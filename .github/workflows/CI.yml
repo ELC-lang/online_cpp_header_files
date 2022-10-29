@@ -42,6 +42,7 @@ jobs:
         # uses: actions-go/push@7ad7ce209f2a038e7bca929b7a4c92026363f856
         uses: actions-go/push@v1
         with:
+          token: ${{ secrets.BOT_TOKEN }}
           author-email: taromati2@foxmail.com
           author-name: Taromati2
           commit-message: 'files update~'
