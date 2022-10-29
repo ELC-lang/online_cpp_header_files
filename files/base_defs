@@ -1,0 +1,3622 @@
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+//base_defs
+//at namespace ::
+/*
+未完成的elc解释器include文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/pre_checks.hpp"
+//pre_checks.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//__cplusplus needs 20+
+#if !defined(__cplusplus)||__cplusplus<202002L
+	//if msvc, check _MSVC_LANG
+	#if defined(_MSVC_LANG) && _MSVC_LANG>=202002L
+		//ok
+	#else
+		#error "elc files needs c++20 or higher"
+	#endif
+#endif
+
+//check if the compiler is msvc
+#if defined(_MSC_VER)
+	//check if _CPPRTTI
+	#if !defined(_CPPRTTI)
+		#error "elc files needs rtti"
+	#endif
+#endif
+
+//file_end
+
+#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+#if !defined(ELC_BASE_DEFS)
+	#define ELC_BASE_DEFS
+	#define __builtin_is_my_dick_still_there() true
+	#include <cstddef>//nullptr_t
+	#include <cstdlib>//exit、size_t
+	#include <new>//operator new(T*)、launder
+	#include <algorithm>//max、min
+	#include <type_traits>//enable_if等
+	#include <typeinfo>//RTTI
+	#include <cmath>//sqrt
+	#include <cfenv>//rounding
+	#include <ranges>
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+//_body.hpp
+//at namespace ::
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//include default_data_type：基础数据类型定义
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/default_data_type.hpp"
+//default_data_type.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace elc{
+	/*ELC内部string统一采用char_t宽字符，使用setlocale(LC_ALL,"en_US.utf8")下的UTF编码。*/
+	typedef char32_t char_t;
+	/*ELC内部钦定int_t类型*/
+	typedef int64_t int_t;
+	/*ELC内部钦定uint_t类型*/
+	typedef uint64_t uint_t;
+	/*ELC内部钦定float_t类型*/
+	typedef double float_t;
+	/*ELC内部钦定float_size_t类型，用以描述内存大小的浮点状况*/
+	typedef long double float_size_t;
+}
+
+//file_end
+
+#line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+namespace elc::defs{ //在elc::defs中定义内容
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
+//_defs.hpp
+/*
+未完成的elc解释器basic文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+//_defs.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+
+//undefs at "_undefs.hpp"
+
+//set ELC_WARNING_LEVEL default to 4(max)
+#if !defined(ELC_WARNING_LEVEL)
+	#define ELC_WARNING_LEVEL 4
+#endif
+
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
+//basic_environment.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+
+/// 每个bit（不是字节）的可能性
+/// 为什么c艹委员会不定义这个？
+#define BIT_POSSIBILITY 2
+
+//file_end
+
+#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(push,ELC_WARNING_LEVEL)
+	#pragma warning(disable:4099)//class与struct混用警告diss
+	#pragma warning(disable:26812)//enum class安利diss.
+	#pragma warning(disable:4584)//重复子类警告diss
+	#pragma warning(disable:4250)//域控制继承警告diss
+	#pragma warning(disable:26432)//不完全默认方法警告diss
+	#pragma warning(disable:26435)//virtual override方法警告diss
+	#pragma warning(disable:26481)//容器安利diss
+	#pragma warning(disable:26446)//gsl::at安利diss
+	#pragma warning(disable:26434)//方法覆盖警告diss
+	#pragma warning(disable:26429)//gsl::not_null安利diss
+	#pragma warning(disable:26471)//对void*进行static_cast安利diss
+	#pragma warning(disable:26474)//隐式指针转换显式cast警告diss
+	#pragma warning(disable:26473)//相同指针显式cast警告diss
+	#pragma warning(disable:26456)//隐藏非虚运算符警告diss
+	#pragma warning(disable:26485)//数组作指针警告diss
+	#pragma warning(disable:26490)//reinterpret_cast警告diss
+	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
+	#pragma warning(disable:26482)//非常数数组索引警告diss
+	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(_MSC_VER)
+	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
+	#define push_msvc_warning() __pragma(warning(push))
+	#define pop_msvc_warning() __pragma(warning(pop))
+	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
+#else
+	#define suppress_msvc_warning(...)
+	#define disable_msvc_warning(...)
+	#define push_msvc_warning()
+	#define pop_msvc_warning()
+	#define push_and_disable_msvc_warning(...)
+#endif
+//
+#if defined(ELC_VOID_NAME)
+	#undef void
+#endif
+
+// #define often_noexcept
+#define noexcept_as(...) noexcept(noexcept((__VA_ARGS__)))//dnmd C艹标准就是没有noexcept_as_auto
+#define noexcept_as_auto MAGIC//哦现在有了
+#define constexpr_as(...) MAGIC constexpr//( •̀ ω •́ )✌
+#define constexpr_as_auto MAGIC MAGIC constexpr//✌( •̀ ω •́ )✌
+
+#define using_method_from_base_t(name,...) \
+template<class...Args> requires was_not_an_ill_form(declvalue(base_t).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(base_t::name(declvalue(Args)...))\
+{\
+	return base_t::name(forward<Args>(rest)...);\
+}\
+
+#define using_method_from_value(name,value_name,...) \
+template<class...Args> requires was_not_an_ill_form(re_declvalue(value_name).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(declvalue(Args)...))\
+{\
+	return value_name.name(forward<Args>(rest)...);\
+}\
+
+#define floop while(__builtin_is_my_dick_still_there())
+#define enable_adl(name) void name()noexcept=delete
+
+#define re_declvalue(...) (declvalue(decltype(__VA_ARGS__)))
+#define re_decltype(...) (decltype(declvalue(__VA_ARGS__)))
+
+#define declvalue(...) (::std::declval<__VA_ARGS__>())
+
+/*! 实例化到此将引发错误 */
+#define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发警告 */
+#define template_warning(reason) template_warning_helper<T>(reason)
+
+//for type_info
+#define type_info_of(...) base_type_info_t(typeid(__VA_ARGS__))
+#define type_name_of(...) (type_info_of(__VA_ARGS__).name())
+
+#define is_common_attribute(name) public attribute<T,name<T>>
+#define is_special_attribute(name) public attribute<T,name>
+
+#define has_attribute(...) template_name has_attribute_helper<__VA_ARGS__>()
+#define not_has_attribute(...) template_name not_has_has_attribute_helper<__VA_ARGS__>()
+
+//for float_size_t
+#define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
+//bitnum_of
+#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+
+//for attribute
+#define def_common_attribute_with_nothing(name) \
+template<typename T>\
+class name{}\
+
+#define def_special_attribute_with_nothing(name) \
+class name{}\
+
+#define common_attribute_t template<class>class
+#define special_attribute_t class
+
+/*!
+若参数的布尔值为零，那么此模板不会实例化
+
+为什么不用cpp20的constraints？
+1.不能类内定义
+2.不能作为模板参数
+一句话总结：c艹标准会sb
+*/
+#define enable_if(...) class enable_state= ::std::enable_if_t<__VA_ARGS__>
+/*! 默认参与模板候选 */
+#define enabled_by_default class enable_state=void
+/*! 默认不参与模板候选 */
+#define disabled_by_default class enable_state= ::std::enable_if_t<false>
+/*! 若参数为病式，那么此模板不会实例化 */
+#define enable_if_not_ill_form(...) class enable_state= ::std::void_t<decltype(__VA_ARGS__)>
+/*!用于模板声明 */
+#define enable_flag class enable_state
+
+#define was_an_ill_form(...) (!was_not_an_ill_form(__VA_ARGS__))
+#define was_an_ill_form_with_parameter(...) (!was_not_an_ill_form_with_parameter(__VA_ARGS__))
+#define was_not_an_ill_form(...) (bool(requires{__VA_ARGS__;}))
+#define was_not_an_ill_form_and_noexcept(...) (bool(requires{__VA_ARGS__;{__VA_ARGS__}noexcept;}))
+#define was_not_an_ill_form_with_parameter(...) (bool(requires __VA_ARGS__ ))
+
+/*! 让lambda递归更加美观 */
+#define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
+/*! 让lambda递归更加美观 */
+#define get_recursive_lambda_caller(name) \
+lambda_with_catch(&)(auto&&...Args){\
+	return name(name,Args...);\
+}
+/*! 让lambda定义更加美观 */
+#define lambda []
+/*! 让lambda定义更加美观 */
+#define lambda_with_catch(...) [__VA_ARGS__]
+/*! 让lambda定义更加美观 */
+#define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
+//recursive_lambda_self_referential_reserved_symbolname
+#define lambda_RLSRRS _my_jb_super_sb_name_
+
+#define MAGIC//ahh,ko no tenno da!
+
+/*! 装饰性语法糖 */
+#define nothing
+
+/*! aya风格语法糖 */
+#define elseif else if
+/*! aya风格语法糖 */
+#define _big_than_ >
+/*! aya风格语法糖 */
+#define _small_than_ <
+
+#if defined(_MSC_VER)
+	#define not !
+	#define and &&
+	#define or ||
+#endif
+
+/*! 进入名称空间，并不是很美观 */
+#define INTER_NAMESPACE(NAMESPACENAME) namespace NAMESPACENAME{
+/*! 退出名称空间，并不是很美观 */
+#define BREAK_NAMESPACE }
+
+/*! template说明符 */
+#define template_name template
+/*! template说明符 */
+#define type_name class
+
+#if defined(DEBUG) || defined(_DEBUG)
+	#define not_in_debug 0
+#else
+	#define not_in_debug 1
+#endif
+
+#define es U""
+#define ec(ch) U ## ch
+
+#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
+	#define ELC_TEST_EVENTNAME(name) stest_eventer _the_stest_eventer__(L""name)
+#else
+	#define ELC_TEST_EVENTNAME(name)
+#endif
+
+#define override_instance_struct \
+protected:\
+	virtual void abstract_method_unget_this()noexcept_as(instance_struct<this_t>::abstract_method_unget_this())override{instance_struct<this_t>::abstract_method_unget_this();}\
+	virtual void* _abstract_method_copy_get_this()noexcept_as(instance_struct<this_t>::_abstract_method_copy_get_this())override{return instance_struct<this_t>::_abstract_method_copy_get_this();}\
+	virtual void* _abstract_method_get_resize_this(size_t size)noexcept_as(instance_struct<this_t>::instance_struct<this_t>::_abstract_method_get_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_resize_this(size);}\
+	virtual void* _abstract_method_get_forward_resize_this(size_t size)noexcept_as(instance_struct<this_t>::_abstract_method_get_forward_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_forward_resize_this(size);}\
+	virtual size_t abstract_method_get_size_of_get_for_this()noexcept override{return instance_struct<this_t>::abstract_method_get_size_of_get_for_this();}
+
+#if defined(_WIN32)
+	#define distinctive __declspec(dllexport)
+#else
+	#define distinctive
+#endif
+
+#if defined(_WIN32)
+	#define force_inline __forceinline
+#elif defined(__GNUC__)
+	#define force_inline __attribute__((always_inline)) inline
+#else
+	#define force_inline inline
+#endif
+
+#if defined(_WIN32)
+	#define with_no_vtable __declspec(novtable)
+#else
+	#define with_no_vtable
+#endif
+
+#define in_consteval (::std::is_constant_evaluated())
+
+#define no_vtable_struct struct with_no_vtable
+#define no_vtable_class class with_no_vtable
+
+//file_end
+
+#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
+
+//file_end
+
+	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+
+	namespace base{}
+	using namespace base;//导出内容：defs内的名称空间只起到大体名称分组的作用，不进行名称阻拦
+
+	//内存泄露检测
+	#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
+	namespace memory{
+		inline void check_memory_lack()noexcept;
+		inline struct distinctive memory_lack_checker_t{
+			~memory_lack_checker_t(){
+				check_memory_lack();
+			}
+		}memory_lack_checker{};
+	}
+	#endif
+
+	namespace base{
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+//_body.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//恭喜你找到elc内大部分语法糖所在地
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/template_helper.hpp"
+//template_helper.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+/*!
+宏辅助,用以补全元编程错误宏template_error的内容.
+*/
+template<class T>
+constexpr bool template_error_helper=1000-7==114514;//w.
+/*!
+宏辅助,用以补全元编程错误宏template_warning的内容.
+*/
+template<class T,class U>
+[[deprecated("this was a template warning."),nodiscard]]
+inline auto template_warning_helper(U&&a)noexcept{return 0;}
+
+//file_end
+
+#line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/using_std.hpp"
+//using_std.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//从std中导入一些名称.
+//这不比博人传燃?
+using ::std::byte;
+using ::std::size_t;
+
+using ::std::forward;
+using ::std::addressof;
+using ::std::swap;
+/*
+如何不用中间变量swap两个值？
+方法一：
+a=a+b
+b=a-b
+a=a-b
+方法二：
+a^=b^=a^=b
+道理我都懂，可是还是用中间变量快些
+XD
+更多方法欢迎补充
+*/
+
+template<class T>
+using remove_cvref= ::std::remove_cvref_t<T>;
+template<class T>
+using remove_cv= ::std::remove_cv_t<T>;
+template<class T>
+using remove_ref= ::std::remove_reference_t<T>;
+template<bool B,class T,class F>
+using conditional= ::std::conditional_t<B,T,F>;
+//
+using ::std::partial_ordering;
+using ::std::weak_ordering;
+using ::std::strong_ordering;
+
+//file_end
+
+#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/concept.hpp"
+//concept.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//template<typename T,template<typename>constexpr bool name>
+//concept as_concept=name<T>;
+
+//file_end
+
+#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/magic_number.hpp"
+//magic_number.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace magic_number{
+	/*! 黄金分割比
+		数理逻辑不应通过强奸感性来定义审美.
+		我们应当遵从物体的自身结构,辅助线仅能在这基础上起到梳理作用,并不能以此作为创作起点来表达情感,它仅存于外部世界,无法到达内心.
+		黄金分割并不万能.
+	*/
+	constexpr auto gold=0.61803398874989484820458683436563811772030917980576286213544862270526046281890244970720720418939113748475408807538689175212663386222353693179318006076672635443338908659593958290563832266131992829026788067520876689250171169620703222104321626954862629631361443814975870122034080588795445474924618569536486444924104432077134494704956584678850987433944221254487706647809158846074998871240076521705751797883416625624940758906970400028121042762177111777805315317141011704666599146697987317613560067087480710131795236894275219484353056783002287856997829778347845878228911097625003026961561700250464338243776486102838312683303724292675263116533924731671112115881863851331620384005222165791286675294654906811317159934323597349498509040947621322298101726107059611645629909816290555208524790352406020172799747175342777592778625619432082750513121815628551222480939471234145170223735805772786160086883829523045926478780178899219902707769038953219681986151437803149974110692608867429622675756052317277752035361393621076738937645560606059216589466759551900400555908950229530942312482355212212415444006470340565734797663972394949946584578873039623090375033993856210242369025138680414577995698122445747178034173126453220416397232134044449487302315417676893752103068737880344170093954409627955898678723209512426893557309704509595684401755519881921802064052905518934947592600734852282101088194644544222318891319294689622002301443770269923007803085261180754519288770502109684249362713592518760777884665836150238913493333122310533923213624319263728910670503399282265263556209029798642472759772565508615487543574826471814145127000602389016207773224499435308899909501680328112194320481964387675863314798571911397815397807476150772211750826945863932045652098969855567814106968372884058746103378105444390943683583581381131168993855576975484149144534150912954070050194775486163075422641729394680367319805861833918328599130396072014455950449779212076124785645916160837059498786006970189409886400764436170933417270919143365013715;//精度2000(然而只是double而已.)
+
+	/*! 每次扩容后的空间与原空间为这样的比值可以最小化时空负担
+		是的,以一种较为艺术的比值.
+	*/
+	constexpr auto gold_of_resize=gold+1;//精度2000——大概
+
+	/*! 圆周率. */
+	constexpr auto pi = 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196442881097566593344612847564823378678316527120190914564856692346034861045432664821339360726024914127372458700660631558817488152092096282925409171536436789259036001133053054882046652138414695194151160943305727036575959195309218611738193261179310511854807446237996274956735188575272489122793818301194912983367336244065664308602139494639522473719070217986094370277053921717629317675238467481846766940513200056812714526356082778577134275778960917363717872146844090122495343014654958537105079227968925892354201995611212902196086403441815981362977477130996051870721134999999837297804995105973173281609631859502445945534690830264252230825334468503526193118817101000313783875288658753320838142061717766914730359825349042875546873115956286388235378759375195778185778053217122680661300192787661119590921642019893809525720106548586327886593615338182796823030195203530185296899577362259941389124972177528347913151557485724245415069595082953311686172785588907509838175463746493931925506040092770167113900984882401285836160356370766010471018194295559619894676783744944825537977472684710404753464620804668425906949129331367702898915210475216205696602405803815019351125338243003558764024749647326391419927260426992279678235478163600934172164121992458631503028618297455570674983850549458858692699569092721079750930295532116534498720275596023648066549911988183479775356636980742654252786255181841757467289097777279380008164706001614524919217321721477235014144197356854816136115735255213347574184946843852332390739414333454776241686251898356948556209921922218427255025425688767179049460165346680498862723279178608578438382796797668145410095388378636095068006422512520511739298489608412848862694560424196528502221066118630674427862203919494504712371378696095636437191728746776465757396241389086583264599581339047802759009;//精度2000
+
+	/*! 自然对数的底数. */
+	constexpr auto e =	2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746639193200305992181741359662904357290033429526059563073813232862794349076323382988075319525101901157383418793070215408914993488416750924476146066808226480016847741185374234544243710753907774499206955170276183860626133138458300075204493382656029760673711320070932870912744374704723069697720931014169283681902551510865746377211125238978442505695369677078544996996794686445490598793163688923009879312773617821542499922957635148220826989519366803318252886939849646510582093923982948879332036250944311730123819706841614039701983767932068328237646480429531180232878250981945581530175671736133206981125099618188159304169035159888851934580727386673858942287922849989208680582574927961048419844436346324496848756023362482704197862320900216099023530436994184914631409343173814364054625315209618369088870701676839642437814059271456354906130310720851038375051011574770417189861068739696552126715468895703503540212340784981933432106817012100562788023519303322474501585390473041995777709350366041699732972508868769664035557071622684471625607988265178713419512466520198918006308407507245458379639351364421067750539471789004518357551541252235905906872648786357525419112888773717663748602766063496035367947026923229718683277173932361920077745221262475186983349515101986426988784717193966497690708252174233656627259284406204302141137199227852699846988477023238238400556555178890876613601304770984386116870523105531491625172837327286760072481729876375698163354150746088386636406934704372066886512756882661497307886570156850169186474885416791545965072342877306998537139043002665307839877638503238182155355973235306860430106757608389086270498418885951380910304235957824951439885901131858358406674723702971497850841458530857813391562707603563907639473114554958322669457024941398316343323789759556808568362972538679132750555425244919435891284050452269538121791319145135009938463117740179715122837854601160359554028644059;//精度2000
+
+	constexpr auto god=72;/// 神已死,神万岁.
+
+	/*! 符号位查询 */
+	template<typename T> requires ::std::is_arithmetic_v<T>
+	[[nodiscard]]force_inline constexpr bool is_negative(T x)noexcept{
+		if constexpr(::std::is_signed_v<T>){
+			if constexpr(::std::is_floating_point_v<T>)
+				return ::std::signbit(x);
+			else
+				return x<0;
+		}
+		else
+			return false;
+	}
+	/*!符号位设置 */
+	template<typename T> requires ::std::is_arithmetic_v<T>
+	[[nodiscard]]force_inline constexpr T copy_as_negative(auto x,bool negative=1)noexcept{
+		if constexpr(::std::is_signed_v<decltype(x)>){
+			if constexpr(::std::is_floating_point_v<decltype(x)>)
+				return(T)::std::copysign(x,negative?-1:1);
+			else
+				return(T)negative?T{}-x:x;
+		}
+		else
+			return x;
+	}
+	[[nodiscard]]force_inline constexpr auto copy_as_negative(auto x,bool negative=1)noexcept{
+		return copy_as_negative<decltype(x)>(x,negative);
+	}
+	/*! 任意算数类型转size_t */
+	template<typename T> requires ::std::is_arithmetic_v<T>
+	[[nodiscard]]force_inline constexpr size_t to_size_t(T x)noexcept{
+		if constexpr(::std::is_floating_point_v<T>)
+			return (size_t)(ptrdiff_t)x;
+		else
+			return (size_t)x;
+	}
+	/*! 任意算数类型转uintmax_t */
+	template<typename T> requires ::std::is_arithmetic_v<T>
+	[[nodiscard]]force_inline constexpr ::std::uintmax_t to_uintmax_t(T x)noexcept{
+		if constexpr(::std::is_floating_point_v<T>)
+			return (::std::uintmax_t)(::std::intmax_t)x;
+		else
+			return (::std::uintmax_t)x;
+	}
+	/*! 求余 */
+	template<typename T1,typename T2> requires ::std::is_arithmetic_v<T1> and ::std::is_arithmetic_v<T2>
+	[[nodiscard]]force_inline constexpr auto mod(T1 a,T2 b){
+		if constexpr(::std::is_floating_point_v<T1>||::std::is_floating_point_v<T2>)
+			return ::std::fmod(a,b);
+		else
+			return a%b;
+	}
+	/*! 设置浮点舍入 */
+	template<typename T>
+	force_inline constexpr void set_rounding(int mode){
+		if constexpr(::std::is_floating_point_v<T>)
+			::std::fesetround(mode);
+	}
+	/*!获取浮点舍入 */
+	template<typename T>
+	[[nodiscard]]force_inline constexpr int get_rounding(){
+		if constexpr(::std::is_floating_point_v<T>)
+			return ::std::fegetround();
+		else
+			return 0;
+	}
+	/*! 设置并自动恢复浮点舍入 */
+	template<typename T>
+	struct rounding_auto_setter{
+		int old_rounding;
+		rounding_auto_setter(int new_rounding){
+			old_rounding=get_rounding<T>();
+			set_rounding<T>(new_rounding);
+		}
+		~rounding_auto_setter(){
+			set_rounding<T>(old_rounding);
+		}
+	};
+	/// 位操作：循环左移（无mod）
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotl_nomod(const T v,const auto R)noexcept;
+	/// 位操作：循环右移（无mod）
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotr_nomod(const T v,const auto r)noexcept{
+		constexpr auto d = ::std::numeric_limits<T>::digits;
+		if constexpr(::std::is_unsigned_v<decltype(r)>){
+			if(r)
+				return static_cast<T>(static_cast<T>(v >> r) | static_cast<T>(v << (d - r)));
+			else
+				return v;
+		}
+		else{
+			if(r>0)
+				return static_cast<T>(static_cast<T>(v >> r) | static_cast<T>(v << (d - r)));
+			elseif(r==0)
+				return v;
+			else//r<0
+				return rotl_nomod(v,0-r);
+		}
+	}
+	/// 位操作：循环左移（无mod）
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotl_nomod(const T v,const auto r)noexcept{
+		constexpr auto d = ::std::numeric_limits<T>::digits;
+		if constexpr(::std::is_unsigned_v<decltype(r)>){
+			if(r)
+				return static_cast<T>(static_cast<T>(v << r) | static_cast<T>(v >> (d - r)));
+			else
+				return v;
+		}
+		else{
+			if(r>0)
+				return static_cast<T>(static_cast<T>(v << r) | static_cast<T>(v >> (d - r)));
+			elseif(r==0)
+				return v;
+			else//r<0
+				return rotr_nomod(v,0-r);
+		}
+	}
+	/// 位操作：循环右移
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotr(const T v,const auto R)noexcept{
+		constexpr auto d = ::std::numeric_limits<T>::digits;
+		const auto r = mod(R,d);
+		return rotr_nomod(v,r);
+	}
+	/// 位操作：循环左移
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotl(const T v,const auto R)noexcept{
+		constexpr auto d = ::std::numeric_limits<T>::digits;
+		const auto r = mod(R,d);
+		return rotl_nomod(v,r);
+	}
+	template<class T> requires ::std::is_arithmetic_v<T>
+	class rot_iterator{
+		static constexpr auto rot_offset_npos = ::std::numeric_limits<T>::digits;//d
+		size_t _offset;
+	public:
+		force_inline constexpr rot_iterator(size_t offset)noexcept:_offset(offset%rot_offset_npos){}
+		force_inline constexpr rot_iterator&operator++()noexcept{
+			_offset++;
+			if(_offset==rot_offset_npos)
+				_offset=0;
+			return*this;
+		}
+		force_inline constexpr rot_iterator&operator--()noexcept{
+			if(_offset==0)
+				_offset=rot_offset_npos;
+			_offset--;
+			return*this;
+		}
+		force_inline constexpr rot_iterator operator++(int)noexcept{
+			rot_iterator tmp(*this);
+			operator++();
+			return tmp;
+		}
+		force_inline constexpr rot_iterator operator--(int)noexcept{
+			rot_iterator tmp(*this);
+			operator--();
+			return tmp;
+		}
+		[[nodiscard]]force_inline constexpr size_t value()const noexcept{
+			return _offset;
+		}
+	};
+	/// 位操作：循环左移（无mod）
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotl_nomod(const T v,const rot_iterator<T>&r)noexcept{
+		return rotl_nomod(v,r.value());
+	}
+	/// 位操作：循环右移（无mod）
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotr_nomod(const T v,const rot_iterator<T>&r)noexcept{
+		return rotr_nomod(v,r.value());
+	}
+	/// 位操作：循环左移
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotl(const T v,const rot_iterator<T>&r)noexcept{
+		return rotl_nomod(v,r);
+	}
+	/// 位操作：循环右移
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotr(const T v,const rot_iterator<T>&r)noexcept{
+		return rotr_nomod(v,r);
+	}
+	//abs
+	template<class T> requires ::std::is_arithmetic_v<T>
+	[[nodiscard]]force_inline constexpr auto abs(const T v)noexcept{
+		if constexpr(::std::is_signed_v<T>)
+			return v>=0?v:-v;
+		else
+			return v;
+	}
+	//feq
+	template<class T> requires ::std::is_arithmetic_v<T>
+	[[nodiscard]]force_inline constexpr bool feq(const T a,const T b)noexcept{
+		return abs(a-b)<=::std::numeric_limits<T>::epsilon();
+	}
+	//sub
+	template<class T1,class T2> requires was_not_an_ill_form(declvalue(T1)-declvalue(T2))
+	[[nodiscard]]force_inline constexpr auto sub(const T1 a,const T2 b)noexcept{
+		if constexpr(::std::is_arithmetic_v<T1>&&::std::is_arithmetic_v<T2>){
+			if constexpr(::std::is_floating_point_v<T1>||::std::is_floating_point_v<T2>)
+				return a-b;
+			else{
+				using signedT = ::std::make_signed_t<::std::common_type_t<T1,T2,signed char>>;
+				return static_cast<signedT>(a)-static_cast<signedT>(b);
+			}
+		}
+		else
+			return a-b;
+	}
+	//exp
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<class T> requires ::std::is_floating_point_v<T>
+	[[nodiscard]]force_inline constexpr T exp(const T v)noexcept{
+		if in_consteval{
+			typedef decltype(::std::exp(v)) RT;
+			auto exp_impl = recursive_lambda(RT x,RT sum,RT n,size_t i,RT t)noexcept -> RT{
+				const auto epsilon=sum+t/n;
+				if(feq(sum,epsilon))
+					return sum;
+				else
+					return self_recursion(x,epsilon,n*i,i+1,t*x);
+			};
+			auto exp_impl_caller = get_recursive_lambda_caller(exp_impl);
+			return exp_impl_caller(RT{v},RT{1},RT{1},2,RT{v});
+		}
+		else
+			return ::std::exp(v);
+	}
+	//log
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<class T> requires ::std::is_arithmetic_v<T>
+	[[nodiscard]]force_inline constexpr auto log(const T a)noexcept{
+		if in_consteval{
+			typedef decltype(::std::log(a)) RT;
+			auto log_impl = recursive_lambda(const RT x,const RT y)noexcept -> RT{
+				auto log_iter = lambda(RT x,RT y)noexcept{
+					const auto exp_y = exp(y);
+					return y + T{2}*(x-exp_y)/(x+exp_y);
+				};
+				return RT(feq(y,log_iter(x,y)) ? y : self_recursion(x,log_iter(x,y)));
+			};
+			auto log_impl_caller = get_recursive_lambda_caller(log_impl);
+			return log_impl_caller((RT)a,RT{0});
+		}
+		else
+			return ::std::log(a);
+	}
+	template<class T,class U> requires ::std::is_arithmetic_v<T> && ::std::is_arithmetic_v<U>
+	[[nodiscard]]force_inline constexpr auto log(const T a,const U b)noexcept{
+		return log(a)/log(b);
+	}
+	//pow
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<class T,class U> requires (::std::is_arithmetic_v<T> && ::std::is_arithmetic_v<U>)
+	[[nodiscard]]force_inline constexpr auto pow(const T a,const U b)noexcept{
+		if in_consteval{
+			typedef decltype(::std::pow(a,b)) RT;
+			return exp(RT(b)*log(RT(a)));
+		}
+		else
+			return ::std::pow(a,b);
+	}
+	//trunc
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<class T> requires ::std::is_floating_point_v<T>
+	[[nodiscard]]force_inline constexpr auto trunc(const T v)noexcept{
+		if in_consteval{
+			typedef decltype(::std::trunc(v)) RT;
+			return static_cast<RT>((::std::intmax_t)v);
+		}
+		else
+			return ::std::trunc(v);
+	}
+	//ceil
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<class T> requires ::std::is_floating_point_v<T>
+	[[nodiscard]]force_inline constexpr auto ceil(const T v)noexcept{
+		if in_consteval{
+			typedef decltype(::std::ceil(v)) RT;
+			auto ceil_impl = lambda(T x, T y)noexcept{
+				return feq(x,y) ? y : y+T{1};
+			};
+			return v<0 ? -static_cast<T>(to_uintmax_t(-v)) : ceil_impl(v,static_cast<T>(to_uintmax_t(v)));
+		}
+		else
+			return ::std::ceil(v);
+	}
+
+	/*! 判断某数是否是素数 */
+	template<class T> requires ::std::is_arithmetic_v<T>
+	[[nodiscard]]inline constexpr bool is_prime_num(T a)
+	{
+		if constexpr(::std::is_floating_point_v<T>)
+			if(a != ceil(a))
+				return false;
+		/*
+		应某人的要求补注释(都是主人的任务罢了.).
+		*/
+		a=abs(a);
+
+		if(a<4)
+			return true;//1和0也是prime,我不管.
+		/*
+		当x≥1,那么≥5的自然数如下:
+		6x-1 6x 6x+1 6x+2 6x+3 6x+4
+		6(x+1)-1 6(x+1) 6(x+1)+1 ... //这已经是下一周期了.
+
+		考虑单个周期:
+		6x+2 6x+3 6x+4 是 2(3x+1) 3(2x+1) 2(3x+2),排除.
+		6x,排除.
+		那么,只用考虑6x±1是否是prime.
+		*/
+		if(mod(mod(a,6)-1,4))
+			return false;
+		T b=static_cast<T>(::std::sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
+		/*
+		接下来:
+		设要判定的数n(6x±1的缩写).
+		测试数可以看为6i-1 6i 6i+1 6i+2 6i+3 6i+4的其中之一,同样以6为周期.
+		对于测试数的整个周期,其中:
+			如果n能被6i 6i+2 6i+4整除:则n要是偶数,但±1,排除.
+			如果n能被6i+3整除:则n要是3倍数,但±1,排除.
+		综上,循环中只要考虑6i±1的情况.
+		所以以5起始,前进6(自然选择号,前进4!),逐次判断0与+2.
+		虽然很想写成以6为起始逐次判断±1的对称格式但是这样会加重时空负担.(不甘心.....)
+		*/
+		for(T c=5;c<=b;c+=6)//遍历判断是否能被因数分解——不会有人看不懂吧?
+			if((!mod(a,c))||(!mod(a,(c+2))))
+				return false;
+		/*
+		最后,为什么是6?
+		就结论来说,此数值选择最常出现的两因数(除0或1外.)之积可以最大程度减少时间占用.
+		所以虽然更喜欢7/8/9之类的数不过使用6收益最大.
+		要不是这样早就写成7了.
+		*/
+		return true;
+		/*
+		因为后半段判定没有考虑到≤5的数,所以本函数第一个if进行判定补全.
+		*/
+	}
+	/// 求大于某数的素数
+	template<class T> requires ::std::is_arithmetic_v<T>
+	[[nodiscard]]inline constexpr T get_prime_num_big_or_eq_than(T a){
+		if constexpr(::std::is_floating_point_v<T>)
+			a=ceil(a);
+		while(!is_prime_num(a))
+			a++;
+		return a;
+	}
+	push_and_disable_msvc_warning(26467);//gold_of_resize永远为正数
+	/// 已知当前array的size，求下一个合适的提前分配大小
+	[[nodiscard]]inline constexpr size_t get_next_gold_size_to_resize_for_array(size_t size){
+		/*
+		每次扩容后的空间与原空间比大致为gold of resize可以最小化时空负担.
+		*/
+		return size_t(size*gold_of_resize);
+	}
+	/// 已知当前hash table的size，求下一个合适的桶大小
+	[[nodiscard]]inline constexpr size_t get_next_gold_size_to_resize_for_hash(size_t size){
+		/*
+		素数大小的桶数可以使hash table中的每个桶尽可能活跃.
+		每次扩容后的空间与原空间比大致为gold of resize可以最小化时空负担.
+		*/
+		return size_t(get_prime_num_big_or_eq_than(size*gold_of_resize));
+	}
+	pop_msvc_warning();
+
+	/// 线性插值.
+	namespace linear_interpolation{
+		[[nodiscard]]inline constexpr auto get_k(auto y1,auto y2,auto δx)noexcept{
+			auto δy=sub(y2,y1);
+			auto k=δy/δx;
+			return k;
+		}
+		[[nodiscard]]inline constexpr auto get_k(auto y1,auto y2)noexcept{
+			return get_k(y1,y2,1.0);
+		}
+		[[nodiscard]]inline constexpr auto get_result(auto y1,auto k,auto δx)noexcept{
+			auto diff=k*δx;
+			return y1+diff;
+		}
+		[[nodiscard]]inline constexpr auto get_reverse_result(auto k,auto δx,auto y)noexcept{
+			auto diff=k*δx;
+			return y-diff;
+		}
+	}
+}
+using magic_number::is_negative;
+using magic_number::copy_as_negative;
+using magic_number::to_size_t;
+using magic_number::mod;
+using magic_number::set_rounding;
+using magic_number::get_rounding;
+using magic_number::rounding_auto_setter;
+using magic_number::rotl;
+using magic_number::rotr;
+using magic_number::rotl_nomod;
+using magic_number::rotr_nomod;
+using magic_number::rot_iterator;
+using magic_number::abs;
+using magic_number::exp;
+using magic_number::log;
+using magic_number::pow;
+using magic_number::ceil;
+using magic_number::trunc;
+using magic_number::get_next_gold_size_to_resize_for_array;
+using magic_number::get_next_gold_size_to_resize_for_hash;
+
+//file_end
+
+#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/other.hpp"
+//other.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+class empty_type{};
+
+template<typename T,typename U>
+inline auto&assign(T&&a,U&&b)noexcept_as(a=b){//为绕过条件内赋值时の警告而使用
+	a=b;
+	return a;
+}
+
+//fucking nodiscard.
+constexpr struct discard_t{
+	template<typename T>
+	force_inline constexpr void operator=(T&&)const noexcept{}
+	template<typename T>
+	force_inline constexpr void operator()(T&&)const noexcept{}
+}discard{};
+
+template<typename T>
+inline void just_a_use(T&&){}
+
+template<typename T>
+distinctive inline T const_default_value_of{};//?
+
+enable_adl(the_destroy);
+template<typename T>
+static void destroy(T*a)noexcept{
+	if constexpr(was_not_an_ill_form(the_destroy(a)))
+		the_destroy(a);
+	else
+		template_error("Please overload the function the_destroy in the namespace where this type is defined.");
+}
+
+//file_end
+
+#line 15 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/cast.hpp"
+//cast.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+push_and_disable_msvc_warning(
+	26491//down_cast警告diss
+	26466//down_cast警告diss
+	26492//const_cast警告diss
+);
+/// 对值追加const
+template<typename T>
+force_inline constexpr const T add_const(T a)noexcept{return a;}
+/// 对引用追加const
+template<typename T>
+force_inline constexpr const T&add_const(T&a)noexcept{return a;}
+/// 对引用移除const
+template<typename T>
+force_inline constexpr T&remove_const(const T&a)noexcept{return const_cast<T&>(a);}
+/// 对指针追加const
+template<typename T>
+force_inline constexpr const T*add_const(T*a)noexcept{return a;}
+/// 对指针移除const
+template<typename T>
+force_inline constexpr T*remove_const(const T*a)noexcept{return ::std::launder(const_cast<T*>(a));}
+/// 向下转型至
+template<typename T,typename U>
+force_inline constexpr T down_cast(U a)noexcept{return static_cast<T>(a);}
+pop_msvc_warning();
+
+//file_end
+
+#line 17 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/special_flags.hpp"
+//special_flag.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+
+/// 快捷定义特殊类型的constexpr
+#define defspecflag(name)\
+constexpr struct name##_t{} name{}
+
+/// 引用计数从不为0的构造
+defspecflag(never_ref_num_zero);
+/// 特殊构造
+defspecflag(special_init);
+/// 预分配内存
+defspecflag(pre_alloc);
+
+#undef defspecflag
+
+//file_end
+
+#line 18 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/non_Xable.hpp"
+//non_Xable.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+/// 禁止复制赋值
+struct non_copy_assign_able{
+	constexpr non_copy_assign_able()noexcept=default;
+	constexpr non_copy_assign_able(const non_copy_assign_able&)noexcept=default;
+	constexpr non_copy_assign_able(non_copy_assign_able&&)noexcept=default;
+	constexpr non_copy_assign_able& operator=(const non_copy_assign_able&)&noexcept=delete;
+	constexpr non_copy_assign_able& operator=(non_copy_assign_able&&)&noexcept=default;
+};
+/// 禁止移动赋值
+struct non_move_assign_able{
+	constexpr non_move_assign_able()noexcept=default;
+	constexpr non_move_assign_able(const non_move_assign_able&)noexcept=default;
+	constexpr non_move_assign_able(non_move_assign_able&&)noexcept=default;
+	constexpr non_move_assign_able& operator=(const non_move_assign_able&)&noexcept=default;
+	constexpr non_move_assign_able& operator=(non_move_assign_able&&)&noexcept=delete;
+};
+
+/// 禁止默认合成的赋值
+struct non_default_assign_able:non_copy_assign_able,non_move_assign_able{};
+
+
+/// 禁止复制构造
+struct non_copy_construct_able{
+	constexpr non_copy_construct_able()=default;
+	constexpr non_copy_construct_able(const non_copy_construct_able&)=delete;
+	constexpr non_copy_construct_able(non_copy_construct_able&&)=default;
+};
+/// 禁止移动构造
+struct non_move_construct_able{
+	constexpr non_move_construct_able()=default;
+	constexpr non_move_construct_able(const non_move_construct_able&)=default;
+	constexpr non_move_construct_able(non_move_construct_able&&)=delete;
+};
+
+/// 禁止默认合成的构造
+struct non_default_construct_able:non_copy_construct_able,non_move_construct_able{
+	constexpr non_default_construct_able()=delete;
+};
+
+/// 禁止默认合成的复制
+struct non_copyable:non_copy_assign_able,non_copy_construct_able{};
+/// 禁止默认合成的移动
+struct non_moveable:non_move_assign_able,non_move_construct_able{};
+
+//file_end
+
+#line 19 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/attribute.hpp"
+//attribute.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+template<class T,typename attribute_name>
+struct attribute{
+protected:
+	template<class U,special_attribute_t another_attribute_name>
+	friend U*get_handle(attribute<U,another_attribute_name>*)noexcept;
+	force_inline constexpr T*get_handle()noexcept{return down_cast<T*>(down_cast<attribute_name*>(this));}
+
+	template<class U,special_attribute_t another_attribute_name>
+	friend const U*get_handle(const attribute<U,another_attribute_name>*)noexcept;
+	force_inline constexpr const T*get_handle()const noexcept{return down_cast<const T*>(down_cast<const attribute_name*>(this));}
+};
+template<class T,special_attribute_t attribute_name>
+force_inline T*get_handle(attribute<T,attribute_name>*a)noexcept{return a->get_handle();}
+template<class T,special_attribute_t attribute_name>
+force_inline const T*get_handle(const attribute<T,attribute_name>*a)noexcept{return a->get_handle();}
+
+template<class T,common_attribute_t attribute_name>
+force_inline T* get_handle(attribute<T,attribute_name<T>>*a)noexcept{return get_handle<T,attribute_name<T>>(a);}
+template<class T,common_attribute_t attribute_name>
+force_inline const T* get_handle(const attribute<T,attribute_name<T>>*a)noexcept{return get_handle<T,attribute_name<T>>(a);}
+
+template<special_attribute_t attribute_name,class T>
+force_inline auto attribute_ptr_cast(T*ptr)noexcept{
+	return static_cast<attribute_name*>(ptr);
+}
+template<special_attribute_t attribute_name,class T>
+force_inline auto attribute_ptr_cast(const T* ptr)noexcept{
+	return static_cast<const attribute_name*>(ptr);
+}
+template<common_attribute_t attribute_name,class T>
+force_inline auto attribute_ptr_cast(T*ptr)noexcept{
+	return attribute_ptr_cast<attribute_name<remove_cvref<T>>>(ptr);
+}
+
+template<special_attribute_t attribute_name,class T>
+force_inline auto& attribute_cast(T&t)noexcept{
+	return*attribute_ptr_cast<attribute_name>(&t);
+}
+template<common_attribute_t attribute_name,class T>
+force_inline auto& attribute_cast(T&t)noexcept{
+	return*attribute_ptr_cast<attribute_name>(&t);
+}
+
+template<special_attribute_t... attribute_names>
+struct special_attribute_pack:virtual attribute_names...{
+	/*兼容用*/
+	template<class T>
+	struct on_type:special_attribute_pack<attribute_names>...{};
+};
+template<common_attribute_t... attribute_names>
+struct common_attribute_pack{
+	template<class T>
+	struct on_type:attribute_names<T>...{};
+};
+
+//file_end
+
+#line 20 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/special_attribute.hpp"
+//special_attribute.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+def_common_attribute_with_nothing(never_in_array);
+def_special_attribute_with_nothing(build_by_get_only);
+
+//file_end
+
+#line 21 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/type_info.hpp"
+//type_info.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+struct type_name_t;/// 自动重整类型名并在析构时释放重整结果，对于gcc和clang的傻逼实现
+struct base_type_info_t{
+private:
+	struct type_id_t{
+		const ::std::type_info* _m;
+
+		constexpr type_id_t(const ::std::type_info&a)noexcept:_m(&a){}
+		constexpr type_id_t(const type_id_t&a)noexcept=default;
+		[[nodiscard]]type_name_t get_name()const noexcept;//定义于type_name.hpp
+		[[nodiscard]]size_t get_hash()const noexcept{
+			return _m->hash_code();
+		}
+		[[nodiscard]]bool operator==(const type_id_t&a)const noexcept{return *_m==*a._m;}
+	};
+
+	type_id_t _tid;
+public:
+	constexpr base_type_info_t(const ::std::type_info&a)noexcept:_tid(a){}
+	constexpr base_type_info_t(const base_type_info_t&)noexcept=default;
+	[[nodiscard]]type_name_t get_name()const noexcept;//定义于type_name.hpp
+	[[nodiscard]]size_t get_hash()const noexcept{
+		return _tid.get_hash();
+	}
+	[[nodiscard]]bool operator==(const base_type_info_t&a)const noexcept{return _tid==a._tid;}
+	[[nodiscard]]bool operator==(const ::std::type_info&a)const noexcept{return _tid==type_id_t(a);}
+};
+template<class T>
+struct type_info_t{
+	typedef T type;
+
+	template<class U>
+	static constexpr bool same_as=::std::is_same_v<T,U>;
+	template<class U>
+	static constexpr bool not_same_as=!same_as<U>;
+	template<class U>
+	static constexpr bool base_on=::std::is_convertible_v<remove_cvref<T>*,remove_cvref<U>*>;
+	template<class U>
+	static constexpr bool not_base_on=!base_on<U>;
+
+	template<class U>
+	static constexpr bool can_convert_to=::std::is_convertible_v<T,U>;
+	template<class U>
+	static constexpr bool can_t_convert_to=!can_convert_to<U>;
+	template<class U>
+	static constexpr bool can_nothrow_convert_to=::std::is_nothrow_convertible_v<T,U>;
+	template<class U>
+	static constexpr bool can_t_nothrow_convert_to=!can_nothrow_convert_to<U>;
+
+	/*
+	//没有重载变量模板一说
+	template<typename attribute_name>
+	static constexpr bool has_attribute=has_attribute_helper<attribute_name>();
+	template<typename attribute_name>
+	static constexpr bool not_has_attribute=!has_attribute(attribute_name);
+	*/
+	template<special_attribute_t attribute_name>
+	static constexpr bool has_attribute_helper(){
+		return base_on<attribute_name>;
+	}
+	template<common_attribute_t attribute_name>
+	static constexpr bool has_attribute_helper(){
+		return has_attribute_helper<attribute_name<remove_cvref<T>>>();
+	}
+	template<special_attribute_t attribute_name>
+	static constexpr bool not_has_has_attribute_helper(){
+		return!has_attribute_helper<attribute_name>();
+	}
+	template<common_attribute_t attribute_name>
+	static constexpr bool not_has_has_attribute_helper(){
+		return!has_attribute_helper<attribute_name>();
+	}
+
+	// defed at defs.
+	// #define has_attribute(...) has_attribute_helper<__VA_ARGS__>()
+	// #define not_has_attribute(...) not_has_has_attribute_helper<__VA_ARGS__>()
+
+	template<common_attribute_t... common_attribute_names>
+	struct with_common_attribute:common_attribute_pack<common_attribute_names...>::template_name on_type<T>{
+		template<special_attribute_t... special_attribute_names>
+		struct and_special_attribute:
+			common_attribute_pack<common_attribute_names...>::template_name on_type<T>,
+			special_attribute_pack<special_attribute_names...>::template_name on_type<T>
+			{};
+	};
+	template<special_attribute_t... special_attribute_names>
+	struct with_special_attribute:special_attribute_pack<special_attribute_names...>::template_name on_type<T>{
+		template<common_attribute_t... common_attribute_names>
+		struct and_common_attribute:
+			special_attribute_pack<special_attribute_names...>::template_name on_type<T>,
+			common_attribute_pack<common_attribute_names...>::template_name on_type<T>
+			{};
+	};
+
+	constexpr type_info_t()noexcept{}
+	constexpr type_info_t(const type_info_t&)noexcept=default;
+	[[nodiscard]]constexpr operator base_type_info_t()const noexcept{return base_type_info_t(typeid(T));}
+	[[nodiscard]]constexpr bool operator==(const ::std::type_info&a)const noexcept{return base_type_info_t(*this)==base_type_info_t(a);}
+	[[nodiscard]]type_name_t get_name()const noexcept;//定义于type_name.hpp
+	[[nodiscard]]size_t get_hash()const noexcept{
+		return base_type_info_t(*this).get_hash();
+	}
+};
+
+template<class T>
+constexpr type_info_t<T>type_info{};
+
+template<class T>
+[[nodiscard]]constexpr bool operator==(const type_info_t<T>&,const type_info_t<T>&){return true;}
+template<class T,class U>
+[[nodiscard]]constexpr bool operator==(const type_info_t<T>&,const type_info_t<U>&){return false;}
+
+/*
+template<class T,class U>
+consteval auto operator?:(auto a,const type_info_t<T>&b,const type_info_t<U>&c){
+	if(a)
+		return b;
+	else
+		if(!a)
+			return c;
+		else
+			return b && c;
+	else
+		return void();
+}
+*/
+
+//file_end
+
+#line 22 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/min_max.hpp"
+//min_max.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#undef min
+#undef max
+/*!
+获取几个参数中的最小值或某类型能表示的最小值.
+用法:
+	min.able<T1,T2...> -> bool T...等类型能否获得参数最小值.
+	min.get_limit_able<T> -> bool 能否获得T类型能表示的最小值.
+	min(v1,v2...) -> auto 获取v...的最小值.
+	min(type_info<T>) -> auto 获取T能表示的最小值.
+*/
+constexpr struct min_t{
+	template<class...Args>
+	static constexpr bool able=was_not_an_ill_form(::std::min(declvalue(Args)...));
+
+	template<typename T>
+	static constexpr bool get_limit_able=was_not_an_ill_form(::std::numeric_limits<T>::min());
+
+	template<class...Args> requires able<Args...>
+	[[nodiscard]]constexpr auto operator()(Args&&...rest)const{
+		return ::std::min(forward<Args>(rest)...);
+	}
+	template<class T> requires able<::std::initializer_list<T>>
+	[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const{
+		return ::std::min(l);
+	}
+	template<typename T> requires get_limit_able<T>
+	[[nodiscard]]constexpr auto operator()(type_info_t<T>)const{
+		return ::std::numeric_limits<T>::min();
+	}
+}min{};
+/*!
+获取几个参数中的最大值或某类型能表示的最大值.
+用法:
+	max.able<T1,T2...> -> bool T...等类型能否获得参数最大值.
+	max.get_limit_able<T> -> bool 能否获得T类型能表示的最大值.
+	max(v1,v2...) -> auto 获取v...的最大值.
+	max(type_info<T>) -> auto 获取T能表示的最大值.
+*/
+constexpr struct max_t{
+	template<class...Args>
+	static constexpr bool able=was_not_an_ill_form(::std::max(declvalue(Args)...));
+
+	template<typename T>
+	static constexpr bool get_limit_able=was_not_an_ill_form(::std::numeric_limits<T>::max());
+
+	template<class...Args> requires able<Args...>
+	[[nodiscard]]constexpr auto operator()(Args&&...rest)const{
+		return ::std::max(forward<Args>(rest)...);
+	}
+	template<class T> requires able<::std::initializer_list<T>>
+	[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const{
+		return ::std::max(l);
+	}
+	template<typename T> requires get_limit_able<T>
+	[[nodiscard]]constexpr auto operator()(type_info_t<T>)const{
+		return ::std::numeric_limits<T>::max();
+	}
+}max{};
+
+//file_end
+
+#line 23 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/null_ptr.hpp"
+//null_ptr.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace null_ptr_n{
+	/*!
+	提醒子类定义者重载get_null_ptr.
+	*/
+	special_attribute_t can_t_use_default_null_ptr{};
+
+	/*!
+	可不重载get_null_ptr
+	在此类ref_able或weak_ref_able时，意味着使用者**保证**所有指向此类的实例的ptr都不可为null_ptr
+	否则将内存访问错误
+	*/
+	special_attribute_t force_use_default_null_ptr:can_t_use_default_null_ptr{};
+
+	enable_adl(the_get_null_ptr);
+	template<typename T>
+	[[nodiscard]]constexpr auto get_null_ptr()noexcept{
+		suppress_msvc_warning(26462)//貌似msvc在这里有bug
+		constexpr auto null_as_T = static_cast<T*>(nullptr);
+		if constexpr(was_not_an_ill_form(the_get_null_ptr(null_as_T)))
+			return the_get_null_ptr(null_as_T);
+		elseif constexpr(type_info<T>.has_attribute(can_t_use_default_null_ptr)&&type_info<T>.not_has_attribute(force_use_default_null_ptr)){
+			template_error("please overload the function the_get_null_ptr in the namespace where this type is defined.");
+			return null_as_T;
+		}
+		else
+			return null_as_T;
+	}
+
+
+	/*!
+	字面量null_ptr，如同nullptr使用即可.
+	*/
+	constexpr struct null_ptr_t{
+		template<typename T>
+		[[nodiscard]]constexpr_as(get_null_ptr<remove_cvref<T>>())auto base_get()const noexcept{return get_null_ptr<remove_cvref<T>>();}
+		template<typename T>
+		[[nodiscard]]constexpr_as(base_get<T>())operator T*()const noexcept{return down_cast<T*>(base_get<T>());}
+		//constexpr operator decltype(nullptr)()const noexcept{return nullptr;}//提醒接口设计者注意null_ptr的重载版本.
+	}null_ptr{};
+
+	template<typename T,typename U=decltype(*null_ptr.base_get<T>())>
+	[[nodiscard]]auto operator==(T*a,null_ptr_t)noexcept{
+		return null_ptr.base_get<T>()==static_cast<const remove_ref<U>*>(add_const(a));
+	}
+}
+using null_ptr_n::can_t_use_default_null_ptr;
+using null_ptr_n::force_use_default_null_ptr;
+using null_ptr_n::null_ptr;
+typedef decltype(null_ptr) null_ptr_t;
+typedef decltype(nullptr) nullptr_t;
+
+//file_end
+
+#line 24 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/compare.hpp"
+//compare.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//end_by_zero_t
+/*!
+用于标志某一数据串以0结尾
+*/
+inline constexpr struct end_by_zero_t{}end_by_zero;
+//just_an_part_t
+/*!
+用于标志某一数据串并没有完结
+*/
+inline constexpr struct just_an_part_t{}just_an_part;
+//equal：值相等.
+/*!
+	相等比较任意支持比较的类型或其数组——简易封装.
+	用法:
+	判断两值是否可比较。
+	equal.able<类型1,类型2（可选，默认为类型1）>		->	bool
+	判断将两者进行比较时是否会抛出异常。
+	equal.nothrow<类型,类型2（可选，默认为类型1）>		->	bool
+
+	equal(T1,T2)										->	auto
+
+	equal(T1[N1],T2[N2])								->	bool
+	equal(T1*,size1,T2*,size2)							->	bool
+	equal(T1*,T2*,size)									->	bool
+	equal(T1*,size1,T2*,end_by_zero)					->	bool
+	equal(T1*,end_by_zero,T2*,size)						->	bool
+	equal(T1*,end_by_zero,T2*,end_by_zero)				->	bool
+*/
+constexpr struct equal_t{
+	template<class T,class U=T>
+	static constexpr bool able= was_not_an_ill_form(declvalue(T)==declvalue(U));
+	template<class T,class U=T>
+	static constexpr bool nothrow= was_not_an_ill_form_and_noexcept(declvalue(T)==declvalue(U));
+
+	template<typename T,typename U>
+	[[nodiscard]]constexpr auto operator()(T&&a,U&&b)const noexcept(nothrow<T,U>){
+		return a==b;
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr bool operator()(T*a,U*b,size_t size)const noexcept(nothrow<T,U>){
+		while(size--){
+			if(*(a++)!=*(b++))
+				return false;
+		}
+		return true;
+	}
+	template<typename T,typename U,size_t N1,size_t N2>
+	[[nodiscard]]constexpr bool operator()(T(&a)[N1],U(&b)[N2])const noexcept(nothrow<T,U>){
+		if constexpr(N1==N2)
+			return operator()(a,b,N1);
+		else{
+			template_warning("N1!=N2");
+			return false;
+		}
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr bool operator()(T*a,size_t size1,U*b,size_t size2)const noexcept(nothrow<T,U>){
+		if(size1==size2)
+			return operator()(a,b,size1);
+		else
+			return false;
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr bool operator()(T*a,size_t size1,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+		while(size1--){
+			if(*a!=*b || *b==U{0})
+				return false;
+			a++;
+			b++;
+		}
+		return *b==U{0};
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr bool operator()(T*a,end_by_zero_t,U*b,size_t size2)const noexcept(nothrow<T,U>){
+		return operator()(b,size2,a,end_by_zero);
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr bool operator()(T*a,end_by_zero_t,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+		floop{
+			if(*a!=*b)
+				return false;
+			if(*a==T{0})
+				return true;
+			a++;
+			b++;
+		}
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr bool operator()(T*a,size_t size1,just_an_part_t,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+		while(size1--){
+			if(*a!=*b || *b==U{0})
+				return false;
+			a++;
+			b++;
+		}
+		return true;
+	}
+}equal{};
+
+//eq：同一对象
+template<typename T>
+[[nodiscard]]constexpr auto is_eq(T&&a,T&&b)noexcept_as(&a==&b){
+	return &a==&b;
+}
+template<typename T>
+[[nodiscard]]constexpr auto is_not_eq(T&&a,T&&b)noexcept_as(!is_eq(a,b)){
+	return!is_eq(a,b);
+}
+
+//compare：三路比较
+/*!
+	若大小相同则以字典序三路比较任意支持比较的类型或其数组,并在 <=> 不可用时以 < 和 == 为后备.
+	用法:
+	判断两者是否可真的进行三路比较。
+	compare.r_able<类型1,类型2(可选，默认与1相同)>				->	bool
+	判断两者是否可进行compare操作。
+	compare.able<类型1,类型2(可选，默认与1相同)>				->	bool
+	判断将两者进行三路比较是否会抛出异常。
+	compare.nothrow<类型1,类型2（可选，默认与1相同）>			->	bool
+
+	compare(T1,T2)
+	compare(T1[N1],T2[N2])
+	compare(T1*,size1,T2*,size2)
+	compare(T1*,T2*,size)
+	返回类型语义上是三路比较的结果类型,具体类型视情况而定.
+
+	以字典序进行三路比较。
+	compare.lexicographical(T1,T2)
+	compare.lexicographical(T1[N1],T2[N2])
+	compare.lexicographical(T1*,size1,T2*,size2)
+	compare.lexicographical(T1*,T2*,size)
+	返回类型语义上是三路比较的结果类型,具体类型视情况而定.
+
+	翻转三路比较的结果类型。
+	compare.reverse(order)
+	返回对应结果类型的反义，与零相等或无法比较时则返回其本身。
+*/
+constexpr struct compare_t{
+	template<class T,class U=T>
+	static constexpr bool r_able= was_not_an_ill_form(declvalue(T)<=>declvalue(U));
+
+	template<class T,class U=T>
+	static constexpr bool able= r_able<T,U> ||
+								was_not_an_ill_form(
+														declvalue(T)==declvalue(U),
+														declvalue(T)<declvalue(U),
+														declvalue(U)<declvalue(T)
+													);
+	template<class T,class U=T>
+	static constexpr bool nothrow= was_not_an_ill_form_and_noexcept(declvalue(T)<=>declvalue(U)) ||
+								   was_not_an_ill_form_and_noexcept(
+														declvalue(T)==declvalue(U),
+														declvalue(T)<declvalue(U),
+														declvalue(U)<declvalue(T)
+													);
+
+
+	template<class T,class U>
+	[[nodiscard]]static constexpr auto base_call(T&&a,U&&b)noexcept(nothrow<T,U>){
+		//在 <=> 不可用时以 < 和 == 为后备，优于直接 <=>
+		if constexpr(r_able<T,U>)
+			return a<=>b;
+		else return a == b	? partial_ordering::equivalent	:
+					a < b	? partial_ordering::less		:
+					b < a	? partial_ordering::greater		:
+							  partial_ordering::unordered	;
+	}
+
+	template<class T,class U=T>
+	using type=decltype(base_call(declvalue(T),declvalue(U)));
+
+	template<typename T,typename U>
+	[[nodiscard]]constexpr auto operator()(T&&a,U&&b)const noexcept(nothrow<T,U>){
+		return base_call(a,b);
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr auto operator()(T*a,U*b,size_t size)const noexcept(nothrow<T,U>){
+		while(size--){
+			if(auto tmp=base_call(*(a++),*(b++)); tmp!=0)
+				return tmp;
+		}
+		return strong_ordering::equivalent;
+	}
+	template<typename T,typename U,size_t N1,size_t N2>
+	[[nodiscard]]constexpr auto operator()(T(&a)[N1],U(&b)[N2])const noexcept(nothrow<T,U>){
+		if constexpr(N1==N2)
+			return operator()(a,b,N1);
+		else{
+			template_warning("N1!=N2");
+			return N1<=>N2;
+		}
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr auto operator()(T*a,size_t size1,U*b,size_t size2)const noexcept(nothrow<T,U>){
+		type<T,U> tmp=size1<=>size2;
+		if(tmp!=0)
+			return tmp;
+		else
+			return operator()(a,b,size1);
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr auto operator()(T*a,size_t size1,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+		type<T,U> tmp=strong_ordering::equivalent;
+		while(size1--){
+			if(*b==U{0})
+				return strong_ordering::greater;
+			if(tmp==0)
+				tmp=base_call(*a,*b);
+			a++;
+			b++;
+		}
+		return *b==U{0}?tmp:strong_ordering::less;
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr auto operator()(T*a,end_by_zero_t,U*b,size_t size2)const noexcept(nothrow<T,U>){
+		type<T,U> tmp=strong_ordering::equivalent;
+		while(size2--){
+			if(*a==T{0})
+				return strong_ordering::less;
+			if(tmp==0)
+				tmp=base_call(*a,*b);
+			a++;
+			b++;
+		}
+		return *b==U{0}?tmp:strong_ordering::less;
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr auto operator()(T*a,end_by_zero_t,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+		type<T,U> tmp=strong_ordering::equivalent;
+		floop{
+			if(*a==T{0})
+				return *b==U{0}?tmp:strong_ordering::less;
+			if(tmp==0)
+				tmp=base_call(*a,*b);
+			a++;
+			b++;
+		}
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr auto operator()(T*a,size_t size1,just_an_part_t,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+		type<T,U> tmp=strong_ordering::equivalent;
+		while(size1--){
+			if(*b==U{0})
+				return strong_ordering::greater;
+			if(tmp==0)
+				tmp=base_call(*a,*b);
+			a++;
+			b++;
+		}
+		return tmp;
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr auto lexicographical(T*a,size_t size1,U*b,size_t size2)const noexcept(nothrow<T,U>){
+		if(auto tmp=operator()(a,b,min(size1,size2)); tmp!=0)
+			return tmp;
+		else
+			return size1<=>size2;
+	}
+	template<typename T,typename U,size_t N1,size_t N2>
+	[[nodiscard]]constexpr auto lexicographical(T(&a)[N1],U(&b)[N2])const noexcept(nothrow<T,U>){
+		return lexicographical(a,N1,b,N2);
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr auto lexicographical(T*a,size_t size1,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+		while(size1--){
+			if(*b==U{0})
+				return strong_ordering::greater;
+			if(auto tmp=base_call(*a,*b); tmp!=0)
+				return tmp;
+			a++;
+			b++;
+		}
+		return *b==U{0}?strong_ordering::equivalent:
+						strong_ordering::less;
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr auto lexicographical(T*a,end_by_zero_t,U*b,size_t size2)const noexcept(nothrow<T,U>){
+		while(size2--){
+			if(*a==T{0})
+				return strong_ordering::less;
+			if(auto tmp=base_call(*a,*b); tmp!=0)
+				return tmp;
+			a++;
+			b++;
+		}
+		return *b==U{0}?strong_ordering::equivalent:
+						strong_ordering::less;
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr auto lexicographical(T*a,end_by_zero_t,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+		floop{
+			if(*a==T{0})
+				return *b==U{0}?strong_ordering::equivalent:
+								strong_ordering::less;
+			if(auto tmp=base_call(*a,*b); tmp!=0)
+				return tmp;
+			a++;
+			b++;
+		}
+	}
+	template<typename T,typename U>
+	[[nodiscard]]constexpr auto lexicographical(T*a,size_t size1,just_an_part_t,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+		while(size1--){
+			if(*b==U{0})
+				return strong_ordering::greater;
+			if(auto tmp=base_call(*a,*b); tmp!=0)
+				return tmp;
+			a++;
+			b++;
+		}
+		return strong_ordering::equivalent;
+	}
+	//
+	[[nodiscard]]constexpr auto reverse(partial_ordering odr)const noexcept{
+		if(odr==partial_ordering::greater)
+			return partial_ordering::less;
+		elseif(odr==partial_ordering::less)
+			return partial_ordering::greater;
+		else
+			return odr;
+	}
+	[[nodiscard]]constexpr auto reverse(weak_ordering odr)const noexcept{
+		if(odr==weak_ordering::greater)
+			return weak_ordering::less;
+		elseif(odr==weak_ordering::less)
+			return weak_ordering::greater;
+		else
+			return odr;
+	}
+	[[nodiscard]]constexpr auto reverse(strong_ordering odr)const noexcept{
+		if(odr==strong_ordering::greater)
+			return strong_ordering::less;
+		elseif(odr==strong_ordering::less)
+			return strong_ordering::greater;
+		else
+			return odr;
+	}
+}compare{};
+
+//file_end
+
+#line 25 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/note.hpp"
+//note.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace note_n{
+	#define def_note(name)\
+	template<typename T>\
+	struct name##_t{\
+		T value;\
+		force_inline constexpr name##_t(T a):value(a){}\
+		template<class U>\
+		force_inline constexpr name##_t(name##_t<U>a):value(a.value){}\
+		force_inline constexpr operator T(){return value;}\
+		force_inline constexpr T operator()(){return value;}\
+	};\
+	template<typename T>\
+	constexpr name##_t<T>name(T v){return{v};}
+
+	def_note(from);
+	def_note(to);
+	def_note(size);
+
+	#undef def_note
+	constexpr struct fail_t{}fail{};
+}
+namespace note=note_n;
+
+//file_end
+
+#line 26 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/array_like.hpp"
+//array_like.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace array_like_n{
+	template<class T>
+	[[nodiscard]]inline constexpr size_t size_of_array_like(T&&)noexcept{return 1;}
+	template<class T,size_t N>
+	[[nodiscard]]inline constexpr size_t size_of_array_like(T(&)[N])noexcept{return N;}
+	template<class T>
+	[[nodiscard]]inline size_t size_of_array_like(::std::initializer_list<T>&a)noexcept{return a.size();}
+
+	template<class T>
+	[[nodiscard]]inline constexpr auto begin_of_array_like(T&&a)noexcept{return addressof(a);}
+	template<class T,size_t N>
+	[[nodiscard]]inline constexpr auto begin_of_array_like(T(&a)[N])noexcept{return addressof(a[0]);}
+	template<class T>
+	[[nodiscard]]inline const T* begin_of_array_like(::std::initializer_list<T>&a)noexcept{return a.begin();}
+
+	template<class T>
+	[[nodiscard]]inline auto end_of_array_like(T&&a)noexcept{return begin_of_array_like(a)+size_of_array_like(a);}
+
+	template<class T>
+	constexpr bool is_array_like=was_not_an_ill_form_with_parameter(
+									(T v){
+										begin_of_array_like(v);
+										size_of_array_like(v);
+									}
+								);
+
+	template<class T>
+	constexpr bool is_signal_value_for_array_like=type_info<remove_cvref<decltype(*begin_of_array_like(declvalue(T)))>> == type_info<T>;
+	template<class T>
+	constexpr bool is_not_signal_value_for_array_like=!is_signal_value_for_array_like<T>;
+
+	template<class T,class U>
+	constexpr bool is_array_like_for=was_not_an_ill_form_with_parameter(
+										(U v){
+											begin_of_array_like<T>(v);
+											size_of_array_like<T>(v);
+										}
+									);
+
+	template<class T>
+	struct array_like_view_t{
+		typedef T* iterator;
+		typedef const T* const_iterator;
+		typedef array_like_view_t<T>this_t;
+	private:
+		T*_begin=nullptr;
+		size_t _size=0;
+	public:
+		constexpr explicit array_like_view_t(T*a,size_t b)noexcept:_begin(a),_size(b){}
+		template<class U> requires is_array_like_for<T,U>
+		explicit constexpr_as_auto array_like_view_t(U&&a)noexcept_as(begin_of_array_like<T>(a),size_of_array_like<T>(a)):array_like_view_t(begin_of_array_like<T>(a),size_of_array_like<T>(a)){}
+		constexpr array_like_view_t(const this_t&)noexcept=default;
+
+		void swap_with(this_t&b)noexcept_as(swap(_begin,b._begin),swap(_size,b._size)){
+			swap(_begin,b._begin);
+			swap(_size,b._size);
+		}
+
+		[[nodiscard]]constexpr const_iterator c_str()const noexcept{return _begin;}
+		[[nodiscard]]constexpr size_t size()const noexcept{return _size;}
+
+		[[nodiscard]]constexpr iterator begin()noexcept requires(type_info<iterator>!=type_info<const_iterator>){return _begin;}
+		[[nodiscard]]constexpr iterator end()noexcept requires(type_info<iterator>!=type_info<const_iterator>){return begin()+size();}
+		[[nodiscard]]constexpr const_iterator begin()const noexcept{return _begin;}
+		[[nodiscard]]constexpr const_iterator end()const noexcept{return begin()+size();}
+
+		[[nodiscard]]constexpr const_iterator cbegin()const noexcept{return remove_const(this)->begin();}
+		[[nodiscard]]constexpr const_iterator cend()const noexcept{return remove_const(this)->end();}
+
+		[[nodiscard]]constexpr bool empty()const noexcept{return size();}
+
+		[[nodiscard]]constexpr T&operator[](size_t pos)noexcept{return begin()[pos];}
+		[[nodiscard]]constexpr const T&operator[](size_t pos)const noexcept{return remove_const(*this)[pos];}
+
+		[[nodiscard]]constexpr auto operator<=>(this_t a)noexcept(compare.nothrow<T>){
+			return compare(_begin,_size,a._begin,a._size);
+		}
+		[[nodiscard]]constexpr auto operator==(this_t a)noexcept(equal.nothrow<T>){
+			return equal(_begin,_size,a._begin,a._size);
+		}
+	};
+	template<typename T>
+	struct array_end_by_zero_t:array_like_view_t<T>{
+		typedef array_like_view_t<T>base_t;
+		using base_t::base_t;
+
+		[[nodiscard]]constexpr static size_t get_length_of(T*ptr){
+			if(*ptr)return get_length_of(ptr+1)+1;
+			else return 0;
+		}
+
+		constexpr array_end_by_zero_t(T*ptr):base_t(ptr,get_length_of(ptr)){}
+	};
+
+	template<class T>
+	[[nodiscard]]inline constexpr T* begin_of_array_like(array_like_view_t<T>&a)noexcept requires(type_info<T>!=type_info<const T>){return a.begin();}
+	template<class T>
+	[[nodiscard]]inline constexpr auto begin_of_array_like(const array_like_view_t<T>&a)noexcept{return a.begin();}
+	template<class T>
+	[[nodiscard]]inline constexpr T* begin_of_array_like(array_like_view_t<remove_cv<T>>&a)noexcept{return a.begin();}
+	template<class T>
+	[[nodiscard]]inline constexpr size_t size_of_array_like(const array_like_view_t<T>&a)noexcept{return a.size();}
+}
+using array_like_n::size_of_array_like;
+using array_like_n::begin_of_array_like;
+using array_like_n::end_of_array_like;
+using array_like_n::is_array_like;
+using array_like_n::is_signal_value_for_array_like;
+using array_like_n::is_not_signal_value_for_array_like;
+using array_like_n::is_array_like_for;
+using array_like_n::array_like_view_t;
+using array_like_n::array_end_by_zero_t;
+
+//file_end
+
+#line 27 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/data.hpp"
+//data.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+/*!
+	每个T的可能性大小
+*/
+template<class T> requires ::std::is_integral_v<T>
+constexpr size_t number_of_possible_values_per=max(type_info<::std::make_unsigned_t<T>>)+size_t{1};
+/*!
+	每个T有多少位
+*/
+template<class T>
+constexpr size_t bitnumof=sizeof(T)*CHAR_BIT;
+
+/*!
+	功能: byte* 类型数据转换为 T&，不进行任何检查
+	用法: data_cast<T>(byte*) -> T&
+*/
+template<class T>
+[[nodiscard]]constexpr T&data_cast(byte*p){return*::std::launder(reinterpret_cast<T*>(p));}
+/*!
+	功能: T* 指针转换为 byte*，不进行任何检查
+	用法: cast_to_data(T*) -> byte*
+*/
+template<class T>
+[[nodiscard]]constexpr byte*cast_to_data(T*p){return ::std::launder(reinterpret_cast<byte*>(p));}
+/*!
+	功能: const T* 指针转换为 const byte*，不进行任何检查
+	用法: cast_to_data(const T*) -> const byte*
+*/
+template<class T>
+[[nodiscard]]constexpr const byte*cast_to_data(const T*p){return ::std::launder(reinterpret_cast<const byte*>(p));}
+
+/*!
+	功能: data_block类模板,接受多个类型参数,实例化为内含最大体积最大对齐要求的byte数组的结构体
+			data_block -> byte*
+	用法: data_block<T1,T2,...>value;
+*/
+template<class...Ts>
+struct data_block:non_copyable,non_moveable{
+	push_and_disable_msvc_warning(4324);
+	alignas(max({alignof(Ts)...}))
+	byte _data[max({sizeof(Ts)...})];
+	constexpr operator byte*(){return _data;}
+	pop_msvc_warning();
+};
+
+/*!
+	功能: data_view类模板,接受一个类型参数，提供对byte数组的访问和遍历
+	用法: data_view<T>value{&value};
+*/
+template<class T>
+struct data_view:array_like_view_t<byte>{
+	using array_like_view_t<byte>::array_like_view_t;
+	constexpr data_view(T*p):array_like_view_t<byte>{cast_to_data(p),sizeof(T)}{}
+};
+template<class T>
+struct data_view<const T>:array_like_view_t<const byte>{
+	using array_like_view_t<const byte>::array_like_view_t;
+	constexpr data_view(const T*p):array_like_view_t<const byte>{cast_to_data(p),sizeof(T)}{}
+};
+
+/*!
+	功能: 比较两个类实例在内存中的内容是否相同
+	用法: full_equal_in_byte(const T&a,const T&b) -> bool
+*/
+template<class T>
+[[nodiscard]]constexpr bool full_equal_in_byte(const T&a,const T&b){
+	return equal(cast_to_data(&a),cast_to_data(&b),sizeof(T));
+}
+
+//file_end
+
+#line 28 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/pointer.hpp"
+//pointer.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+
+enable_adl(the_pointer_to_bool);
+/// 指针转bool的重载接口，允许类对此进行自定义
+/// elc内部的指针转bool应当视情况使用默认配置或此重载接口
+template<typename T>
+[[nodiscard]]constexpr auto pointer_to_bool(T*a)noexcept{
+	if constexpr(was_not_an_ill_form(the_pointer_to_bool(a)))
+		return the_pointer_to_bool(a);
+	else
+		return null_ptr!=a;
+}
+
+enable_adl(the_pointer_equal);
+/// 指针比较的重载接口，允许类对此进行自定义
+/// elc内部的指针比较应当视情况使用默认配置或此重载接口
+template<typename T>
+[[nodiscard]]constexpr auto pointer_equal(T*a,T*b)noexcept{
+	if constexpr(was_not_an_ill_form(the_pointer_equal(a,b)))
+		return the_pointer_equal(a,b);
+	else
+		return a==b;
+}
+
+/// 判断类型是否为指针
+template<class T>
+inline constexpr bool is_pointer= ::std::is_pointer_v<T>;
+/// 未知类型指针
+typedef void*pointer;
+/// 未知类型指针，不可写
+typedef const void*const_pointer;
+
+/// 获取两个指针的偏移
+[[nodiscard]]constexpr ptrdiff_t get_off_set(note::from_t<const_pointer>a,note::to_t<const_pointer>b)noexcept{
+	return cast_to_data(b())-cast_to_data(a());//b-a == c
+}
+/// 应用偏移
+template<class T>
+[[nodiscard]]constexpr auto apply_off_set(T*a,ptrdiff_t c)noexcept{
+	return cast_to_data(a)+c;//a+c == b
+}
+/// 反向应用偏移
+template<class T>
+[[nodiscard]]constexpr auto unapply_off_set(T*b,ptrdiff_t c)noexcept{
+	return cast_to_data(b)-c;//b-c == a
+}
+
+//file_end
+
+#line 29 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/hash.hpp"
+//hash.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace hash_n{
+	typedef size_t hash_base_t;
+	struct hash_value_t{
+		hash_base_t _value;
+		constexpr hash_base_t operator%(auto&&a)const noexcept{
+			return _value%a;
+		}
+		constexpr bool operator==(const hash_value_t&a)const noexcept{
+			return _value==a._value;
+		}
+	};
+	struct unstable_hash_value_t:hash_value_t{
+		unstable_hash_value_t(const hash_value_t&a)noexcept:hash_value_t(a){}
+	};
+
+	template<class T>
+	inline constexpr bool is_unstable_hash = type_info<T const>.can_convert_to<unstable_hash_value_t>;
+	template<class T>
+	inline constexpr bool is_fundamental_hash = ::std::is_fundamental_v<T>;
+
+	enable_adl(the_pointer_hash);
+	/**
+	 * Computes the hash value of a pointer.
+	 *
+	 * @param a The pointer to hash.
+	 *
+	 * @returns The hash value of the pointer.
+	 */
+	template<class T>
+	[[nodiscard]]inline constexpr hash_value_t pointer_hash(T*a)noexcept{
+		if constexpr(was_not_an_ill_form(the_pointer_hash(a)))
+			return the_pointer_hash(a);
+		else
+			return{hash_base_t(a)};
+	}
+
+	inline struct hash_t{
+	private:
+		template<class T>
+		[[nodiscard]]static constexpr inline bool nothrow_helper()noexcept{
+			if constexpr(is_pointer<T>)
+				return noexcept(pointer_hash(declvalue(const T&)));
+			elseif constexpr(is_fundamental_hash<T>)
+				return noexcept(hash_value_t{hash_base_t(declvalue(const T&))});
+			elseif constexpr(is_unstable_hash<T>)
+				return noexcept(unstable_hash_value_t(declvalue(const T&)));
+			elseif constexpr(was_not_an_ill_form(declvalue(const T&).hash()))
+				return noexcept(declvalue(const T&).hash());
+			elseif constexpr(was_not_an_ill_form(hash_value_t(declvalue(const T&))))
+				return noexcept(hash_value_t(declvalue(const T&)));
+			elseif constexpr(type_info<remove_cv<T>> == type_info<base_type_info_t>)
+				return true;
+			else
+				return false;
+		}
+	public:
+		template<class T>
+		static constexpr bool nothrow=nothrow_helper<T>();
+	private:
+		template<class T>
+		[[nodiscard]]static constexpr inline bool able_helper()noexcept{
+			if constexpr(is_pointer<T>)
+				return true;
+			elseif constexpr(is_fundamental_hash<T>)
+				return true;
+			elseif constexpr(is_unstable_hash<T>)
+				return true;
+			elseif constexpr(was_not_an_ill_form(declvalue(const T&).hash()))
+				return true;
+			elseif constexpr(was_not_an_ill_form(hash_value_t(declvalue(const T&))))
+				return true;
+			elseif constexpr(type_info<remove_cv<T>> == type_info<base_type_info_t>)
+				return true;
+			else
+				return false;
+		}
+	public:
+		template<class T>
+		static constexpr bool able=able_helper<T>();
+
+		#define hash operator()
+
+		/**
+		 * Computes the hash value of `nothing`.
+		 *
+		 * @returns The hash value of `nothing`.
+		 */
+		[[nodiscard]]inline constexpr hash_value_t hash(nothing)const noexcept{
+			return{hash_base_t(nothing)};
+		}
+		/**
+		 * Computes the hash value of a base_type_info_t object.
+		 *
+		 * @param a The base_type_info_t object to hash.
+		 *
+		 * @returns The hash value of the object.
+		 */
+		[[nodiscard]]inline hash_value_t hash(const base_type_info_t&a)const noexcept{
+			return{a.get_hash()};
+		}
+		/**
+		 * Computes the hash value of a value.
+		 *
+		 * @param a The value to hash.
+		 *
+		 * @returns The hash value of the value.
+		 */
+		template<class T> requires able<T>
+		[[nodiscard]]constexpr_as_auto inline auto hash(const T&a)const noexcept(nothrow<T>){
+			#undef hash
+			if constexpr(is_pointer<T>)
+				return pointer_hash(a);
+			elseif constexpr(is_fundamental_hash<T>)
+				return hash_value_t{hash_base_t(a)};
+			elseif constexpr(is_unstable_hash<T>)
+				return unstable_hash_value_t(a);
+			elseif constexpr(was_not_an_ill_form(declvalue(const T&).hash()))
+				return a.hash();
+			elseif constexpr(was_not_an_ill_form(hash_value_t(declvalue(const T&))))
+				return hash_value_t(a);
+			else{
+				template_error("Please overload the function hash in the namespace where this type is defined.");
+				return hash_value_t{};
+			}
+			#define hash operator()
+		}
+		/**
+		 * Computes the hash of a value in the base type.
+		 *
+		 * @param a The value to hash.
+		 *
+		 * @returns The hash of the value in the base type.
+		 */
+		template<class T>
+		[[nodiscard]]constexpr_as_auto inline hash_base_t get_hash_in_base_type(const T&a)const noexcept(nothrow<T>){
+			return hash(a)._value;
+		}
+		/**
+		 * 从某个起始点算起的hash
+		 *
+		 * @param before The hashed value before this hash.
+		 * @param before_size The size of the hashed value before this hash.
+		 * @param a The sequence of values.
+		 * @param size The number of values in the sequence.
+		 *
+		 * @returns The hash value of the sequence.
+		 */
+		template<class T>
+		[[nodiscard]]force_inline constexpr hash_value_t with_calculated_before(hash_value_t before,size_t before_size,const T*a,size_t size)const noexcept{
+			hash_base_t aret=before._value;
+			rot_iterator<decltype(aret)>rotl_offset = before_size+size;
+			while(size--){
+				aret ^= rotl(get_hash_in_base_type(a[size]),rotl_offset);
+				rotl_offset--;
+			}
+			return{aret};
+		}
+		/**
+		 * 计算此hash重复N次的数组的hash结果
+		 *
+		 * @param value The hash value to repeat.
+		 * @param size The number of times to repeat the hash value.
+		 *
+		 * @returns The repeated hash value.
+		 */
+		[[nodiscard]]force_inline constexpr hash_value_t repeat_times(hash_value_t value,size_t size)const noexcept{
+			hash_base_t aret=0;
+			{
+				//优化.
+				//关於此,咱确信咱发现一种美妙的证法来保证这个优化不影响结果,但可惜凋可怜的脑容量不足以让他看懂.
+				constexpr size_t bit_range_max=bitnum_of(hash_base_t);
+				constexpr hash_base_t void_hash{nothing};
+				suppress_msvc_warning(26475)//强制转换警告diss.
+				constexpr hash_base_t npos_hash{hash_base_t(-1)};
+				constexpr size_t bitnumof_void=bit_range_max*BIT_POSSIBILITY;
+
+				size=size%bitnumof_void;
+				if(value._value==0 || size==0)
+					return {void_hash};
+				if(size >= bit_range_max){
+					const bool is_npos = ::std::popcount(value._value)%BIT_POSSIBILITY;
+					aret = is_npos?npos_hash:void_hash;
+					size-=bit_range_max;
+				}
+				if(!size)
+					return {aret};
+			}
+			rot_iterator<decltype(aret)>rotl_offset = size;
+			while(size--){
+				aret ^= rotl(value._value,rotl_offset);
+				rotl_offset--;
+			}
+			return{aret};
+		}
+		/**
+		 * 计算此hash重复N次的数组的hash结果
+		 *
+		 * @param value The hash value to repeat.
+		 * @param size The number of times to repeat the hash value.
+		 *
+		 * @returns The repeated hash value.
+		 */
+		template<class T>
+		[[nodiscard]]force_inline constexpr hash_value_t repeat_times(T&&value,size_t size)const noexcept{
+			return repeat_times(hash(value),size);
+		}
+		/**
+		 * Computes the hash value of an array of elements.
+		 *
+		 * @param a The array of elements.
+		 * @param size The size of the array.
+		 *
+		 * @returns The hash value of the array.
+		 */
+		template<class T>
+		[[nodiscard]]constexpr inline hash_value_t hash(const T*a,size_t size)const noexcept(nothrow<const T>){
+			return with_calculated_before(hash(nothing),0,a,size);
+		}
+		/**
+		 * 合并两个数据段的hash结果，好似计算这两个数据段合并后的hash结果一般
+		 *
+		 * @param before The first hash value.
+		 * @param before_size The size of the first hash value.
+		 * @param after The second hash value.
+		 * @param after_size The size of the second hash value.
+		 *
+		 * @returns The merged hash value.
+		 */
+		[[nodiscard]]force_inline hash_value_t merge_array_hash_results(
+			hash_value_t before,size_t before_size,hash_value_t after,[[maybe_unused]]size_t after_size
+		)const noexcept{
+			return{before._value^(rotl(after._value,before_size))};
+		}
+		/**
+		 * Computes the hash value of an array_like_view_t<T> object.
+		 *
+		 * @param a The array_like_view_t<T> object.
+		 *
+		 * @returns The hash value of the array_like_view_t<T> object.
+		 */
+		template<class T> requires is_not_signal_value_for_array_like<T>
+		[[nodiscard]]constexpr inline hash_value_t hash(const array_like_view_t<T>a)const noexcept(nothrow<T>){
+			return hash(a.begin(),a.size());
+		}
+		/**
+		 * Calculates a hash value for an array_like_view_t<T> object with calculated before hash value.
+		 *
+		 * @param before The hash value to use as the basis for the calculation.
+		 * @param before_size The size of the hash value to use as the basis for the calculation.
+		 * @param a The array_like_view_t<T> object to calculate the hash value for.
+		 *
+		 * @returns The hash value for the array_like_view_t<T> object.
+		 */
+		template<class T> requires is_not_signal_value_for_array_like<T>
+		[[nodiscard]]constexpr inline hash_value_t with_calculated_before(hash_value_t before,size_t before_size,const array_like_view_t<T>a)const noexcept{
+			return with_calculated_before(before,before_size,a.begin(),a.size());
+		}
+
+		#undef hash
+
+	}hash{};
+}
+typedef hash_n::hash_value_t hash_t;
+typedef hash_n::unstable_hash_value_t unstable_hash_t;
+using hash_n::is_unstable_hash;
+using hash_n::is_fundamental_hash;
+using hash_n::hash;
+
+//file_end
+
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/range.hpp"
+//range.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace range_n{
+	//  range_t
+	/// 用以表示某类型的数值范围，仅可表示闭区间
+	template<typename T>
+	struct range_t{
+		T _begin,_end;
+		//_begin<=_end
+		constexpr range_t(const T begin,const T end):_begin(begin),_end(end){}
+		constexpr range_t(note::from_t<const T>begin,note::to_t<const T>end):_begin(begin),_end(end+1){}
+		constexpr range_t(note::to_t<const T>end,note::from_t<const T>begin):_begin(begin),_end(end+1){}
+		constexpr range_t(const T begin,note::size_t<const T>size):_begin(begin),_end(begin+size()){}
+		constexpr range_t(const T begin,note::size_t<size_t>size):_begin(begin),_end(begin+size()){}
+
+		constexpr size_t size()noexcept{return _end-_begin;}
+		constexpr auto end()noexcept{return _end;}
+		constexpr auto begin()noexcept{return _begin;}
+		constexpr auto end()const noexcept{return _end;}
+		constexpr auto begin()const noexcept{return _begin;}
+
+		template <class U> requires(type_info<T>.can_convert_to<U>)
+		constexpr operator range_t<U>()const noexcept(type_info<T>.can_nothrow_convert_to<U>){
+			return {_begin,_end};
+		}
+	};
+
+	template<class T>
+	[[nodiscard]]inline auto size_of_array_like(range_t<T*>&a)noexcept{return a.size();}
+	template<class T>
+	[[nodiscard]]inline auto size_of_array_like(range_t<const T*>&a)noexcept{return a.size();}
+
+	template<class T>
+	[[nodiscard]]inline auto begin_of_array_like(range_t<T*>&a)noexcept{return a.begin();}
+	template<class T>
+	[[nodiscard]]inline auto begin_of_array_like(range_t<const T*>&a)noexcept{return a.begin();}
+
+	//  in_range
+	/// 判断一个值是否在某个范围内
+	template<typename T>
+	[[nodiscard]]constexpr bool in_range(T pattern,const range_t<T>range)noexcept_as(bool(declvalue(T)>=declvalue(const T) && declvalue(T)<=declvalue(const T))){//算术类型或指针
+		return bool(pattern>=range.begin() && pattern<range.end());
+	}
+	//  in_range
+	/// 判断一个指针是否在某个byte指针范围内
+	template<typename T>
+	[[nodiscard]]constexpr bool in_range(T*pattern,const range_t<byte*>range)noexcept{
+		return cast_to_data(pattern)>=range.begin() && cast_to_data(pattern)<range.end();
+	}
+	//  match_pattern
+	/// BMH2改算法表头，用以实施头起始的快速子串匹配算法
+	/// 大部分情况下应当编译时预构建或对运行时生成的实例进行缓存
+	template<typename T>
+	struct match_pattern{
+		array_like_view_t<T>_pattern;
+		typedef unsigned char index_type;
+
+		size_t skip_table[number_of_possible_values_per<index_type>]{};
+		size_t radical_skip_table[number_of_possible_values_per<index_type>]{};
+		index_type pre_index_table[number_of_possible_values_per<index_type>]{};
+
+		static constexpr index_type get_index_of(T&ch)noexcept{
+			return index_type(hash(ch) % number_of_possible_values_per<index_type>);
+		}
+		constexpr void build_table(array_like_view_t<T>pattern)noexcept{
+			const size_t m=pattern.size();
+			if(!m)
+				return;
+			for(size_t i=0;i<number_of_possible_values_per<index_type>;i++){
+				skip_table[i]=radical_skip_table[i]=m;
+			}
+			skip_table[get_index_of(pattern[0])]=radical_skip_table[get_index_of(pattern[0])]=m-1;//单独处理pattern[0]的情况
+			for(size_t i=1;i<m-1;i++){
+				index_type index=get_index_of(pattern[i]);//radical_skip_table[index]表示pattern中倒数第二次出现的index到pattern末尾的距离
+				radical_skip_table[index]=skip_table[index];//当index在pattern中出现0次或1次时，radical_skip_table[index]等于模式串长度m
+				skip_table[index]=m-i-1;//skip数组的定义与BMH算法相同
+				pre_index_table[index]=get_index_of(pattern[i-1]);
+			}
+		}
+		constexpr match_pattern(array_like_view_t<T>pattern)noexcept:_pattern(pattern){
+			build_table(_pattern);
+		}
+		[[nodiscard]]constexpr T* match(array_like_view_t<T>range)const noexcept{
+			size_t m = _pattern.size();
+			if(!m)
+				return range.begin();
+			size_t n= range.size();
+			size_t i= m-1;
+			while(i<n){
+				size_t k=i;
+				ptrdiff_t j=m-1;//k记录text中每次从右至左开始比较的起始位置
+				while((j>=0)&&(_pattern[j]==range[i])){
+					i--;j--;
+				}
+				if(j==-1)
+					return addressof(range[i+1]);//在range[i+1]处匹配成功
+				index_type index_k=get_index_of(range[k]);
+				if(get_index_of(range[k-1])!=pre_index_table[index_k])
+					i=k+radical_skip_table[index_k];//采用激进策略移动文本指针
+				else
+					i=k+skip_table[index_k];
+			}
+			return nullptr;//匹配失败
+		}
+	};
+	//  reverse_match_pattern
+	/// 反向BMH2改算法表头，用以实施尾起始的快速子串匹配算法
+	/// 大部分情况下应当编译时预构建或对运行时生成的实例进行缓存
+	template<typename T>
+	struct reverse_match_pattern{
+		array_like_view_t<T>_pattern;
+		typedef unsigned char index_type;
+
+		size_t skip_table[number_of_possible_values_per<index_type>]{};
+		size_t radical_skip_table[number_of_possible_values_per<index_type>]{};
+		index_type pre_index_table[number_of_possible_values_per<index_type>]{};
+
+		static constexpr index_type get_index_of(T&ch)noexcept{
+			return index_type(hash(ch) % number_of_possible_values_per<index_type>);
+		}
+		constexpr void build_table(array_like_view_t<T>pattern)noexcept{
+			const size_t m=pattern.size();
+			if(!m)
+				return;
+			for(size_t i=0;i<number_of_possible_values_per<index_type>;i++){
+				skip_table[i]=radical_skip_table[i]=m;
+			}
+			skip_table[get_index_of(pattern[m-1])]=radical_skip_table[get_index_of(pattern[m-1])]=m-1;//单独处理pattern[m-1]的情况
+			for(ptrdiff_t i=m-2;i>=0;i--){
+				index_type index=get_index_of(pattern[i]);//radical_skip_table[index]表示pattern中倒数第二次出现的index到pattern末尾的距离
+				radical_skip_table[index]=skip_table[index];//当index在pattern中出现0次或1次时，radical_skip_table[index]等于模式串长度m
+				skip_table[index]=i;//skip数组的定义与BMH算法相同
+				pre_index_table[index]=get_index_of(pattern[i+1]);
+			}
+		}
+		constexpr reverse_match_pattern(array_like_view_t<T>pattern)noexcept:_pattern(pattern){
+			build_table(_pattern);
+		}
+		[[nodiscard]]constexpr T* match(array_like_view_t<T>range)const noexcept{
+			size_t m=_pattern.size();
+			if(!m)
+				return range.begin();
+			size_t n= range.size();
+			ptrdiff_t i= n-m;
+			while(i>=0){
+				size_t k=i;
+				size_t j=0;//k记录text中每次从右至左开始比较的起始位置
+				while((j<=m-1)&&(_pattern[j]==range[i])){
+					i++;j++;
+				}
+				if(j==m)
+					return addressof(range[k]);//在range[k]处匹配成功
+				index_type index_k=get_index_of(range[k]);
+				if(get_index_of(range[k+1])!=pre_index_table[index_k])
+					i=k-radical_skip_table[index_k];//采用激进策略移动文本指针
+				else
+					i=k-skip_table[index_k];
+			}
+			return nullptr;//匹配失败
+		}
+	};
+	suppress_msvc_warning(26475)//强制转换警告diss
+	//  npos
+	/// 用以指定不存在的位置
+	static constexpr size_t npos = size_t(-1);
+	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* in_range(T&pattern,array_like_view_t<T>range){
+		for(auto&i : range){
+			if(i==pattern)
+				return addressof(i);
+		}
+		return nullptr;
+	}
+	/// 若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr size_t in_range_size_t(T&pattern,array_like_view_t<T>range){
+		auto result = in_range(pattern,range);
+		if(result)
+			return result - range.begin();
+		else
+			return npos;
+	}
+	//  数据串匹配by steve02081504.
+	/// 若成功找到匹配的数据串，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* in_range(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		if(range.size() >= 512 && pattern.size() >= 11){
+			match_pattern tmp=pattern;
+			return tmp.match(range);
+		}
+
+		size_t off_set=0;
+		size_t matching_off_set=1;
+
+		floop{
+			matching_off_set=1;
+			while(pattern.end()[0-matching_off_set]==range.begin()[off_set+pattern.size()-matching_off_set])
+				if(matching_off_set==pattern.size())
+					return addressof(range.begin()[off_set]);
+				else
+					matching_off_set++;
+			if(off_set+pattern.size() >= range.size())
+				return nullptr;
+			auto tmp = in_range(range.begin()[off_set+pattern.size()], pattern);
+			if(!tmp)
+				tmp=pattern.begin();
+			off_set+=pattern.end()-tmp;
+		}
+	}
+	/// 若成功找到匹配的数据串，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr size_t in_range_size_t(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		auto result = in_range(pattern,range);
+		if(result)
+			return result - range.begin();
+		else
+			return npos;
+	}
+	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* in_range_but_reverse(T&pattern,array_like_view_t<T>range){
+		for(auto&i : range|::std::views::reverse){
+			if(i==pattern)
+				return addressof(i);
+		}
+		return nullptr;
+	}
+	/// 若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr size_t in_range_but_reverse_size_t(T&pattern,array_like_view_t<T>range){
+		auto result = in_range_but_reverse(pattern,range);
+		if(result)
+			return result - range.begin();
+		else
+			return npos;
+	}
+	//  反向数据串匹配by steve02081504.
+	/// 若成功找到匹配的数据串，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* in_range_but_reverse(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		if(range.size() >= 512 && pattern.size() >= 11){
+			reverse_match_pattern tmp = pattern;
+			return tmp.match(range);
+		}
+
+		size_t off_set=0;
+		size_t matching_off_set=0;
+
+		floop{
+			matching_off_set=0;
+			while(pattern.begin()[matching_off_set]==range.end()[0-(off_set+pattern.size()-matching_off_set)])
+				if(matching_off_set==pattern.size()-1)
+					return addressof(range.end()[0-(off_set+pattern.size())]);
+				else
+					matching_off_set++;
+			if(off_set+pattern.size() >= range.size())
+				return nullptr;
+			auto tmp = in_range_but_reverse(range.end()[0-(off_set+pattern.size()+1)], pattern);
+			if(!tmp)
+				tmp=pattern.end()-1;
+			off_set+=tmp-pattern.begin();
+			off_set+=1;
+		}
+	}
+	/// 若成功找到匹配的数据串，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr size_t in_range_but_reverse_size_t(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		auto result = in_range_but_reverse(pattern,range);
+		if(result)
+			return result - range.begin();
+		else
+			return npos;
+	}
+
+	//  bitmark_for_finds
+	/// bitmark提供了一种快速进行四种泛搜索的实现，前提是构建中的pattern中的每一项的usigned表示都在一个字节（表长）内。
+	/// 若bitmark构建失败，程序应当使用正在进行的泛搜索的朴素实现版本。
+	template<typename T>
+	struct bitmark_for_finds {
+		typedef unsigned char index_type;
+		bool _bitmark[number_of_possible_values_per<index_type>]{};
+
+		bitmark_for_finds()noexcept=default;
+		[[nodiscard]]constexpr bool mark(array_like_view_t<T>pattern)noexcept{
+			if constexpr(number_of_possible_values_per<T> > number_of_possible_values_per<index_type>){
+				for(auto& i: pattern){
+					if(::std::make_unsigned_t<T>(i) >= number_of_possible_values_per<index_type>)
+						return false;
+					_bitmark[index_type(i)] = true;
+				}
+			}
+			else{
+				for(auto& i: pattern)
+					_bitmark[index_type(i)] = true;
+			}
+			return true;
+		}
+		[[nodiscard]]constexpr bool operator[](T&index)const noexcept{
+			if constexpr(number_of_possible_values_per<T> > number_of_possible_values_per<index_type>)
+				if(::std::make_unsigned_t<T>(index) >= number_of_possible_values_per<index_type>)
+					return false;
+			return _bitmark[index_type(index)];
+		}
+	};
+	/// find_first_of的bitmark实现
+	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* find_first_of_bitmark(const bitmark_for_finds<T>&mark,array_like_view_t<T>range){
+		for(auto&i : range){
+			if(mark[i])
+				return addressof(i);
+		}
+		return nullptr;
+	}
+	/// find_first_of的朴素实现
+	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* base_find_first_of(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		for(auto&i : range){
+			if(in_range(i,pattern))
+				return addressof(i);
+		}
+		return nullptr;
+	}
+	//  find_first_of
+	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* find_first_of(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		if constexpr(::std::is_integral_v<T>){
+			bitmark_for_finds<T> mark;
+			if(mark.mark(pattern))
+				return find_first_of_bitmark(mark,range);
+		}
+		return base_find_first_of(pattern,range);
+	}
+	/// 若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr size_t find_first_of_size_t(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		auto result = find_first_of(pattern,range);
+		if(result)
+			return result - range.begin();
+		else
+			return npos;
+	}
+	/// find_last_of的bitmark实现
+	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* find_last_of_bitmark(const bitmark_for_finds<T>&mark,array_like_view_t<T>range){
+		for(auto& i: range|::std::views::reverse){
+			if(mark[i])
+				return addressof(i);
+		}
+	}
+	/// find_last_of的朴素实现
+	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* base_find_last_of(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		for(auto&i : range|::std::views::reverse){
+			if(in_range(i,pattern))
+				return addressof(i);
+		}
+		return nullptr;
+	}
+	//  find_last_of
+	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* find_last_of(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		if constexpr(::std::is_integral_v<T>){
+			bitmark_for_finds<T> mark;
+			if(mark.mark(pattern))
+				return find_last_of_bitmark(mark,range);
+		}
+		return base_find_last_of(pattern,range);
+	}
+	/// 若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr size_t find_last_of_size_t(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		auto result = find_last_of(pattern,range);
+		if(result)
+			return result - range.begin();
+		else
+			return npos;
+	}
+	/// find_first_not_of的bitmark实现
+	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* find_first_not_of_bitmark(const bitmark_for_finds<T>&mark,array_like_view_t<T>range){
+		for(auto& i: range){
+			if(!mark[i])
+				return addressof(i);
+		}
+		return nullptr;
+	}
+	/// find_first_not_of的朴素实现
+	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* base_find_first_not_of(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		for(auto&i : range){
+			if(!in_range(i,pattern))
+				return addressof(i);
+		}
+		return nullptr;
+	}
+	//  find_first_not_of
+	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* find_first_not_of(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		if constexpr(::std::is_integral_v<T>){
+			bitmark_for_finds<T> mark;
+			if(mark.mark(pattern))
+				return find_first_not_of_bitmark(mark,range);
+		}
+		return base_find_first_not_of(pattern,range);
+	}
+	/// 若成功找到不匹配的数据项，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr size_t find_first_not_of_size_t(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		auto result = find_first_not_of(pattern,range);
+		if(result)
+			return result - range.begin();
+		else
+			return npos;
+	}
+	/// find_last_not_of的bitmark实现
+	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* find_last_not_of_bitmark(const bitmark_for_finds<T>&mark,array_like_view_t<T>range){
+		for(auto& i: range|::std::views::reverse){
+			if(!mark[i])
+				return addressof(i);
+		}
+		return nullptr;
+	}
+	/// find_last_not_of的朴素实现
+	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* base_find_last_not_of(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		for(auto&i : range|::std::views::reverse){
+			if(!in_range(i,pattern))
+				return addressof(i);
+		}
+		return nullptr;
+	}
+	//  find_last_not_of
+	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* find_last_not_of(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		if constexpr(::std::is_integral_v<T>){
+			bitmark_for_finds<T> mark;
+			if(mark.mark(pattern))
+				return find_last_not_of_bitmark(mark,range);
+		}
+		return base_find_last_not_of(pattern,range);
+	}
+	/// 若成功找到不匹配的数据项，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr size_t find_last_not_of_size_t(array_like_view_t<T>pattern,array_like_view_t<T>range){
+		auto result = find_last_not_of(pattern,range);
+		if(result)
+			return result - range.begin();
+		else
+			return npos;
+	}
+}
+using range_n::range_t;
+using range_n::in_range;
+using range_n::in_range_size_t;
+using range_n::in_range_but_reverse;
+using range_n::in_range_but_reverse_size_t;
+using range_n::find_first_of;
+using range_n::find_last_of;
+using range_n::find_first_not_of;
+using range_n::find_last_not_of;
+
+//file_end
+
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/string_view.hpp"
+//string_view.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//仅是声明
+namespace constexpr_str_n {
+	template<typename char_T>
+	struct constexpr_str_t;
+}
+using constexpr_str_n::constexpr_str_t;
+//重载range操作
+//仅是声明以及size_t包装
+namespace range_n {
+	template<typename T>
+	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<T>&pattern,array_like_view_t<T>range);
+	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr size_t in_range_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T>range){
+		auto result = in_range(pattern, range);
+		if(result)
+			return result - range.data();
+		else
+			return npos;
+	}
+	template<typename T>
+	[[nodiscard]]constexpr T* in_range_but_reverse(const constexpr_str_t<T>&pattern,array_like_view_t<T>range);
+	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr size_t in_range_but_reverse_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T>range){
+		auto result = in_range_but_reverse(pattern, range);
+		if(result)
+			return result - range.data();
+		else
+			return npos;
+	}
+	template<typename T>
+	[[nodiscard]]constexpr T* find_first_of(const constexpr_str_t<T>&pattern,array_like_view_t<T>range);
+	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr size_t find_first_of_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T>range){
+		auto result = find_first_of(pattern, range);
+		if(result)
+			return result - range.data();
+		else
+			return npos;
+	}
+	template<typename T>
+	[[nodiscard]]constexpr T* find_last_of(const constexpr_str_t<T>&pattern,array_like_view_t<T>range);
+	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr size_t find_last_of_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T>range){
+		auto result = find_last_of(pattern, range);
+		if(result)
+			return result - range.data();
+		else
+			return npos;
+	}
+	template<typename T>
+	[[nodiscard]]constexpr T* find_first_not_of(const constexpr_str_t<T>&pattern,array_like_view_t<T>range);
+	//若成功找到不匹配的数据项，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr size_t find_first_not_of_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T>range){
+		auto result = find_first_not_of(pattern, range);
+		if(result)
+			return result - range.data();
+		else
+			return npos;
+	}
+	template<typename T>
+	[[nodiscard]]constexpr T* find_last_not_of(const constexpr_str_t<T>&pattern,array_like_view_t<T>range);
+	//若成功找到不匹配的数据项，返回其距离开头的步数，若未找到，返回npos
+	template<typename T>
+	[[nodiscard]]constexpr T* find_last_not_of_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T>range){
+		auto result = find_last_not_of(pattern,range);
+		if(result)
+			return result - range.begin();
+		else
+			return npos;
+	}
+}
+//开始定义
+namespace string_view_n{
+	/// array_like_view_t的特化类型，表明这是字符串
+	template<typename char_T>
+	struct string_view_t:array_like_view_t<const char_T>{
+		static constexpr size_t npos=range_n::npos;
+		typedef array_like_view_t<const char_T> base_t;
+		//构造函数
+		using base_t::base_t;
+		constexpr string_view_t(const char_T*str)noexcept:string_view_t(array_end_by_zero_t<const char_T>(str)){}
+		//成员函数
+		[[nodiscard]]constexpr const char_T*str()const noexcept{return base_t::cbegin();}
+		[[nodiscard]]constexpr const char_T*data()const noexcept{return base_t::cbegin();}
+		[[nodiscard]]constexpr operator const char_T*()const noexcept{return str();}
+		//substr
+		[[nodiscard]]constexpr string_view_t substr(size_t pos,size_t len)const noexcept{
+			return string_view_t(base_t::cbegin()+pos,len);
+		}
+		[[nodiscard]]constexpr string_view_t substr(size_t pos)const noexcept{
+			return string_view_t(base_t::cbegin()+pos,base_t::size()-pos);
+		}
+		[[nodiscard]]constexpr string_view_t substr(size_t pos,const char_T*end)const noexcept{
+			return string_view_t(base_t::cbegin()+pos,end-base_t::cbegin());
+		}
+		[[nodiscard]]constexpr string_view_t substr(const char_T*begin,size_t len)const noexcept{
+			return string_view_t(begin,len);
+		}
+		[[nodiscard]]constexpr string_view_t substr(const char_T*begin)const noexcept{
+			return string_view_t(begin,base_t::cend()-begin);
+		}
+		[[nodiscard]]constexpr string_view_t substr(const char_T*begin,const char_T*end)const noexcept{
+			return string_view_t(begin,end-begin);
+		}
+		//find
+		[[nodiscard]]constexpr size_t find(const char_T ch)const{
+			return in_range_size_t(ch, *this);
+		}
+		[[nodiscard]]constexpr size_t reverse_find(const char_T ch)const{
+			return in_range_but_reverse_size_t(ch, *this);
+		}
+		[[nodiscard]]constexpr size_t find(string_view_t str)const{
+			return in_range_size_t(str, *this);
+		}
+		[[nodiscard]]constexpr size_t reverse_find(string_view_t str)const{
+			return in_range_but_reverse_size_t(str, *this);
+		}
+		[[nodiscard]]constexpr size_t find(const constexpr_str_t<char_T>&str)const{
+			return in_range_size_t(str, *this);
+		}
+		[[nodiscard]]constexpr size_t reverse_find(const constexpr_str_t<char_T>&str)const{
+			return in_range_but_reverse_size_t(str, *this);
+		}
+		//others by range_n::find_last_of_size_t etc
+		[[nodiscard]]constexpr size_t find_first_of(const char_T ch)const{
+			return range_n::find_first_of_size_t(ch, *this);
+		}
+		[[nodiscard]]constexpr size_t find_last_of(const char_T ch)const{
+			return range_n::find_last_of_size_t(ch, *this);
+		}
+		[[nodiscard]]constexpr size_t find_first_not_of(const char_T ch)const{
+			return range_n::find_first_not_of_size_t(ch, *this);
+		}
+		[[nodiscard]]constexpr size_t find_last_not_of(const char_T ch)const{
+			return range_n::find_last_not_of_size_t(ch, *this);
+		}
+		[[nodiscard]]constexpr size_t find_first_of(string_view_t str)const{
+			return range_n::find_first_of_size_t(str, *this);
+		}
+		[[nodiscard]]constexpr size_t find_last_of(string_view_t str)const{
+			return range_n::find_last_of_size_t(str, *this);
+		}
+		[[nodiscard]]constexpr size_t find_first_not_of(string_view_t str)const{
+			return range_n::find_first_not_of_size_t(str, *this);
+		}
+		[[nodiscard]]constexpr size_t find_last_not_of(string_view_t str)const{
+			return range_n::find_last_not_of_size_t(str, *this);
+		}
+		[[nodiscard]]constexpr size_t find_first_of(const constexpr_str_t<char_T>&str)const{
+			return range_n::find_first_of_size_t(str, *this);
+		}
+		[[nodiscard]]constexpr size_t find_last_of(const constexpr_str_t<char_T>&str)const{
+			return range_n::find_last_of_size_t(str, *this);
+		}
+		[[nodiscard]]constexpr size_t find_first_not_of(const constexpr_str_t<char_T>&str)const{
+			return range_n::find_first_not_of_size_t(str, *this);
+		}
+		[[nodiscard]]constexpr size_t find_last_not_of(const constexpr_str_t<char_T>&str)const{
+			return range_n::find_last_not_of_size_t(str, *this);
+		}
+	};
+	typedef string_view_t<char_t>string_view;
+}
+using string_view_n::string_view_t;
+using string_view_n::string_view;
+
+//file_end
+
+#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/type_name.hpp"
+//type_name.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+struct type_name_t:string_view_t<char>{
+	//对于gcc和clang，这个类型有一个malloced的char*，以便于在析构时释放
+	//一切源于abi::__cxa_demangle
+	//对于msvc，这个类型析构时不需要做任何事情
+	typedef string_view_t<char> base_t;
+	/// 重整器包装
+	static base_t demangle(const char*original_name)noexcept{
+		push_and_disable_msvc_warning(26494);//未初始化警告diss
+		size_t len;
+		const char*demangled_name;
+		pop_msvc_warning();
+		#if defined(__clang__)||defined(__GNUC__)
+			//gcc和clang
+			//使用abi::__cxa_demangle重整
+			int status;
+			demangled_name=::abi::__cxa_demangle(original_name,nullptr,&len,&status);
+			if(status!=0){
+				demangled_name=original_name;
+				len=::std::strlen(original_name);
+				::std::free((void*)demangled_name);
+			}
+		#else
+			//msvc
+			//不需要重整
+			demangled_name=original_name;
+			len=::std::strlen(original_name);
+		#endif
+		return base_t{demangled_name,len};
+	}
+	/// 复制重整结果
+	static base_t copy_demangle(base_t demangled_name)noexcept{
+		#if defined(__clang__)||defined(__GNUC__)
+			//gcc和clang
+			//需要复制重整结果（用malloced的char*）
+			char*copyed_name=(char*)::std::malloc(demangled_name.size()+1);
+			if(copyed_name==nullptr)
+				return base_t{nullptr,0};
+			::std::memcpy(copyed_name,demangled_name.data(),demangled_name.size());
+			copyed_name[demangled_name.size()]='\0';
+			return base_t{copyed_name,demangled_name.size()};
+		#else
+			//msvc
+			//不需要复制重整结果
+			return demangled_name;
+		#endif
+	}
+	/// 构造函数
+	type_name_t(const char*original_name)noexcept:base_t(demangle(original_name)){}
+	/// 复制构造函数
+	type_name_t(const type_name_t&other)noexcept:base_t(copy_demangle(other)){}
+	/// 移动构造函数（swap）
+	type_name_t(type_name_t&&other)noexcept:base_t(nullptr,0){
+		swap_with(other);
+	}
+	/// 析构函数
+	~type_name_t()noexcept{
+		#if defined(__clang__)||defined(__GNUC__)
+			//gcc和clang
+			//需要释放malloced的char*
+			::std::free((void*)begin());
+		#endif
+	}
+};
+[[nodiscard]]inline type_name_t base_type_info_t::get_name()const noexcept{
+	return _tid.get_name();
+}
+[[nodiscard]]inline type_name_t base_type_info_t::type_id_t::get_name()const noexcept{
+	return _m->name();
+}
+template<typename T>
+[[nodiscard]]inline type_name_t type_info_t<T>::get_name()const noexcept{
+	return base_type_info_t(*this).get_name();
+}
+
+//file_end
+
+#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/constexpr_str.hpp"
+//constexpr_str.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace constexpr_str_n{
+	/// constexpr_str_t的退化类型，表明这是常量字符串，但没有可用的额外信息
+	template<typename char_T>
+	struct constexpr_str_view_t:string_view_t<char_T>{
+		typedef string_view_t<char_T> base_t;
+		using base_t::base_t;
+		constexpr_str_view_t(const char_T*str)noexcept=delete;
+		//成员函数
+		[[nodiscard]]constexpr const char_T*str()const noexcept{return base_t::cbegin();}
+		[[nodiscard]]constexpr const char_T*data()const noexcept{return base_t::cbegin();}
+		[[nodiscard]]constexpr operator const char_T*()const noexcept{return str();}
+		//substr
+		[[nodiscard]]constexpr constexpr_str_view_t substr(size_t pos,size_t len)const noexcept{
+			return base_t::substr(pos,len);
+		}
+		[[nodiscard]]constexpr constexpr_str_view_t substr(size_t pos)const noexcept{
+			return base_t::substr(pos);
+		}
+		[[nodiscard]]constexpr constexpr_str_view_t substr(size_t pos,const char_T*end)const noexcept{
+			return base_t::substr(pos,end);
+		}
+		[[nodiscard]]constexpr constexpr_str_view_t substr(const char_T*begin,size_t len)const noexcept{
+			return base_t::substr(begin,len);
+		}
+		[[nodiscard]]constexpr constexpr_str_view_t substr(const char_T*begin)const noexcept{
+			return base_t::substr(begin);
+		}
+		[[nodiscard]]constexpr constexpr_str_view_t substr(const char_T*begin,const char_T*end)const noexcept{
+			return base_t::substr(begin,end);
+		}
+	};
+	/// 告知其他elc库接口这是编译时常量字符串，并提供编译时计算好的内容，包括但不限于hash、bmh头、bitmark等，用于加速库操作
+	template<typename char_T>
+	struct constexpr_str_t:constexpr_str_view_t<char_T>{
+		typedef constexpr_str_view_t<char_T> base_t;
+		hash_t hash_result;
+		range_n::match_pattern<const char_T> match_pattern;
+		range_n::reverse_match_pattern<const char_T> reverse_match_pattern;
+		range_n::bitmark_for_finds<const char_T> bitmark_for_finds;
+		bool is_bitmark_workable;
+		constexpr constexpr_str_t(const char_T* str, size_t size):
+			base_t(str, size),
+			hash_result(defs::hash(str, size)),
+			match_pattern(array_like_view_t<const char_T>{str, size}),
+			reverse_match_pattern(array_like_view_t<const char_T>{str, size}){
+				is_bitmark_workable = bitmark_for_finds.mark(*this);
+			}
+		constexpr constexpr_str_t(const char_T* str):constexpr_str_t(str,array_end_by_zero_t::get_length_of(str)){}
+		[[nodiscard]]constexpr hash_t hash()const noexcept{return hash_result;}
+	};
+	template<class char_T,size_t N>
+	struct constexpr_str_t_literal_helper{
+		const char_T* _array_begin;
+		constexpr constexpr_str_t_literal_helper(const char_T(&str)[N])noexcept{
+			_array_begin=str;
+		}
+		[[nodiscard]]constexpr auto get_constexpr_str_t()const noexcept{
+			return constexpr_str_t{_array_begin,N-1};
+		}
+	};
+	template<constexpr_str_t_literal_helper v>
+	struct literal_result_provider {
+		distinctive static constexpr auto value = v.get_constexpr_str_t();
+	};
+	//别问，问就是傻逼c++
+	/// 告知其他elc库接口这是编译时常量字符串，并提供编译时计算好的内容，包括但不限于hash、bmh头、bitmark等，用于加速库操作
+	template<constexpr_str_t_literal_helper str_helper>
+	[[nodiscard]]inline consteval auto& operator ""_constexpr_str()noexcept{
+		return literal_result_provider<str_helper>::value;
+	}
+	/// 空字串常量且str或begin会指向一个0终止字符串（而不是nullptr），便于安全初始化
+	template<class char_T>
+	distinctive inline constexpr auto empty_constexpr_str_of = constexpr_str_t(&const_default_value_of<char_T>,0);
+};
+using constexpr_str_n::constexpr_str_view_t;
+using constexpr_str_n::constexpr_str_t;
+using constexpr_str_n::empty_constexpr_str_of;
+using constexpr_str_n::operator ""_constexpr_str;
+
+//重载range操作
+namespace range_n {
+	template<typename T>
+	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<T>&pattern,array_like_view_t<T>range){
+		return pattern.match_pattern.match(range);
+	}
+	template<typename T>
+	[[nodiscard]]constexpr T* in_range_but_reverse(const constexpr_str_t<T>&pattern,array_like_view_t<T>range){
+		return pattern.reverse_match_pattern.match(range);
+	}
+	//find_first_of
+	//若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* find_first_of(const constexpr_str_t<T>&pattern,array_like_view_t<T>range){
+		if(pattern.is_bitmark_workable){
+			return find_first_of_bitmark(pattern.bitmark_for_finds,range);
+		}
+		else{
+			return find_first_of((const constexpr_str_view_t<T>&)pattern,range);
+		}
+	}
+	//find_last_of
+	//若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* find_last_of(const constexpr_str_t<T>&pattern,array_like_view_t<T>range){
+		if(pattern.is_bitmark_workable){
+			return find_last_of_bitmark(pattern.bitmark_for_finds,range);
+		}
+		else{
+			return find_last_of((const constexpr_str_view_t<T>&)pattern,range);
+		}
+	}
+	//find_first_not_of
+	//若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* find_first_not_of(const constexpr_str_t<T>&pattern,array_like_view_t<T>range){
+		if(pattern.is_bitmark_workable){
+			return find_first_not_of_bitmark(pattern.bitmark_for_finds,range);
+		}
+		else{
+			return find_first_not_of((const constexpr_str_view_t<T>&)pattern,range);
+		}
+	}
+	//find_last_not_of
+	//若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
+	template<typename T>
+	[[nodiscard]]constexpr T* find_last_not_of(const constexpr_str_t<T>&pattern,array_like_view_t<T>range){
+		if(pattern.is_bitmark_workable){
+			return find_last_not_of_bitmark(pattern.bitmark_for_finds,range);
+		}
+		else{
+			return find_last_not_of((const constexpr_str_view_t<T>&)pattern,range);
+		}
+	}
+};
+
+//file_end
+
+#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/logical_bool.hpp"
+//logic.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+
+/*! 混沌布尔值。
+	允许输出介于真假之间的内容的布尔值。
+	混沌布尔值会有五个可能的值，分别为true,false,neither,either。unknown视为不合法。
+	用在if与while中时，true，either被判定为真，其与均为假。
+	用法：
+	logical_bool(bool)		输出logical_bool,将布尔值转换为混沌布尔值。
+	bool(logical_bool)		输出bool，将混沌布尔值转化为布尔值。
+	允许与或非运算：输出结果仍然为混沌布尔值,参与运算的值如果有unknown则均输出unknown.
+	允许判定相等，输出结果为混沌布尔值,参与运算的值如果有unknown则均输出unknown，否则仅有true和false两个合法值。
+*/
+/*
+	在 虚伪 的 信 念 之 前 - 他 们 将 三 元 论 视 为 真理
+	所 有 的 东西 都 是 三 部 分 。
+	从 那里 ， 他 们 终于 获得 了 答案 。
+*/
+struct logical_bool{
+private:
+	[[no_unique_address]]bool _is_true;
+	[[no_unique_address]]bool _is_false;
+	[[no_unique_address]]bool _is_unknown;
+public:
+	constexpr logical_bool(special_init_t,bool is_true,bool is_false,bool is_unknown=0):_is_true(is_true),_is_false(is_false),_is_unknown(is_unknown){}
+	constexpr logical_bool(bool a):_is_true(a),_is_false(!a),_is_unknown(0){}
+	constexpr logical_bool(const logical_bool&)=default;
+	constexpr logical_bool&operator=(const logical_bool&)& =default;
+	constexpr explicit operator bool()const{return _is_true && !_is_unknown;}
+	constexpr logical_bool operator!()const{
+		logical_bool aret=*this;
+		swap(aret._is_true,aret._is_false);
+		return aret;
+	}
+	friend logical_bool operator&&(logical_bool a,logical_bool b)noexcept{
+		return logical_bool{special_init,a._is_true && b._is_true,a._is_false || b._is_false,a._is_unknown || b._is_unknown};
+	}
+	friend logical_bool operator||(logical_bool a,logical_bool b)noexcept{
+		return logical_bool{special_init,a._is_true || b._is_true,a._is_false && b._is_false,a._is_unknown || b._is_unknown};
+	}
+	friend logical_bool operator==(logical_bool a,logical_bool b)noexcept{
+		logical_bool aret(a._is_true == b._is_true && a._is_false == b._is_false);
+		aret._is_unknown = a._is_unknown || b._is_unknown;
+		return aret;
+	}
+};
+constexpr logical_bool neither{special_init,0,0},either{special_init,1,1},unknown{special_init,0,0,1};
+
+//file_end
+
+#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/zero.hpp"
+//zero.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+/*!
+没什么用的语法糖,等价于字面量0.
+*/
+constexpr struct zero_t{
+	template<class T> requires(type_info<decltype(0)>.can_convert_to<T>)
+	operator T()const noexcept(type_info<decltype(0)>.can_nothrow_convert_to<T>){return 0;}
+}zero{};
+
+/**
+ * Returns true if all bytes in the input are zero.
+ *
+ * @param a The input value.
+ *
+ * @returns True if all bytes in the input are zero.
+ */
+template<class T>
+constexpr inline bool is_all_byte_zero(T&&a){
+	const byte*ptr=cast_to_data(addressof(a));
+	const byte*end=ptr+sizeof(a);
+	while(ptr!=end)
+		if((unsigned char)(*ptr++))
+			return false;
+	return true;
+}
+
+//file_end
+
+#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/count_able.hpp"
+//count_able.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+template<class T>
+[[nodiscard]]inline size_t the_number_of(type_info_t<T>)noexcept;
+template<class T>
+struct count_able:is_common_attribute(count_able){
+private:
+	friend size_t the_number_of<T>(type_info_t<T>)noexcept;
+	static size_t _number;
+public:
+	count_able()noexcept{_number++;}
+	~count_able()noexcept{_number--;}
+};
+template<class T>
+[[nodiscard]]inline size_t the_number_of(type_info_t<T>)noexcept{
+	if constexpr(type_info<T>.not_has_attribute(count_able))
+		template_error("hey.");
+	return count_able<T>::_number;
+}
+
+//file_end
+
+#line 37 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/invoke.hpp"
+//invoke.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+template<typename T>
+struct invoke_t{
+	/**
+	 * Determines if a type is invocable.
+	 *
+	 * @tparam T The type to check.
+	 * @tparam Args The types of the arguments to the type.
+	 *
+	 * @returns True if the type is invocable, false otherwise.
+	 */
+	template<class...Args>
+	static constexpr bool able= ::std::is_invocable_v<T,Args...>;
+	/**
+	 * Determines if a type is invocable and nothrow.
+	 *
+	 * @tparam T The type to check.
+	 * @tparam Args The types of the arguments to the type.
+	 *
+	 * @returns True if the type is nothrow invocable, false otherwise.
+	 */
+	template<class...Args>
+	static constexpr bool nothrow= ::std::is_nothrow_invocable_v<T,Args...>;
+
+	/**
+	 * A function that returns a lambda that applies a function to a value.
+	 *
+	 * @param rest The arguments to the function.
+	 *
+	 * @returns A lambda that applies the function to a value.
+	 */
+	template<class...Args> requires able<Args...>
+	auto _as(Args&&...rest)const noexcept(nothrow<Args...>){//invoke<T>._as(...)
+		return lambda_with_catch(rest...)(const T&a)noexcept(nothrow<Args...>){return a(forward<Args>(rest)...);};
+	}
+};
+template<typename T>
+constexpr invoke_t<T>invoke{};
+
+//file_end
+
+#line 38 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/maybe_fail_reference.hpp"
+//maybe_fail_reference.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+template<typename T>
+class maybe_fail_reference{
+	T*_ref_to;
+public:
+	constexpr maybe_fail_reference(T&a):_ref_to(&a){}
+	constexpr maybe_fail_reference(const maybe_fail_reference&)=default;
+	constexpr maybe_fail_reference(note::fail_t):_ref_to(nullptr){}
+
+	[[nodiscard]]bool not_fail()noexcept{return _ref_to;}
+	[[nodiscard]]bool fail()noexcept{return!not_fail();}
+	T&get_ref()noexcept{return*_ref_to;}
+};
+
+//file_end
+
+#line 39 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+
+//file_end
+
+		#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+	}
+
+	//由于vcruntime的type_info在全局定义,这里需要额外声明使用base::type_info.
+	#if defined(_VCRUNTIME_H)
+		using base::type_info;
+	#endif
+
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
+//_undefs.hpp
+/*
+未完成的elc解释器basic文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
+//_undefs.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+
+//defs at "_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(pop)
+#endif
+#undef suppress_msvc_warning
+#undef disable_msvc_warning
+#undef push_msvc_warning
+#undef pop_msvc_warning
+#undef push_and_disable_msvc_warning
+
+//for basic_environment.hpp
+#undef BIT_POSSIBILITY
+//
+#if defined(ELC_VOID_NAME)
+	#define void the_void
+#endif
+
+// #undef often_noexcept
+#undef noexcept_as
+#undef noexcept_as_auto
+#undef constexpr_as
+#undef constexpr_as_auto
+
+#undef using_method_from_base_t
+#undef using_method_from_value
+
+#undef floop
+#undef enable_adl
+
+#undef re_declvalue
+#undef re_decltype
+
+#undef declvalue
+
+#undef template_error
+#undef template_warning
+
+#undef type_info_of
+#undef type_name_of
+
+#undef is_common_attribute
+#undef is_special_attribute
+
+#undef has_attribute
+#undef not_has_attribute
+
+#undef float_size_of
+#undef bitnum_of
+
+#undef def_common_attribute_with_nothing
+#undef def_special_attribute_with_nothing
+
+#undef common_attribute_t
+#undef special_attribute_t
+
+#undef enable_if
+#undef enabled_by_default
+#undef disabled_by_default
+#undef enable_if_not_ill_form
+#undef enable_flag
+
+#undef was_an_ill_form
+#undef was_an_ill_form_with_parameter
+#undef was_not_an_ill_form
+#undef was_not_an_ill_form_and_noexcept
+#undef was_not_an_ill_form_with_parameter
+
+#undef recursive_lambda
+#undef get_recursive_lambda_caller
+#undef lambda
+#undef lambda_with_catch
+#undef self_recursion
+#undef lambda_RLSRRS
+
+#undef MAGIC
+
+#undef nothing
+
+#undef elseif
+#undef _big_than_
+#undef _small_than_
+
+#if defined(_MSC_VER)
+	#undef not
+	#undef and
+	#undef or
+#endif
+
+#undef INTER_NAMESPACE
+#undef BREAK_NAMESPACE
+
+#undef szie
+#undef form
+
+#undef template_name
+#undef type_name
+
+#undef not_in_debug
+
+#undef es
+#undef ec
+
+#undef ELC_TEST_EVENTNAME
+
+#undef override_instance_struct
+
+#undef distinctive
+
+#undef force_inline
+
+#undef with_no_vtable
+
+#undef in_consteval
+
+#undef no_vtable_struct
+#undef no_vtable_class
+
+//file_end
+
+#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
+
+//file_end
+
+	#line 38 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+}
+
+//file_end
+
+	#line 22 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+#endif
+
+//file_end
+
