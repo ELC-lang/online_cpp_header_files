@@ -460,6 +460,8 @@ protected:\
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
 
+//#define get_elc_defs using namespace ::elc::defs
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
@@ -690,6 +692,7 @@ namespace magic_number{
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
 	template<class T> requires ::std::is_unsigned_v<T>
 	[[nodiscard]]force_inline constexpr auto rotl_nomod(const T v,const auto R)noexcept;
+	#define rot_base(opt,antiopt) static_cast<T>(static_cast<T>(v opt r) | static_cast<T>(v antiopt (d - r)))
 	/// 位操作：循环右移（无mod）
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
 	template<class T> requires ::std::is_unsigned_v<T>
@@ -697,13 +700,13 @@ namespace magic_number{
 		constexpr auto d = ::std::numeric_limits<T>::digits;
 		if constexpr(::std::is_unsigned_v<decltype(r)>){
 			if(r)
-				return static_cast<T>(static_cast<T>(v >> r) | static_cast<T>(v << (d - r)));
+				return rot_base(>>,<<);
 			else
 				return v;
 		}
 		else{
 			if(r>0)
-				return static_cast<T>(static_cast<T>(v >> r) | static_cast<T>(v << (d - r)));
+				return rot_base(>>,<<);
 			elseif(r==0)
 				return v;
 			else//r<0
@@ -717,19 +720,20 @@ namespace magic_number{
 		constexpr auto d = ::std::numeric_limits<T>::digits;
 		if constexpr(::std::is_unsigned_v<decltype(r)>){
 			if(r)
-				return static_cast<T>(static_cast<T>(v << r) | static_cast<T>(v >> (d - r)));
+				return rot_base(<<,>>);
 			else
 				return v;
 		}
 		else{
 			if(r>0)
-				return static_cast<T>(static_cast<T>(v << r) | static_cast<T>(v >> (d - r)));
+				return rot_base(<<,>>);
 			elseif(r==0)
 				return v;
 			else//r<0
 				return rotr_nomod(v,0-r);
 		}
 	}
+	#undef rot_base
 	/// 位操作：循环右移
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
 	template<class T> requires ::std::is_unsigned_v<T>
@@ -2228,13 +2232,13 @@ namespace hash_n{
 	inline constexpr bool is_fundamental_hash = ::std::is_fundamental_v<T>;
 
 	enable_adl(the_pointer_hash);
-	/**
-	 * Computes the hash value of a pointer.
-	 *
-	 * @param a The pointer to hash.
-	 *
-	 * @returns The hash value of the pointer.
-	 */
+	/*!
+	Computes the hash value of a pointer.
+	
+	@param a The pointer to hash.
+	
+	@returns The hash value of the pointer.
+	*/
 	template<class T>
 	[[nodiscard]]inline constexpr hash_value_t pointer_hash(T*a)noexcept{
 		if constexpr(was_not_an_ill_form(the_pointer_hash(a)))
@@ -2289,31 +2293,31 @@ namespace hash_n{
 
 		#define hash operator()
 
-		/**
-		 * Computes the hash value of `nothing`.
-		 *
-		 * @returns The hash value of `nothing`.
-		 */
+		/*!
+		Computes the hash value of `nothing`.
+		
+		@returns The hash value of `nothing`.
+		*/
 		[[nodiscard]]inline constexpr hash_value_t hash(nothing)const noexcept{
 			return{hash_base_t(nothing)};
 		}
-		/**
-		 * Computes the hash value of a base_type_info_t object.
-		 *
-		 * @param a The base_type_info_t object to hash.
-		 *
-		 * @returns The hash value of the object.
-		 */
+		/*!
+		Computes the hash value of a base_type_info_t object.
+		
+		@param a The base_type_info_t object to hash.
+		
+		@returns The hash value of the object.
+		*/
 		[[nodiscard]]inline hash_value_t hash(const base_type_info_t&a)const noexcept{
 			return{a.get_hash()};
 		}
-		/**
-		 * Computes the hash value of a value.
-		 *
-		 * @param a The value to hash.
-		 *
-		 * @returns The hash value of the value.
-		 */
+		/*!
+		Computes the hash value of a value.
+		
+		@param a The value to hash.
+		
+		@returns The hash value of the value.
+		*/
 		template<class T> requires able<T>
 		[[nodiscard]]constexpr_as_auto inline auto hash(const T&a)const noexcept(nothrow<T>){
 			#undef hash
@@ -2333,27 +2337,27 @@ namespace hash_n{
 			}
 			#define hash operator()
 		}
-		/**
-		 * Computes the hash of a value in the base type.
-		 *
-		 * @param a The value to hash.
-		 *
-		 * @returns The hash of the value in the base type.
-		 */
+		/*!
+		Computes the hash of a value in the base type.
+		
+		@param a The value to hash.
+		
+		@returns The hash of the value in the base type.
+		*/
 		template<class T>
 		[[nodiscard]]constexpr_as_auto inline hash_base_t get_hash_in_base_type(const T&a)const noexcept(nothrow<T>){
 			return hash(a)._value;
 		}
-		/**
-		 * 从某个起始点算起的hash
-		 *
-		 * @param before The hashed value before this hash.
-		 * @param before_size The size of the hashed value before this hash.
-		 * @param a The sequence of values.
-		 * @param size The number of values in the sequence.
-		 *
-		 * @returns The hash value of the sequence.
-		 */
+		/*!
+		从某个起始点算起的hash
+		
+		@param before The hashed value before this hash.
+		@param before_size The size of the hashed value before this hash.
+		@param a The sequence of values.
+		@param size The number of values in the sequence.
+		
+		@returns The hash value of the sequence.
+		*/
 		template<class T>
 		[[nodiscard]]force_inline constexpr hash_value_t with_calculated_before(hash_value_t before,size_t before_size,const T*a,size_t size)const noexcept{
 			hash_base_t aret=before._value;
@@ -2364,14 +2368,14 @@ namespace hash_n{
 			}
 			return{aret};
 		}
-		/**
-		 * 计算此hash重复N次的数组的hash结果
-		 *
-		 * @param value The hash value to repeat.
-		 * @param size The number of times to repeat the hash value.
-		 *
-		 * @returns The repeated hash value.
-		 */
+		/*!
+		计算此hash重复N次的数组的hash结果
+		
+		@param value The hash value to repeat.
+		@param size The number of times to repeat the hash value.
+		
+		@returns The repeated hash value.
+		*/
 		[[nodiscard]]force_inline constexpr hash_value_t repeat_times(hash_value_t value,size_t size)const noexcept{
 			hash_base_t aret=0;
 			{
@@ -2401,65 +2405,64 @@ namespace hash_n{
 			}
 			return{aret};
 		}
-		/**
-		 * 计算此hash重复N次的数组的hash结果
-		 *
-		 * @param value The hash value to repeat.
-		 * @param size The number of times to repeat the hash value.
-		 *
-		 * @returns The repeated hash value.
-		 */
+		/*!
+		计算此hash重复N次的数组的hash结果
+		
+		@param value The hash value to repeat.
+		@param size The number of times to repeat the hash value.
+		
+		@returns The repeated hash value.
+		*/
 		template<class T>
 		[[nodiscard]]force_inline constexpr hash_value_t repeat_times(T&&value,size_t size)const noexcept{
 			return repeat_times(hash(value),size);
 		}
-		/**
-		 * Computes the hash value of an array of elements.
-		 *
-		 * @param a The array of elements.
-		 * @param size The size of the array.
-		 *
-		 * @returns The hash value of the array.
-		 */
+		/*!
+		Computes the hash value of an array of elements.
+		
+		@param a The array of elements.
+		@param size The size of the array.
+		
+		@returns The hash value of the array.
+		*/
 		template<class T>
 		[[nodiscard]]constexpr inline hash_value_t hash(const T*a,size_t size)const noexcept(nothrow<const T>){
 			return with_calculated_before(hash(nothing),0,a,size);
 		}
-		/**
-		 * 合并两个数据段的hash结果，好似计算这两个数据段合并后的hash结果一般
-		 *
-		 * @param before The first hash value.
-		 * @param before_size The size of the first hash value.
-		 * @param after The second hash value.
-		 * @param after_size The size of the second hash value.
-		 *
-		 * @returns The merged hash value.
-		 */
+		/*!
+		合并两个数据段的hash结果，好似计算这两个数据段合并后的hash结果一般
+		
+		@param before The first hash value.
+		@param before_size The size of the first hash value.
+		@param after The second hash value.
+		@param after_size The size of the second hash value.
+		
+		@returns The merged hash value.
+		*/
 		[[nodiscard]]force_inline hash_value_t merge_array_hash_results(
 			hash_value_t before,size_t before_size,hash_value_t after,[[maybe_unused]]size_t after_size
 		)const noexcept{
 			return{before._value^(rotl(after._value,before_size))};
 		}
-		/**
-		 * Computes the hash value of an array_like_view_t<T> object.
-		 *
-		 * @param a The array_like_view_t<T> object.
-		 *
-		 * @returns The hash value of the array_like_view_t<T> object.
-		 */
+		/*!
+		计算一个 array_like_view_t<T> 对象的哈希值。
+		@param a array_like_view_t<T> 对象。
+		
+		@returns array_like_view_t<T> 对象的哈希值。
+		*/
 		template<class T> requires is_not_signal_value_for_array_like<T>
 		[[nodiscard]]constexpr inline hash_value_t hash(const array_like_view_t<T>a)const noexcept(nothrow<T>){
 			return hash(a.begin(),a.size());
 		}
-		/**
-		 * Calculates a hash value for an array_like_view_t<T> object with calculated before hash value.
-		 *
-		 * @param before The hash value to use as the basis for the calculation.
-		 * @param before_size The size of the hash value to use as the basis for the calculation.
-		 * @param a The array_like_view_t<T> object to calculate the hash value for.
-		 *
-		 * @returns The hash value for the array_like_view_t<T> object.
-		 */
+		/*!
+		计算一个 array_like_view_t<T> 对象的哈希值，并在哈希值之前进行计算。
+		
+		@param before 用来作为计算基础的哈希值。
+		@param before_size 用来作为计算基础的哈希值的大小。
+		@param a 要计算哈希值的 array_like_view_t<T> 对象。
+		
+		@returns array_like_view_t<T> 对象的哈希值。
+		*/
 		template<class T> requires is_not_signal_value_for_array_like<T>
 		[[nodiscard]]constexpr inline hash_value_t with_calculated_before(hash_value_t before,size_t before_size,const array_like_view_t<T>a)const noexcept{
 			return with_calculated_before(before,before_size,a.begin(),a.size());
@@ -3454,13 +3457,13 @@ constexpr struct zero_t{
 	operator T()const noexcept(type_info<decltype(0)>.can_nothrow_convert_to<T>){return 0;}
 }zero{};
 
-/**
- * Returns true if all bytes in the input are zero.
- *
- * @param a The input value.
- *
- * @returns True if all bytes in the input are zero.
- */
+/*!
+Returns true if all bytes in the input are zero.
+
+@param a The input value.
+
+@returns True if all bytes in the input are zero.
+*/
 template<class T>
 constexpr inline bool is_all_byte_zero(T&&a){
 	const byte*ptr=cast_to_data(addressof(a));
@@ -3515,34 +3518,34 @@ template<class T>
 */
 template<typename T>
 struct invoke_t{
-	/**
-	 * Determines if a type is invocable.
-	 *
-	 * @tparam T The type to check.
-	 * @tparam Args The types of the arguments to the type.
-	 *
-	 * @returns True if the type is invocable, false otherwise.
-	 */
+	/*!
+	Determines if a type is invocable.
+	
+	@tparam T The type to check.
+	@tparam Args The types of the arguments to the type.
+	
+	@returns True if the type is invocable, false otherwise.
+	*/
 	template<class...Args>
 	static constexpr bool able= ::std::is_invocable_v<T,Args...>;
-	/**
-	 * Determines if a type is invocable and nothrow.
-	 *
-	 * @tparam T The type to check.
-	 * @tparam Args The types of the arguments to the type.
-	 *
-	 * @returns True if the type is nothrow invocable, false otherwise.
-	 */
+	/*!
+	Determines if a type is invocable and nothrow.
+	
+	@tparam T The type to check.
+	@tparam Args The types of the arguments to the type.
+	
+	@returns True if the type is nothrow invocable, false otherwise.
+	*/
 	template<class...Args>
 	static constexpr bool nothrow= ::std::is_nothrow_invocable_v<T,Args...>;
 
-	/**
-	 * A function that returns a lambda that applies a function to a value.
-	 *
-	 * @param rest The arguments to the function.
-	 *
-	 * @returns A lambda that applies the function to a value.
-	 */
+	/*!
+	A function that returns a lambda that applies a function to a value.
+	
+	@param rest The arguments to the function.
+	
+	@returns A lambda that applies the function to a value.
+	*/
 	template<class...Args> requires able<Args...>
 	auto _as(Args&&...rest)const noexcept(nothrow<Args...>){//invoke<T>._as(...)
 		return lambda_with_catch(rest...)(const T&a)noexcept(nothrow<Args...>){return a(forward<Args>(rest)...);};
@@ -3724,6 +3727,8 @@ public:
 
 #undef no_vtable_struct
 #undef no_vtable_class
+
+//#undef get_elc_defs
 
 //file_end
 
@@ -4103,6 +4108,8 @@ protected:\
 
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
+
+//#define get_elc_defs using namespace ::elc::defs
 
 //file_end
 
@@ -4514,6 +4521,8 @@ namespace overhead_n{
 #undef no_vtable_struct
 #undef no_vtable_class
 
+//#undef get_elc_defs
+
 //file_end
 
 		#line 188 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
@@ -4832,6 +4841,8 @@ protected:\
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
 
+//#define get_elc_defs using namespace ::elc::defs
+
 //file_end
 
 		#line 20 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
@@ -4851,7 +4862,7 @@ protected:\
 			#endif
 			::std::abort();
 		}
-		/// @brief 同 die ，但是有详细的错误信息
+		/// @brief 同 die() ，但是有详细的错误信息
 		/// @param err_msg 错误信息
 		[[noreturn]]inline void die_with(const char_t*err_msg)noexcept{
 			#if defined(_MSC_VER)
@@ -5021,6 +5032,8 @@ protected:\
 
 #undef no_vtable_struct
 #undef no_vtable_class
+
+//#undef get_elc_defs
 
 //file_end
 
@@ -5398,6 +5411,8 @@ protected:\
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
 
+//#define get_elc_defs using namespace ::elc::defs
+
 //file_end
 
 	#line 22 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
@@ -5574,6 +5589,8 @@ namespace elc::defs::locale::str{
 
 #undef no_vtable_struct
 #undef no_vtable_class
+
+//#undef get_elc_defs
 
 //file_end
 
@@ -5839,6 +5856,8 @@ protected:\
 
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
+
+//#define get_elc_defs using namespace ::elc::defs
 
 //file_end
 
@@ -7288,15 +7307,15 @@ namespace default_method{
 		#endif
 	#endif
 
-	/**
-	 * Reallocates a block of memory.
-	 *
-	 * @param ptr The pointer to the block of memory to reallocate.
-	 * @param nsize The new size of the block of memory.
-	 * @param align The alignment of the block of memory.
-	 *
-	 * @returns The new pointer to the block of memory.
-	 */
+	/*!
+	Reallocates a block of memory.
+	
+	@param ptr The pointer to the block of memory to reallocate.
+	@param nsize The new size of the block of memory.
+	@param align The alignment of the block of memory.
+	
+	@returns The new pointer to the block of memory.
+	*/
 	[[nodiscard]]inline byte*base_realloc(byte*ptr,size_t nsize,size_t align)noexcept{
 		byte*p=::elc::APIs::alloc::realloc(ptr,nsize,align);
 		#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
@@ -7311,14 +7330,14 @@ namespace default_method{
 		#endif
 		return p;
 	}
-	/**
-	 * Allocates aligned memory.
-	 *
-	 * @param align The alignment of the memory.
-	 * @param size The size of the memory.
-	 *
-	 * @returns A pointer to the allocated memory.
-	 */
+	/*!
+	Allocates aligned memory.
+	
+	@param align The alignment of the memory.
+	@param size The size of the memory.
+	
+	@returns A pointer to the allocated memory.
+	*/
 	[[nodiscard]]inline byte*base_aligned_alloc(size_t align,size_t size)noexcept{
 		byte*p=::elc::APIs::alloc::aligned_alloc(align,size);
 		#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
@@ -7329,12 +7348,12 @@ namespace default_method{
 		#endif
 		return p;
 	}
-	/**
-	 * Frees a pointer allocated by base_alloc.
-	 *
-	 * @param p The pointer to free.
-	 * @param align The alignment of the pointer.
-	 */
+	/*!
+	Frees a pointer allocated by base_alloc.
+	
+	@param p The pointer to free.
+	@param align The alignment of the pointer.
+	*/
 	inline void base_free(byte*p,size_t align)noexcept{
 		//传入需释放的数据块起始点与大小（字节）
 		#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
@@ -7351,14 +7370,14 @@ namespace default_method{
 		#endif
 		::elc::APIs::alloc::free(p,align);
 	}
-	/**
-	 * Computes the size of an allocation.
-	 *
-	 * @param arg The pointer to the start of the allocation.
-	 * @param align The alignment of the allocation.
-	 *
-	 * @returns The size of the allocation.
-	 */
+	/*!
+	Computes the size of an allocation.
+	
+	@param arg The pointer to the start of the allocation.
+	@param align The alignment of the allocation.
+	
+	@returns The size of the allocation.
+	*/
 	inline size_t base_get_size_of_alloc(const byte*arg, size_t align)noexcept{
 		//arg保证不与null_ptr相等
 		const auto tmp= ::elc::APIs::alloc::get_size_of_alloc(arg,align);
@@ -7614,11 +7633,9 @@ export copy_alloc;
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
-/**
- * Checks for memory leaks.
- *
- * @returns None
- */
+/*!
+Checks for memory leaks.
+*/
 inline void check_memory_lack()noexcept{
 	stest_mapeventlogwith(lambda(const void*p,steventlist*a)noexcept{
 		stest_putsf(L"内存泄露于%p,分配自:",p);
@@ -7700,22 +7717,22 @@ namespace get_n{
 	using abstract_base_n::abstract_base;
 	//struct build_by_get_only{};已定义于 "../../base_defs/special_attribute.hpp"
 
-	/**
-	 * 向后减小数据块大小并转移原有实例的生命周期，但并不析构旧的实例
-	 *
-	 * @param arg 原有数据块
-	 * @param to_size 新的数据块大小
-	 */
+	/*!
+	向后减小数据块大小并转移原有实例的生命周期，但并不析构旧的实例
+	
+	@param arg 原有数据块
+	@param to_size 新的数据块大小
+	*/
 	template<typename T>
 	void alloc_size_cut(T*&arg,size_t to_size)noexcept{
 		realloc(arg,to_size);
 	}
-	/**
-	 * 向后扩大数据块大小并转移原有实例的生命周期，但并不构造新的实例
-	 *
-	 * @param arg 原有数据块
-	 * @param to_size 新的数据块大小
-	 */
+	/*!
+	向后扩大数据块大小并转移原有实例的生命周期，但并不构造新的实例
+	
+	@param arg 原有数据块
+	@param to_size 新的数据块大小
+	*/
 	template<typename T>
 	void alloc_size_grow(T*&arg,size_t to_size)noexcept(move.trivial<T> or move.nothrow<T>){
 		if constexpr(move.trivial<T>)
@@ -7738,13 +7755,13 @@ namespace get_n{
 			arg=tmp;
 		}
 	}
-	/**
-	 * 在指定位置插入未初始化数据块并转移原有实例的生命周期，但并不构造新的实例
-	 *
-	 * @param arg 原有数据块
-	 * @param insert_pos 插入位置
-	 * @param insert_size 插入大小
-	 */
+	/*!
+	在指定位置插入未初始化数据块并转移原有实例的生命周期，但并不构造新的实例
+	
+	@param arg 原有数据块
+	@param insert_pos 插入位置
+	@param insert_size 插入大小
+	*/
 	template<typename T>
 	void alloc_size_grow_with_insert_uninitialized_data(T*&arg,size_t insert_pos,size_t insert_size)noexcept(move.trivial<T> or move.nothrow<T>){
 		const auto from_size=get_size_of_alloc(arg);
@@ -7774,17 +7791,17 @@ namespace get_n{
 			arg=tmp;
 		}
 	}
-	/**
-	 * 在指定位置插入未初始化数据块并转移原有实例的生命周期，但并不构造新的实例
-	 * 若有多余的大小，追加到末尾
-	 *
-	 * @param arg 原有数据块
-	 * @param to_size 新的数据块大小
-	 * @param insert_pos 插入位置
-	 * @param insert_size 插入大小
-	 *
-	 * @returns 多余的大小
-	 */
+	/*!
+	在指定位置插入未初始化数据块并转移原有实例的生命周期，但并不构造新的实例
+	若有多余的大小，追加到末尾
+	
+	@param arg 原有数据块
+	@param to_size 新的数据块大小
+	@param insert_pos 插入位置
+	@param insert_size 插入大小
+	
+	@returns 多余的大小
+	*/
 	template<typename T>
 	size_t alloc_size_grow_with_insert_uninitialized_data(T*&arg,size_t to_size,size_t insert_pos,size_t insert_size)noexcept(move.trivial<T> or move.nothrow<T>){
 		const auto from_size=get_size_of_alloc(arg);
@@ -7814,12 +7831,12 @@ namespace get_n{
 		}
 		return to_size-from_size-insert_size;
 	}
-	/**
-	 * 向前减小数据块大小并转移原有实例的生命周期，但并不析构旧的实例
-	 *
-	 * @param arg 原有数据块
-	 * @param to_size 新的数据块大小
-	 */
+	/*!
+	向前减小数据块大小并转移原有实例的生命周期，但并不析构旧的实例
+	
+	@param arg 原有数据块
+	@param to_size 新的数据块大小
+	*/
 	template<typename T>
 	void forward_alloc_size_cut(T*&arg,size_t to_size)noexcept(move.trivial<T> or move.nothrow<T>){
 		const auto from_size=get_size_of_alloc(arg);
@@ -7845,12 +7862,12 @@ namespace get_n{
 			arg=tmp;
 		}
 	}
-	/**
-	 * 向前扩大数据块大小并转移原有实例的生命周期，但并不构造新的实例
-	 *
-	 * @param arg 原有数据块
-	 * @param to_size 新的数据块大小
-	 */
+	/*!
+	向前扩大数据块大小并转移原有实例的生命周期，但并不构造新的实例
+	
+	@param arg 原有数据块
+	@param to_size 新的数据块大小
+	*/
 	template<typename T>
 	void forward_alloc_size_grow(T*&arg,size_t to_size)noexcept(move.trivial<T> or move.nothrow<T>){
 		const auto from_size=get_size_of_alloc(arg);
@@ -7881,17 +7898,17 @@ namespace get_n{
 	若有多余的大小，追加到前端
 	返回多余的大小
 	*/
-	/**
-	 * 在指定位置插入未初始化数据块并转移原有实例的生命周期，但并不构造新的实例
-	 * 若有多余的大小，追加到前端
-	 *
-	 * @param arg 原有数据块
-	 * @param to_size 新的数据块大小
-	 * @param insert_pos 插入位置
-	 * @param insert_size 插入大小
-	 *
-	 * @returns 多余的大小
-	 */
+	/*!
+	在指定位置插入未初始化数据块并转移原有实例的生命周期，但并不构造新的实例
+	若有多余的大小，追加到前端
+	
+	@param arg 原有数据块
+	@param to_size 新的数据块大小
+	@param insert_pos 插入位置
+	@param insert_size 插入大小
+	
+	@returns 多余的大小
+	*/
 	template<typename T>
 	size_t forward_alloc_size_grow_with_insert_uninitialized_data(T*&arg,size_t to_size,size_t insert_pos,size_t insert_size)noexcept(move.trivial<T> or move.nothrow<T>){
 		const auto from_size=get_size_of_alloc(arg);
@@ -7937,30 +7954,30 @@ namespace get_n{
 		template<class...Args>
 		static constexpr bool nothrow=construct<T>.nothrow<Args...>;
 
-		/**
-		 * Constructs an object of type T.
-		 *
-		 * @param rest The arguments to pass to the constructor of T.
-		 *
-		 * @returns A pointer to the newly constructed object.
-		 */
+		/*!
+		Constructs an object of type T.
+		
+		@param rest The arguments to pass to the constructor of T.
+		
+		@returns A pointer to the newly constructed object.
+		*/
 		template<class...Args> requires able<Args...>
 		[[nodiscard]]T* operator()(Args&&...rest)const noexcept(nothrow<Args...>){
 			const APIs::alloc::source_location_guard slg;
 			return construct<T>[alloc<T>()](forward<Args>(rest)...);
 		}
 
-		/**
-		 * Allocates an array of T with the specified size.
-		 */
+		/*!
+		Allocates an array of T with the specified size.
+		*/
 		struct array_get_t{
 			size_t _size;
-			/**
-			* Constructs an array of objects of type T.
-			*
-			* @param rest The arguments to pass to the constructor of T.
-			*
-			* @returns An array of objects of type T.
+			/*!
+			Constructs an array of objects of type T.
+			
+			@param rest The arguments to pass to the constructor of T.
+			
+			@returns An array of objects of type T.
 			*/
 			template<class...Args> requires able<Args...>
 			[[nodiscard]]T* operator()(Args&&...rest)const noexcept(nothrow<Args...>){
@@ -11618,6 +11635,8 @@ inline void test_end(){
 #undef no_vtable_struct
 #undef no_vtable_class
 
+//#undef get_elc_defs
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
@@ -12003,6 +12022,8 @@ protected:\
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
 
+//#define get_elc_defs using namespace ::elc::defs
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
@@ -12212,6 +12233,8 @@ inline void test_end(){
 
 #undef no_vtable_struct
 #undef no_vtable_class
+
+//#undef get_elc_defs
 
 //file_end
 
@@ -12556,6 +12579,8 @@ protected:\
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
 
+//#define get_elc_defs using namespace ::elc::defs
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
@@ -12816,6 +12841,8 @@ inline void test_end(){
 
 #undef no_vtable_struct
 #undef no_vtable_class
+
+//#undef get_elc_defs
 
 //file_end
 
@@ -13125,6 +13152,8 @@ protected:\
 
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
+
+//#define get_elc_defs using namespace ::elc::defs
 
 //file_end
 
@@ -14356,6 +14385,8 @@ inline void test_end(){
 #undef no_vtable_struct
 #undef no_vtable_class
 
+//#undef get_elc_defs
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
@@ -14661,6 +14692,8 @@ protected:\
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
 
+//#define get_elc_defs using namespace ::elc::defs
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
@@ -14825,6 +14858,8 @@ protected:\
 
 #undef no_vtable_struct
 #undef no_vtable_class
+
+//#undef get_elc_defs
 
 //file_end
 
@@ -15197,6 +15232,8 @@ protected:\
 
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
+
+//#define get_elc_defs using namespace ::elc::defs
 
 //file_end
 
@@ -18815,6 +18852,8 @@ using string_n::string;
 #undef no_vtable_struct
 #undef no_vtable_class
 
+//#undef get_elc_defs
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
@@ -19155,6 +19194,8 @@ protected:\
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
 
+//#define get_elc_defs using namespace ::elc::defs
+
 //file_end
 
 		#line 20 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/str_code_convert.hpp"
@@ -19328,6 +19369,8 @@ protected:\
 
 #undef no_vtable_struct
 #undef no_vtable_class
+
+//#undef get_elc_defs
 
 //file_end
 
@@ -19596,6 +19639,8 @@ protected:\
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
 
+//#define get_elc_defs using namespace ::elc::defs
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
@@ -19859,6 +19904,8 @@ inline void test_end(){
 
 #undef no_vtable_struct
 #undef no_vtable_class
+
+//#undef get_elc_defs
 
 //file_end
 
@@ -20157,6 +20204,8 @@ protected:\
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
 
+//#define get_elc_defs using namespace ::elc::defs
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
@@ -20321,6 +20370,8 @@ protected:\
 
 #undef no_vtable_struct
 #undef no_vtable_class
+
+//#undef get_elc_defs
 
 //file_end
 
@@ -20611,6 +20662,8 @@ protected:\
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
 
+//#define get_elc_defs using namespace ::elc::defs
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
@@ -20847,6 +20900,8 @@ inline void test_end{
 
 #undef no_vtable_struct
 #undef no_vtable_class
+
+//#undef get_elc_defs
 
 //file_end
 

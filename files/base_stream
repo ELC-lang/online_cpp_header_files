@@ -307,6 +307,8 @@ protected:\
 #define no_vtable_struct struct with_no_vtable
 #define no_vtable_class class with_no_vtable
 
+//#define get_elc_defs using namespace ::elc::defs
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
@@ -567,6 +569,8 @@ inline void test_end(){
 
 #undef no_vtable_struct
 #undef no_vtable_class
+
+//#undef get_elc_defs
 
 //file_end
 
