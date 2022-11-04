@@ -296,6 +296,28 @@ namespace elc::defs{ //在elc::defs中定义内容
 	#define pop_msvc_warning()
 	#define push_and_disable_msvc_warning(...)
 #endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("elc")
+	#undef elc
+#endif
 //
 #if defined(ELC_VOID_NAME)
 	#undef void
@@ -1444,8 +1466,6 @@ consteval auto operator?:(auto a,const type_info_t<T>&b,const type_info_t<U>&c){
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
-#undef min
-#undef max
 /*!
 获取几个参数中的最小值或某类型能表示的最小值.
 用法:
@@ -3746,6 +3766,18 @@ public:
 #undef push_msvc_warning
 #undef pop_msvc_warning
 #undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("elc")
+#endif
 
 //for basic_environment.hpp
 #undef BIT_POSSIBILITY
@@ -4058,6 +4090,28 @@ elc依赖的基础函数.
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
 	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("elc")
+	#undef elc
 #endif
 //
 #if defined(ELC_VOID_NAME)
@@ -4543,6 +4597,18 @@ namespace overhead_n{
 #undef push_msvc_warning
 #undef pop_msvc_warning
 #undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("elc")
+#endif
 
 //for basic_environment.hpp
 #undef BIT_POSSIBILITY
@@ -4790,6 +4856,28 @@ namespace elc{
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
 	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("elc")
+	#undef elc
 #endif
 //
 #if defined(ELC_VOID_NAME)
@@ -5055,6 +5143,18 @@ protected:\
 #undef push_msvc_warning
 #undef pop_msvc_warning
 #undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("elc")
+#endif
 
 //for basic_environment.hpp
 #undef BIT_POSSIBILITY
@@ -5365,6 +5465,28 @@ namespace elc::defs::locale{
 	#define pop_msvc_warning()
 	#define push_and_disable_msvc_warning(...)
 #endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("elc")
+	#undef elc
+#endif
 //
 #if defined(ELC_VOID_NAME)
 	#undef void
@@ -5616,6 +5738,18 @@ namespace elc::defs::locale::str{
 #undef push_msvc_warning
 #undef pop_msvc_warning
 #undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("elc")
+#endif
 
 //for basic_environment.hpp
 #undef BIT_POSSIBILITY
@@ -5810,6 +5944,28 @@ namespace elc::defs{ //在elc::defs中定义内容
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
 	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("elc")
+	#undef elc
 #endif
 //
 #if defined(ELC_VOID_NAME)
@@ -11748,6 +11904,18 @@ inline void test_end(){
 #undef push_msvc_warning
 #undef pop_msvc_warning
 #undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("elc")
+#endif
 
 //for basic_environment.hpp
 #undef BIT_POSSIBILITY
@@ -11979,6 +12147,28 @@ namespace elc::defs{
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
 	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("elc")
+	#undef elc
 #endif
 //
 #if defined(ELC_VOID_NAME)
@@ -15691,6 +15881,18 @@ using string_n::string;
 #undef push_msvc_warning
 #undef pop_msvc_warning
 #undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("elc")
+#endif
 
 //for basic_environment.hpp
 #undef BIT_POSSIBILITY
@@ -15965,6 +16167,28 @@ namespace elc{
 	#define pop_msvc_warning()
 	#define push_and_disable_msvc_warning(...)
 #endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("elc")
+	#undef elc
+#endif
 //
 #if defined(ELC_VOID_NAME)
 	#undef void
@@ -16213,6 +16437,18 @@ protected:\
 #undef push_msvc_warning
 #undef pop_msvc_warning
 #undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("elc")
+#endif
 
 //for basic_environment.hpp
 #undef BIT_POSSIBILITY
@@ -16409,6 +16645,28 @@ namespace elc::defs{
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
 	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("elc")
+	#undef elc
 #endif
 //
 #if defined(ELC_VOID_NAME)
@@ -16748,6 +17006,18 @@ inline void test_end(){
 #undef push_msvc_warning
 #undef pop_msvc_warning
 #undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("elc")
+#endif
 
 //for basic_environment.hpp
 #undef BIT_POSSIBILITY
@@ -16974,6 +17244,28 @@ namespace elc::defs{
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
 	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("elc")
+	#undef elc
 #endif
 //
 #if defined(ELC_VOID_NAME)
@@ -17214,6 +17506,18 @@ protected:\
 #undef push_msvc_warning
 #undef pop_msvc_warning
 #undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("elc")
+#endif
 
 //for basic_environment.hpp
 #undef BIT_POSSIBILITY
@@ -17432,6 +17736,28 @@ namespace elc::defs{
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
 	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("elc")
+	#undef elc
 #endif
 //
 #if defined(ELC_VOID_NAME)
@@ -18197,6 +18523,18 @@ inline void test_end(){
 #undef push_msvc_warning
 #undef pop_msvc_warning
 #undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("elc")
+#endif
 
 //for basic_environment.hpp
 #undef BIT_POSSIBILITY
