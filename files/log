@@ -143,7 +143,6 @@ namespace elc::defs{
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
 	#pragma warning(disable:4099)//class与struct混用警告diss
-	#pragma warning(disable:26812)//enum class安利diss.
 	#pragma warning(disable:4584)//重复子类警告diss
 	#pragma warning(disable:4250)//域控制继承警告diss
 	#pragma warning(disable:26432)//不完全默认方法警告diss
@@ -379,6 +378,43 @@ protected:\
 
 //#define get_elc_defs using namespace ::elc::defs
 
+#if __has_include(<sal.h>)
+	#include <sal.h>//sal
+#endif
+#if defined(__ATTR_SAL)
+	#define _in_param _In_
+	#define _out_param _Out_
+	#define _inout_param _Inout_
+	#define _in_opt_param _In_opt_
+	#define _out_opt_param _Out_opt_
+	#define _inout_opt_param _Inout_opt_
+	#define _in_param_with_reads(size) _In_reads_(size)
+	#define _out_param_with_writes(size) _Out_writes_(size)
+	#define _in_param_end_by_zero _In_z_
+	#define _return_maybenull _Ret_maybenull_
+	#define _return_nevernull _Ret_notnull_
+	#define _return_nevernull_end_by_zero _Ret_z_
+	#define _return_nevernull_has_size(size) _Ret_writes_(size)
+
+	#define _end_by_zero _Null_terminated_
+#else
+	#define _in_param
+	#define _out_param
+	#define _inout_param
+	#define _in_opt_param
+	#define _out_opt_param
+	#define _inout_opt_param
+	#define _in_param_with_reads(size)
+	#define _out_param_with_writes(size)
+	#define _in_param_end_by_zero
+	#define _return_maybenull
+	#define _return_nevernull
+	#define _return_nevernull_end_by_zero
+	#define _return_nevernull_has_size(size)
+
+	#define _end_by_zero
+#endif
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
@@ -398,7 +434,8 @@ protected:\
 项目地址：https://github.com/steve02081504/ELC
 */
 push_and_disable_msvc_warning(4250);
-enum seek_type{beg,end,cur};
+enum class seek_type{beg,end,cur};
+using enum seek_type;
 no_vtable_struct base_stream{
 	virtual ~base_stream()=default;
 	virtual void*seek(seek_type,int_t)=0;
@@ -654,6 +691,22 @@ inline void test_end(){
 
 //#undef get_elc_defs
 
+#undef _in_param
+#undef _out_param
+#undef _inout_param
+#undef _in_opt_param
+#undef _out_opt_param
+#undef _inout_opt_param
+#undef _in_param_with_reads
+#undef _out_param_with_writes
+#undef _in_param_end_by_zero
+#undef _return_maybenull
+#undef _return_nevernull
+#undef _return_nevernull_end_by_zero
+#undef _return_nevernull_has_size
+
+#undef _end_by_zero
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
@@ -751,7 +804,6 @@ namespace elc::defs{
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
 	#pragma warning(disable:4099)//class与struct混用警告diss
-	#pragma warning(disable:26812)//enum class安利diss.
 	#pragma warning(disable:4584)//重复子类警告diss
 	#pragma warning(disable:4250)//域控制继承警告diss
 	#pragma warning(disable:26432)//不完全默认方法警告diss
@@ -987,6 +1039,43 @@ protected:\
 
 //#define get_elc_defs using namespace ::elc::defs
 
+#if __has_include(<sal.h>)
+	#include <sal.h>//sal
+#endif
+#if defined(__ATTR_SAL)
+	#define _in_param _In_
+	#define _out_param _Out_
+	#define _inout_param _Inout_
+	#define _in_opt_param _In_opt_
+	#define _out_opt_param _Out_opt_
+	#define _inout_opt_param _Inout_opt_
+	#define _in_param_with_reads(size) _In_reads_(size)
+	#define _out_param_with_writes(size) _Out_writes_(size)
+	#define _in_param_end_by_zero _In_z_
+	#define _return_maybenull _Ret_maybenull_
+	#define _return_nevernull _Ret_notnull_
+	#define _return_nevernull_end_by_zero _Ret_z_
+	#define _return_nevernull_has_size(size) _Ret_writes_(size)
+
+	#define _end_by_zero _Null_terminated_
+#else
+	#define _in_param
+	#define _out_param
+	#define _inout_param
+	#define _in_opt_param
+	#define _out_opt_param
+	#define _inout_opt_param
+	#define _in_param_with_reads(size)
+	#define _out_param_with_writes(size)
+	#define _in_param_end_by_zero
+	#define _return_maybenull
+	#define _return_nevernull
+	#define _return_nevernull_end_by_zero
+	#define _return_nevernull_has_size(size)
+
+	#define _end_by_zero
+#endif
+
 //file_end
 
 #line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
@@ -1005,7 +1094,8 @@ protected:\
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
-enum log_type{error,warning,info,note};
+enum class log_type{error,warning,info,note};
+using enum log_type;
 struct logger:noexcept_ostream{
 private:
 	noexcept_ostream*_tie_with=nullptr;
@@ -1225,6 +1315,22 @@ inline void test_end{
 #undef no_vtable_class
 
 //#undef get_elc_defs
+
+#undef _in_param
+#undef _out_param
+#undef _inout_param
+#undef _in_opt_param
+#undef _out_opt_param
+#undef _inout_opt_param
+#undef _in_param_with_reads
+#undef _out_param_with_writes
+#undef _in_param_end_by_zero
+#undef _return_maybenull
+#undef _return_nevernull
+#undef _return_nevernull_end_by_zero
+#undef _return_nevernull_has_size
+
+#undef _end_by_zero
 
 //file_end
 
