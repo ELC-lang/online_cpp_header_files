@@ -300,7 +300,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 //for float_size_t
 #define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
 //bitnum_of
-#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
 
 //for attribute
 #define def_common_attribute_with_nothing(name) \
@@ -444,6 +444,7 @@ protected:\
 	#define _in_param_with_reads(size) _In_reads_(size)
 	#define _out_param_with_writes(size) _Out_writes_(size)
 	#define _in_param_end_by_zero _In_z_
+	#define _in_param_end_by_zero_or_size(size) _In_reads_or_z_(size)
 	#define _return_maybenull _Ret_maybenull_
 	#define _return_nevernull _Ret_notnull_
 	#define _return_nevernull_end_by_zero _Ret_z_
@@ -460,6 +461,7 @@ protected:\
 	#define _in_param_with_reads(size)
 	#define _out_param_with_writes(size)
 	#define _in_param_end_by_zero
+	#define _in_param_end_by_zero_or_size(size)
 	#define _return_maybenull
 	#define _return_nevernull
 	#define _return_nevernull_end_by_zero
@@ -637,6 +639,7 @@ protected:\
 #undef _in_param_with_reads
 #undef _out_param_with_writes
 #undef _in_param_end_by_zero
+#undef _in_param_end_by_zero_or_size
 #undef _return_maybenull
 #undef _return_nevernull
 #undef _return_nevernull_end_by_zero
@@ -799,7 +802,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 //for float_size_t
 #define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
 //bitnum_of
-#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
 
 //for attribute
 #define def_common_attribute_with_nothing(name) \
@@ -943,6 +946,7 @@ protected:\
 	#define _in_param_with_reads(size) _In_reads_(size)
 	#define _out_param_with_writes(size) _Out_writes_(size)
 	#define _in_param_end_by_zero _In_z_
+	#define _in_param_end_by_zero_or_size(size) _In_reads_or_z_(size)
 	#define _return_maybenull _Ret_maybenull_
 	#define _return_nevernull _Ret_notnull_
 	#define _return_nevernull_end_by_zero _Ret_z_
@@ -959,6 +963,7 @@ protected:\
 	#define _in_param_with_reads(size)
 	#define _out_param_with_writes(size)
 	#define _in_param_end_by_zero
+	#define _in_param_end_by_zero_or_size(size)
 	#define _return_maybenull
 	#define _return_nevernull
 	#define _return_nevernull_end_by_zero
@@ -2104,7 +2109,7 @@ constexpr struct equal_t{
 		return a==b;
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr bool operator()(T*a,U*b,size_t size)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr bool operator()(_in_param_with_reads(size)T*a,_in_param_with_reads(size)U*b,size_t size)const noexcept(nothrow<T,U>){
 		while(size--){
 			if(*(a++)!=*(b++))
 				return false;
@@ -2121,14 +2126,16 @@ constexpr struct equal_t{
 		}
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr bool operator()(T*a,size_t size1,U*b,size_t size2)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr bool operator()( _in_param_with_reads(size1)T*a,size_t size1,
+											_in_param_with_reads(size2)U*b,size_t size2)const noexcept(nothrow<T,U>){
 		if(size1==size2)
 			return operator()(a,b,size1);
 		else
 			return false;
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr bool operator()(T*a,size_t size1,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr bool operator()(_in_param_with_reads(size1)T*a,size_t size1,
+								  _in_param_end_by_zero_or_size(size1)U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
 		while(size1--){
 			if(*a!=*b || *b==U{0})
 				return false;
@@ -2138,11 +2145,13 @@ constexpr struct equal_t{
 		return *b==U{0};
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr bool operator()(T*a,end_by_zero_t,U*b,size_t size2)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr bool operator()(_in_param_end_by_zero_or_size(size2)T*a,end_by_zero_t,
+													_in_param_with_reads(size2)U*b,size_t size2)const noexcept(nothrow<T,U>){
 		return operator()(b,size2,a,end_by_zero);
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr bool operator()(T*a,end_by_zero_t,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr bool operator()( _in_param_end_by_zero T*a,end_by_zero_t,
+											_in_param_end_by_zero U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
 		floop{
 			if(*a!=*b)
 				return false;
@@ -2153,7 +2162,8 @@ constexpr struct equal_t{
 		}
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr bool operator()(T*a,size_t size1,just_an_part_t,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr bool operator()(_in_param_with_reads(size1)T*a,size_t size1,just_an_part_t,
+								  _in_param_end_by_zero_or_size(size1)U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
 		while(size1--){
 			if(*a!=*b || *b==U{0})
 				return false;
@@ -2241,7 +2251,7 @@ constexpr struct compare_t{
 		return base_call(a,b);
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr auto operator()(T*a,U*b,size_t size)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr auto operator()(_in_param_with_reads(size)T*a,_in_param_with_reads(size)U*b,size_t size)const noexcept(nothrow<T,U>){
 		while(size--){
 			if(auto tmp=base_call(*(a++),*(b++)); tmp!=0)
 				return tmp;
@@ -2258,7 +2268,8 @@ constexpr struct compare_t{
 		}
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr auto operator()(T*a,size_t size1,U*b,size_t size2)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr auto operator()( _in_param_with_reads(size1)T*a,size_t size1,
+											_in_param_with_reads(size2)U*b,size_t size2)const noexcept(nothrow<T,U>){
 		type<T,U> tmp=size1<=>size2;
 		if(tmp!=0)
 			return tmp;
@@ -2266,7 +2277,8 @@ constexpr struct compare_t{
 			return operator()(a,b,size1);
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr auto operator()(T*a,size_t size1,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr auto operator()(_in_param_with_reads(size1)T*a,size_t size1,
+								  _in_param_end_by_zero_or_size(size1)U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
 		type<T,U> tmp=strong_ordering::equivalent;
 		while(size1--){
 			if(*b==U{0})
@@ -2279,7 +2291,8 @@ constexpr struct compare_t{
 		return *b==U{0}?tmp:strong_ordering::less;
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr auto operator()(T*a,end_by_zero_t,U*b,size_t size2)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr auto operator()(_in_param_end_by_zero_or_size(size2)T*a,end_by_zero_t,
+													_in_param_with_reads(size2)U*b,size_t size2)const noexcept(nothrow<T,U>){
 		type<T,U> tmp=strong_ordering::equivalent;
 		while(size2--){
 			if(*a==T{0})
@@ -2292,7 +2305,8 @@ constexpr struct compare_t{
 		return *b==U{0}?tmp:strong_ordering::less;
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr auto operator()(T*a,end_by_zero_t,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr auto operator()( _in_param_end_by_zero T*a,end_by_zero_t,
+											_in_param_end_by_zero U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
 		type<T,U> tmp=strong_ordering::equivalent;
 		floop{
 			if(*a==T{0})
@@ -2304,7 +2318,8 @@ constexpr struct compare_t{
 		}
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr auto operator()(T*a,size_t size1,just_an_part_t,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr auto operator()(_in_param_with_reads(size1)T*a,size_t size1,just_an_part_t,
+								  _in_param_end_by_zero_or_size(size1)U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
 		type<T,U> tmp=strong_ordering::equivalent;
 		while(size1--){
 			if(*b==U{0})
@@ -2317,7 +2332,8 @@ constexpr struct compare_t{
 		return tmp;
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr auto lexicographical(T*a,size_t size1,U*b,size_t size2)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr auto lexicographical(_in_param_with_reads(size1)T*a,size_t size1,
+												_in_param_with_reads(size2)U*b,size_t size2)const noexcept(nothrow<T,U>){
 		if(auto tmp=operator()(a,b,min(size1,size2)); tmp!=0)
 			return tmp;
 		else
@@ -2328,7 +2344,8 @@ constexpr struct compare_t{
 		return lexicographical(a,N1,b,N2);
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr auto lexicographical(T*a,size_t size1,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr auto lexicographical( _in_param_with_reads(size1)T*a,size_t size1,
+										_in_param_end_by_zero_or_size(size1)U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
 		while(size1--){
 			if(*b==U{0})
 				return strong_ordering::greater;
@@ -2341,7 +2358,8 @@ constexpr struct compare_t{
 						strong_ordering::less;
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr auto lexicographical(T*a,end_by_zero_t,U*b,size_t size2)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr auto lexicographical(_in_param_end_by_zero_or_size(size2)T*a,end_by_zero_t,
+														 _in_param_with_reads(size2)U*b,size_t size2)const noexcept(nothrow<T,U>){
 		while(size2--){
 			if(*a==T{0})
 				return strong_ordering::less;
@@ -2354,7 +2372,8 @@ constexpr struct compare_t{
 						strong_ordering::less;
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr auto lexicographical(T*a,end_by_zero_t,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr auto lexicographical(_in_param_end_by_zero T*a,end_by_zero_t,
+												_in_param_end_by_zero U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
 		floop{
 			if(*a==T{0})
 				return *b==U{0}?strong_ordering::equivalent:
@@ -2366,7 +2385,8 @@ constexpr struct compare_t{
 		}
 	}
 	template<typename T,typename U>
-	[[nodiscard]]constexpr auto lexicographical(T*a,size_t size1,just_an_part_t,U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
+	[[nodiscard]]constexpr auto lexicographical( _in_param_with_reads(size1)T*a,size_t size1,just_an_part_t,
+										_in_param_end_by_zero_or_size(size1)U*b,end_by_zero_t)const noexcept(nothrow<T,U>){
 		while(size1--){
 			if(*b==U{0})
 				return strong_ordering::greater;
@@ -2581,11 +2601,6 @@ using array_like_n::array_end_by_zero_t;
 */
 template<class T> requires ::std::is_integral_v<T>
 constexpr size_t number_of_possible_values_per=max(type_info<::std::make_unsigned_t<T>>)+size_t{1};
-/*!
-	每个T有多少位
-*/
-template<class T>
-constexpr size_t bitnumof=sizeof(T)*CHAR_BIT;
 
 /*!
 	功能: byte* 类型数据转换为 T&，不进行任何检查
@@ -4372,6 +4387,7 @@ public:
 #undef _in_param_with_reads
 #undef _out_param_with_writes
 #undef _in_param_end_by_zero
+#undef _in_param_end_by_zero_or_size
 #undef _return_maybenull
 #undef _return_nevernull
 #undef _return_nevernull_end_by_zero
@@ -4654,7 +4670,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 //for float_size_t
 #define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
 //bitnum_of
-#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
 
 //for attribute
 #define def_common_attribute_with_nothing(name) \
@@ -4798,6 +4814,7 @@ protected:\
 	#define _in_param_with_reads(size) _In_reads_(size)
 	#define _out_param_with_writes(size) _Out_writes_(size)
 	#define _in_param_end_by_zero _In_z_
+	#define _in_param_end_by_zero_or_size(size) _In_reads_or_z_(size)
 	#define _return_maybenull _Ret_maybenull_
 	#define _return_nevernull _Ret_notnull_
 	#define _return_nevernull_end_by_zero _Ret_z_
@@ -4814,6 +4831,7 @@ protected:\
 	#define _in_param_with_reads(size)
 	#define _out_param_with_writes(size)
 	#define _in_param_end_by_zero
+	#define _in_param_end_by_zero_or_size(size)
 	#define _return_maybenull
 	#define _return_nevernull
 	#define _return_nevernull_end_by_zero
@@ -5255,6 +5273,7 @@ namespace overhead_n{
 #undef _in_param_with_reads
 #undef _out_param_with_writes
 #undef _in_param_end_by_zero
+#undef _in_param_end_by_zero_or_size
 #undef _return_maybenull
 #undef _return_nevernull
 #undef _return_nevernull_end_by_zero
@@ -5455,7 +5474,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 //for float_size_t
 #define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
 //bitnum_of
-#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
 
 //for attribute
 #define def_common_attribute_with_nothing(name) \
@@ -5599,6 +5618,7 @@ protected:\
 	#define _in_param_with_reads(size) _In_reads_(size)
 	#define _out_param_with_writes(size) _Out_writes_(size)
 	#define _in_param_end_by_zero _In_z_
+	#define _in_param_end_by_zero_or_size(size) _In_reads_or_z_(size)
 	#define _return_maybenull _Ret_maybenull_
 	#define _return_nevernull _Ret_notnull_
 	#define _return_nevernull_end_by_zero _Ret_z_
@@ -5615,6 +5635,7 @@ protected:\
 	#define _in_param_with_reads(size)
 	#define _out_param_with_writes(size)
 	#define _in_param_end_by_zero
+	#define _in_param_end_by_zero_or_size(size)
 	#define _return_maybenull
 	#define _return_nevernull
 	#define _return_nevernull_end_by_zero
@@ -5792,6 +5813,7 @@ protected:\
 #undef _in_param_with_reads
 #undef _out_param_with_writes
 #undef _in_param_end_by_zero
+#undef _in_param_end_by_zero_or_size
 #undef _return_maybenull
 #undef _return_nevernull
 #undef _return_nevernull_end_by_zero
@@ -5947,7 +5969,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 //for float_size_t
 #define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
 //bitnum_of
-#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
 
 //for attribute
 #define def_common_attribute_with_nothing(name) \
@@ -6091,6 +6113,7 @@ protected:\
 	#define _in_param_with_reads(size) _In_reads_(size)
 	#define _out_param_with_writes(size) _Out_writes_(size)
 	#define _in_param_end_by_zero _In_z_
+	#define _in_param_end_by_zero_or_size(size) _In_reads_or_z_(size)
 	#define _return_maybenull _Ret_maybenull_
 	#define _return_nevernull _Ret_notnull_
 	#define _return_nevernull_end_by_zero _Ret_z_
@@ -6107,6 +6130,7 @@ protected:\
 	#define _in_param_with_reads(size)
 	#define _out_param_with_writes(size)
 	#define _in_param_end_by_zero
+	#define _in_param_end_by_zero_or_size(size)
 	#define _return_maybenull
 	#define _return_nevernull
 	#define _return_nevernull_end_by_zero
@@ -6328,6 +6352,7 @@ protected:\
 #undef _in_param_with_reads
 #undef _out_param_with_writes
 #undef _in_param_end_by_zero
+#undef _in_param_end_by_zero_or_size
 #undef _return_maybenull
 #undef _return_nevernull
 #undef _return_nevernull_end_by_zero
@@ -6513,7 +6538,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 //for float_size_t
 #define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
 //bitnum_of
-#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
 
 //for attribute
 #define def_common_attribute_with_nothing(name) \
@@ -6657,6 +6682,7 @@ protected:\
 	#define _in_param_with_reads(size) _In_reads_(size)
 	#define _out_param_with_writes(size) _Out_writes_(size)
 	#define _in_param_end_by_zero _In_z_
+	#define _in_param_end_by_zero_or_size(size) _In_reads_or_z_(size)
 	#define _return_maybenull _Ret_maybenull_
 	#define _return_nevernull _Ret_notnull_
 	#define _return_nevernull_end_by_zero _Ret_z_
@@ -6673,6 +6699,7 @@ protected:\
 	#define _in_param_with_reads(size)
 	#define _out_param_with_writes(size)
 	#define _in_param_end_by_zero
+	#define _in_param_end_by_zero_or_size(size)
 	#define _return_maybenull
 	#define _return_nevernull
 	#define _return_nevernull_end_by_zero
@@ -6850,6 +6877,7 @@ protected:\
 #undef _in_param_with_reads
 #undef _out_param_with_writes
 #undef _in_param_end_by_zero
+#undef _in_param_end_by_zero_or_size
 #undef _return_maybenull
 #undef _return_nevernull
 #undef _return_nevernull_end_by_zero
@@ -7082,7 +7110,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 //for float_size_t
 #define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
 //bitnum_of
-#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
 
 //for attribute
 #define def_common_attribute_with_nothing(name) \
@@ -7226,6 +7254,7 @@ protected:\
 	#define _in_param_with_reads(size) _In_reads_(size)
 	#define _out_param_with_writes(size) _Out_writes_(size)
 	#define _in_param_end_by_zero _In_z_
+	#define _in_param_end_by_zero_or_size(size) _In_reads_or_z_(size)
 	#define _return_maybenull _Ret_maybenull_
 	#define _return_nevernull _Ret_notnull_
 	#define _return_nevernull_end_by_zero _Ret_z_
@@ -7242,6 +7271,7 @@ protected:\
 	#define _in_param_with_reads(size)
 	#define _out_param_with_writes(size)
 	#define _in_param_end_by_zero
+	#define _in_param_end_by_zero_or_size(size)
 	#define _return_maybenull
 	#define _return_nevernull
 	#define _return_nevernull_end_by_zero
@@ -7450,6 +7480,7 @@ namespace elc::defs::locale::str{
 #undef _in_param_with_reads
 #undef _out_param_with_writes
 #undef _in_param_end_by_zero
+#undef _in_param_end_by_zero_or_size
 #undef _return_maybenull
 #undef _return_nevernull
 #undef _return_nevernull_end_by_zero
@@ -7614,7 +7645,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 //for float_size_t
 #define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
 //bitnum_of
-#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
 
 //for attribute
 #define def_common_attribute_with_nothing(name) \
@@ -7758,6 +7789,7 @@ protected:\
 	#define _in_param_with_reads(size) _In_reads_(size)
 	#define _out_param_with_writes(size) _Out_writes_(size)
 	#define _in_param_end_by_zero _In_z_
+	#define _in_param_end_by_zero_or_size(size) _In_reads_or_z_(size)
 	#define _return_maybenull _Ret_maybenull_
 	#define _return_nevernull _Ret_notnull_
 	#define _return_nevernull_end_by_zero _Ret_z_
@@ -7774,6 +7806,7 @@ protected:\
 	#define _in_param_with_reads(size)
 	#define _out_param_with_writes(size)
 	#define _in_param_end_by_zero
+	#define _in_param_end_by_zero_or_size(size)
 	#define _return_maybenull
 	#define _return_nevernull
 	#define _return_nevernull_end_by_zero
@@ -13670,6 +13703,7 @@ inline void test_end(){
 #undef _in_param_with_reads
 #undef _out_param_with_writes
 #undef _in_param_end_by_zero
+#undef _in_param_end_by_zero_or_size
 #undef _return_maybenull
 #undef _return_nevernull
 #undef _return_nevernull_end_by_zero
@@ -13934,7 +13968,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 //for float_size_t
 #define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
 //bitnum_of
-#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
 
 //for attribute
 #define def_common_attribute_with_nothing(name) \
@@ -14078,6 +14112,7 @@ protected:\
 	#define _in_param_with_reads(size) _In_reads_(size)
 	#define _out_param_with_writes(size) _Out_writes_(size)
 	#define _in_param_end_by_zero _In_z_
+	#define _in_param_end_by_zero_or_size(size) _In_reads_or_z_(size)
 	#define _return_maybenull _Ret_maybenull_
 	#define _return_nevernull _Ret_notnull_
 	#define _return_nevernull_end_by_zero _Ret_z_
@@ -14094,6 +14129,7 @@ protected:\
 	#define _in_param_with_reads(size)
 	#define _out_param_with_writes(size)
 	#define _in_param_end_by_zero
+	#define _in_param_end_by_zero_or_size(size)
 	#define _return_maybenull
 	#define _return_nevernull
 	#define _return_nevernull_end_by_zero
@@ -14271,6 +14307,7 @@ protected:\
 #undef _in_param_with_reads
 #undef _out_param_with_writes
 #undef _in_param_end_by_zero
+#undef _in_param_end_by_zero_or_size
 #undef _return_maybenull
 #undef _return_nevernull
 #undef _return_nevernull_end_by_zero
@@ -14433,7 +14470,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 //for float_size_t
 #define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
 //bitnum_of
-#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
 
 //for attribute
 #define def_common_attribute_with_nothing(name) \
@@ -14577,6 +14614,7 @@ protected:\
 	#define _in_param_with_reads(size) _In_reads_(size)
 	#define _out_param_with_writes(size) _Out_writes_(size)
 	#define _in_param_end_by_zero _In_z_
+	#define _in_param_end_by_zero_or_size(size) _In_reads_or_z_(size)
 	#define _return_maybenull _Ret_maybenull_
 	#define _return_nevernull _Ret_notnull_
 	#define _return_nevernull_end_by_zero _Ret_z_
@@ -14593,6 +14631,7 @@ protected:\
 	#define _in_param_with_reads(size)
 	#define _out_param_with_writes(size)
 	#define _in_param_end_by_zero
+	#define _in_param_end_by_zero_or_size(size)
 	#define _return_maybenull
 	#define _return_nevernull
 	#define _return_nevernull_end_by_zero
@@ -14834,6 +14873,7 @@ inline void test_end(){
 #undef _in_param_with_reads
 #undef _out_param_with_writes
 #undef _in_param_end_by_zero
+#undef _in_param_end_by_zero_or_size
 #undef _return_maybenull
 #undef _return_nevernull
 #undef _return_nevernull_end_by_zero
@@ -15080,7 +15120,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 //for float_size_t
 #define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
 //bitnum_of
-#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
 
 //for attribute
 #define def_common_attribute_with_nothing(name) \
@@ -15224,6 +15264,7 @@ protected:\
 	#define _in_param_with_reads(size) _In_reads_(size)
 	#define _out_param_with_writes(size) _Out_writes_(size)
 	#define _in_param_end_by_zero _In_z_
+	#define _in_param_end_by_zero_or_size(size) _In_reads_or_z_(size)
 	#define _return_maybenull _Ret_maybenull_
 	#define _return_nevernull _Ret_notnull_
 	#define _return_nevernull_end_by_zero _Ret_z_
@@ -15240,6 +15281,7 @@ protected:\
 	#define _in_param_with_reads(size)
 	#define _out_param_with_writes(size)
 	#define _in_param_end_by_zero
+	#define _in_param_end_by_zero_or_size(size)
 	#define _return_maybenull
 	#define _return_nevernull
 	#define _return_nevernull_end_by_zero
@@ -15533,6 +15575,7 @@ inline void test_end(){
 #undef _in_param_with_reads
 #undef _out_param_with_writes
 #undef _in_param_end_by_zero
+#undef _in_param_end_by_zero_or_size
 #undef _return_maybenull
 #undef _return_nevernull
 #undef _return_nevernull_end_by_zero
@@ -15741,7 +15784,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 //for float_size_t
 #define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
 //bitnum_of
-#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
 
 //for attribute
 #define def_common_attribute_with_nothing(name) \
@@ -15885,6 +15928,7 @@ protected:\
 	#define _in_param_with_reads(size) _In_reads_(size)
 	#define _out_param_with_writes(size) _Out_writes_(size)
 	#define _in_param_end_by_zero _In_z_
+	#define _in_param_end_by_zero_or_size(size) _In_reads_or_z_(size)
 	#define _return_maybenull _Ret_maybenull_
 	#define _return_nevernull _Ret_notnull_
 	#define _return_nevernull_end_by_zero _Ret_z_
@@ -15901,6 +15945,7 @@ protected:\
 	#define _in_param_with_reads(size)
 	#define _out_param_with_writes(size)
 	#define _in_param_end_by_zero
+	#define _in_param_end_by_zero_or_size(size)
 	#define _return_maybenull
 	#define _return_nevernull
 	#define _return_nevernull_end_by_zero
@@ -17162,6 +17207,7 @@ inline void test_end(){
 #undef _in_param_with_reads
 #undef _out_param_with_writes
 #undef _in_param_end_by_zero
+#undef _in_param_end_by_zero_or_size
 #undef _return_maybenull
 #undef _return_nevernull
 #undef _return_nevernull_end_by_zero
@@ -17366,7 +17412,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 //for float_size_t
 #define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
 //bitnum_of
-#define bitnum_of(...) (bitnumof<__VA_ARGS__>)
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
 
 //for attribute
 #define def_common_attribute_with_nothing(name) \
@@ -17510,6 +17556,7 @@ protected:\
 	#define _in_param_with_reads(size) _In_reads_(size)
 	#define _out_param_with_writes(size) _Out_writes_(size)
 	#define _in_param_end_by_zero _In_z_
+	#define _in_param_end_by_zero_or_size(size) _In_reads_or_z_(size)
 	#define _return_maybenull _Ret_maybenull_
 	#define _return_nevernull _Ret_notnull_
 	#define _return_nevernull_end_by_zero _Ret_z_
@@ -17526,6 +17573,7 @@ protected:\
 	#define _in_param_with_reads(size)
 	#define _out_param_with_writes(size)
 	#define _in_param_end_by_zero
+	#define _in_param_end_by_zero_or_size(size)
 	#define _return_maybenull
 	#define _return_nevernull
 	#define _return_nevernull_end_by_zero
@@ -17722,6 +17770,7 @@ protected:\
 #undef _in_param_with_reads
 #undef _out_param_with_writes
 #undef _in_param_end_by_zero
+#undef _in_param_end_by_zero_or_size
 #undef _return_maybenull
 #undef _return_nevernull
 #undef _return_nevernull_end_by_zero
