@@ -179,6 +179,438 @@ namespace elc{
 //file_end
 
 #line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
+//basic_environment.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace elc::defs{
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+//_defs.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+
+//undefs at "_undefs.hpp"
+
+//set ELC_WARNING_LEVEL default to 4(max)
+#if !defined(ELC_WARNING_LEVEL)
+	#define ELC_WARNING_LEVEL 4
+#endif
+
+#if defined(_MSC_VER)
+	#pragma warning(push,ELC_WARNING_LEVEL)
+	#pragma warning(disable:4099)//class与struct混用警告diss
+	#pragma warning(disable:4584)//重复子类警告diss
+	#pragma warning(disable:4250)//域控制继承警告diss
+	#pragma warning(disable:26432)//不完全默认方法警告diss
+	#pragma warning(disable:26435)//virtual override方法警告diss
+	#pragma warning(disable:26481)//容器安利diss
+	#pragma warning(disable:26446)//gsl::at安利diss
+	#pragma warning(disable:26434)//方法覆盖警告diss
+	#pragma warning(disable:26429)//gsl::not_null安利diss
+	#pragma warning(disable:26471)//对void*进行static_cast安利diss
+	#pragma warning(disable:26474)//隐式指针转换显式cast警告diss
+	#pragma warning(disable:26473)//相同指针显式cast警告diss
+	#pragma warning(disable:26456)//隐藏非虚运算符警告diss
+	#pragma warning(disable:26485)//数组作指针警告diss
+	#pragma warning(disable:26490)//reinterpret_cast警告diss
+	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
+	#pragma warning(disable:26482)//非常数数组索引警告diss
+	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(_MSC_VER)
+	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
+	#define push_msvc_warning() __pragma(warning(push))
+	#define pop_msvc_warning() __pragma(warning(pop))
+	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
+#else
+	#define suppress_msvc_warning(...)
+	#define disable_msvc_warning(...)
+	#define push_msvc_warning()
+	#define pop_msvc_warning()
+	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("elc")
+	#undef elc
+#endif
+//
+#if defined(ELC_VOID_NAME)
+	#undef void
+#endif
+
+// #define often_noexcept
+#define noexcept_as(...) noexcept(noexcept((__VA_ARGS__)))//dnmd C艹标准就是没有noexcept_as_auto
+#define noexcept_as_auto MAGIC//哦现在有了
+#define constexpr_as(...) MAGIC constexpr//( •̀ ω •́ )✌
+#define constexpr_as_auto MAGIC MAGIC constexpr//✌( •̀ ω •́ )✌
+
+#define using_method_from_base_t(name,...) \
+template<class...Args> requires was_not_an_ill_form(declvalue(base_t).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(base_t::name(declvalue(Args)...))\
+{\
+	return base_t::name(forward<Args>(rest)...);\
+}\
+
+#define using_method_from_value(name,value_name,...) \
+template<class...Args> requires was_not_an_ill_form(re_declvalue(value_name).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(declvalue(Args)...))\
+{\
+	return value_name.name(forward<Args>(rest)...);\
+}\
+
+#define floop while(__builtin_is_my_dick_still_there())
+#define enable_adl(name) void name()noexcept=delete
+
+#define re_declvalue(...) (declvalue(decltype(__VA_ARGS__)))
+#define re_decltype(...) (decltype(declvalue(__VA_ARGS__)))
+
+#define declvalue(...) (::std::declval<__VA_ARGS__>())
+
+/*! 实例化到此将引发错误 */
+#define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发警告 */
+#define template_warning(reason) template_warning_helper<T>(reason)
+
+//for type_info
+#define type_info_of(...) base_type_info_t(typeid(__VA_ARGS__))
+#define type_name_of(...) (type_info_of(__VA_ARGS__).name())
+
+#define is_common_attribute(name) public attribute<T,name<T>>
+#define is_special_attribute(name) public attribute<T,name>
+
+#define has_attribute(...) template_name has_attribute_helper<__VA_ARGS__>()
+#define not_has_attribute(...) template_name not_has_has_attribute_helper<__VA_ARGS__>()
+
+//for float_size_t
+#define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
+//bitnum_of
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
+
+//for attribute
+#define def_common_attribute_with_nothing(name) \
+template<typename T>\
+class name{}\
+
+#define def_special_attribute_with_nothing(name) \
+class name{}\
+
+#define common_attribute_t template<class>class
+#define special_attribute_t class
+
+/*!
+若参数的布尔值为零，那么此模板不会实例化
+
+为什么不用cpp20的constraints？
+1.不能类内定义
+2.不能作为模板参数
+一句话总结：c艹标准会sb
+*/
+#define enable_if(...) class enable_state= ::std::enable_if_t<__VA_ARGS__>
+/*! 默认参与模板候选 */
+#define enabled_by_default class enable_state=void
+/*! 默认不参与模板候选 */
+#define disabled_by_default class enable_state= ::std::enable_if_t<false>
+/*! 若参数为病式，那么此模板不会实例化 */
+#define enable_if_not_ill_form(...) class enable_state= ::std::void_t<decltype(__VA_ARGS__)>
+/*!用于模板声明 */
+#define enable_flag class enable_state
+
+#define was_an_ill_form(...) (!was_not_an_ill_form(__VA_ARGS__))
+#define was_an_ill_form_with_parameter(...) (!was_not_an_ill_form_with_parameter(__VA_ARGS__))
+#define was_not_an_ill_form(...) (bool(requires{__VA_ARGS__;}))
+#define was_not_an_ill_form_and_noexcept(...) (bool(requires{__VA_ARGS__;{__VA_ARGS__}noexcept;}))
+#define was_not_an_ill_form_with_parameter(...) (bool(requires __VA_ARGS__ ))
+
+/*! 让lambda递归更加美观 */
+#define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
+/*! 让lambda递归更加美观 */
+#define get_recursive_lambda_caller(name) \
+lambda_with_catch(&)(auto&&...Args){\
+	return name(name,Args...);\
+}
+/*! 让lambda定义更加美观 */
+#define lambda []
+/*! 让lambda定义更加美观 */
+#define lambda_with_catch(...) [__VA_ARGS__]
+/*! 让lambda定义更加美观 */
+#define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
+//recursive_lambda_self_referential_reserved_symbolname
+#define lambda_RLSRRS _my_jb_super_sb_name_
+
+#define MAGIC//ahh,ko no tenno da!
+
+/*! 装饰性语法糖 */
+#define nothing
+
+/*! aya风格语法糖 */
+#define elseif else if
+/*! aya风格语法糖 */
+#define _big_than_ >
+/*! aya风格语法糖 */
+#define _small_than_ <
+
+#if defined(_MSC_VER)
+	#define not !
+	#define and &&
+	#define or ||
+#endif
+
+/*! 进入名称空间，并不是很美观 */
+#define INTER_NAMESPACE(NAMESPACENAME) namespace NAMESPACENAME{
+/*! 退出名称空间，并不是很美观 */
+#define BREAK_NAMESPACE }
+
+/*! template说明符 */
+#define template_name template
+/*! template说明符 */
+#define type_name class
+
+#if defined(DEBUG) || defined(_DEBUG)
+	#define not_in_debug 0
+#else
+	#define not_in_debug 1
+#endif
+
+#define es U""
+#define ec(ch) U ## ch
+
+#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
+	#define ELC_TEST_EVENTNAME(name) stest_eventer _the_stest_eventer__(L""name)
+#else
+	#define ELC_TEST_EVENTNAME(name)
+#endif
+
+#define override_instance_struct \
+protected:\
+	virtual void abstract_method_unget_this()noexcept_as(instance_struct<this_t>::abstract_method_unget_this())override{instance_struct<this_t>::abstract_method_unget_this();}\
+	virtual void* _abstract_method_copy_get_this()noexcept_as(instance_struct<this_t>::_abstract_method_copy_get_this())override{return instance_struct<this_t>::_abstract_method_copy_get_this();}\
+	virtual void* _abstract_method_get_resize_this(size_t size)noexcept_as(instance_struct<this_t>::instance_struct<this_t>::_abstract_method_get_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_resize_this(size);}\
+	virtual void* _abstract_method_get_forward_resize_this(size_t size)noexcept_as(instance_struct<this_t>::_abstract_method_get_forward_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_forward_resize_this(size);}\
+	virtual size_t abstract_method_get_size_of_get_for_this()noexcept override{return instance_struct<this_t>::abstract_method_get_size_of_get_for_this();}
+
+#if defined(_WIN32)
+	#define distinctive __declspec(dllexport)
+#else
+	#define distinctive
+#endif
+
+#if defined(_WIN32)
+	#define force_inline __forceinline
+#elif defined(__GNUC__)
+	#define force_inline __attribute__((always_inline)) inline
+#else
+	#define force_inline inline
+#endif
+
+#if defined(_WIN32)
+	#define with_no_vtable __declspec(novtable)
+#else
+	#define with_no_vtable
+#endif
+
+#define in_consteval (::std::is_constant_evaluated())
+
+#define no_vtable_struct struct with_no_vtable
+#define no_vtable_class class with_no_vtable
+
+//#define get_elc_defs using namespace ::elc::defs
+
+//file_end
+
+	#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
+
+	inline namespace basic_environment{
+		/// 每个bit（不是字节）的可能性
+		/// 为什么c艹委员会不定义这个？
+		constexpr size_t BIT_POSSIBILITY=2;
+		/*! 给定大小的无符号整数类型 */
+		template<size_t size>
+		using unsigned_specific_size_t=decltype(lambda(){
+			if constexpr(size==1)
+				return uint8_t{};
+			else if constexpr(size==2)
+				return uint16_t{};
+			else if constexpr(size==4)
+				return uint32_t{};
+			else if constexpr(size==8)
+				return uint64_t{};
+		}());
+	}
+
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
+//_undefs.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+
+//defs at "_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(pop)
+#endif
+#undef suppress_msvc_warning
+#undef disable_msvc_warning
+#undef push_msvc_warning
+#undef pop_msvc_warning
+#undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("elc")
+#endif
+
+//
+#if defined(ELC_VOID_NAME)
+	#define void the_void
+#endif
+
+// #undef often_noexcept
+#undef noexcept_as
+#undef noexcept_as_auto
+#undef constexpr_as
+#undef constexpr_as_auto
+
+#undef using_method_from_base_t
+#undef using_method_from_value
+
+#undef floop
+#undef enable_adl
+
+#undef re_declvalue
+#undef re_decltype
+
+#undef declvalue
+
+#undef template_error
+#undef template_warning
+
+#undef type_info_of
+#undef type_name_of
+
+#undef is_common_attribute
+#undef is_special_attribute
+
+#undef has_attribute
+#undef not_has_attribute
+
+#undef float_size_of
+#undef bitnum_of
+
+#undef def_common_attribute_with_nothing
+#undef def_special_attribute_with_nothing
+
+#undef common_attribute_t
+#undef special_attribute_t
+
+#undef enable_if
+#undef enabled_by_default
+#undef disabled_by_default
+#undef enable_if_not_ill_form
+#undef enable_flag
+
+#undef was_an_ill_form
+#undef was_an_ill_form_with_parameter
+#undef was_not_an_ill_form
+#undef was_not_an_ill_form_and_noexcept
+#undef was_not_an_ill_form_with_parameter
+
+#undef recursive_lambda
+#undef get_recursive_lambda_caller
+#undef lambda
+#undef lambda_with_catch
+#undef self_recursion
+#undef lambda_RLSRRS
+
+#undef MAGIC
+
+#undef nothing
+
+#undef elseif
+#undef _big_than_
+#undef _small_than_
+
+#if defined(_MSC_VER)
+	#undef not
+	#undef and
+	#undef or
+#endif
+
+#undef INTER_NAMESPACE
+#undef BREAK_NAMESPACE
+
+#undef szie
+#undef form
+
+#undef template_name
+#undef type_name
+
+#undef not_in_debug
+
+#undef es
+#undef ec
+
+#undef ELC_TEST_EVENTNAME
+
+#undef override_instance_struct
+
+#undef distinctive
+
+#undef force_inline
+
+#undef with_no_vtable
+
+#undef in_consteval
+
+#undef no_vtable_struct
+#undef no_vtable_class
+
+//#undef get_elc_defs
+
+//file_end
+
+	#line 29 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
+}
+
+//file_end
+
+#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
 namespace elc::defs{ //在elc::defs中定义内容
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
 //_defs.hpp
@@ -200,26 +632,7 @@ namespace elc::defs{ //在elc::defs中定义内容
 //undefs at "_undefs.hpp"
 
 //set ELC_WARNING_LEVEL default to 4(max)
-#if !defined(ELC_WARNING_LEVEL)
-	#define ELC_WARNING_LEVEL 4
-#endif
-
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
-//basic_environment.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-/// 每个bit（不是字节）的可能性
-/// 为什么c艹委员会不定义这个？
-#define BIT_POSSIBILITY 2
-
-//file_end
-
-#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -465,7 +878,7 @@ protected:\
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
 
 	namespace base{}
 	using namespace base;//导出内容：defs内的名称空间只起到大体名称分组的作用，不进行名称阻拦
@@ -973,6 +1386,16 @@ namespace magic_number{
 		*/
 	}
 	/// 求大于某数的素数
+	template<class T> requires ::std::is_arithmetic_v<T>
+	[[nodiscard]]inline constexpr T get_prime_num_big_than(T a){
+		if constexpr(::std::is_floating_point_v<T>)
+			a=ceil(a);
+		do
+			a++;
+		while(!is_prime_num(a));
+		return a;
+	}
+	/// 求大于或等于某数的素数
 	template<class T> requires ::std::is_arithmetic_v<T>
 	[[nodiscard]]inline constexpr T get_prime_num_big_or_eq_than(T a){
 		if constexpr(::std::is_floating_point_v<T>)
@@ -2113,11 +2536,18 @@ template<class T>
 */
 template<class...Ts>
 struct data_block:non_copyable,non_moveable{
+	static constexpr size_t size=max({sizeof(Ts)...});
+	static constexpr size_t align=max({alignof(Ts)...});
 	push_and_disable_msvc_warning(4324);
-	alignas(max({alignof(Ts)...}))
-	byte _data[max({sizeof(Ts)...})];
-	constexpr operator byte*(){return _data;}
+	alignas(align)byte _data[size];
 	pop_msvc_warning();
+	constexpr operator byte*(){return _data;}
+	constexpr operator const byte*()const{return _data;}
+	//begin & end
+	constexpr byte*begin(){return _data;}
+	constexpr byte*end(){return _data+size;}
+	constexpr const byte*begin()const{return _data;}
+	constexpr const byte*end()const{return _data+size;}
 };
 
 /*!
@@ -3704,9 +4134,113 @@ public:
 
 #line 39 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/rand.hpp"
+//rand.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace rand_n{
+	typedef uint_t seed_type;//考虑到通用性以便于跨平台通用的seed，不可以使用uintmax_t
+	distinctive inline seed_type rand_seed=magic_number::god;
+	template<class T>
+	struct rand_t{
+		static constexpr bool able=::std::is_trivially_constructible_v<T> && was_not_an_ill_form(unsigned_specific_size_t<sizeof(T)>{});
+		static constexpr bool nothrow=able;
+	private:
+		typedef unsigned_specific_size_t<min(2*sizeof(T),sizeof(seed_type))> rand_value_type;
+		//m
+		static constexpr size_t modulus=size_t(pow(BIT_POSSIBILITY,bitnum_of(rand_value_type)));
+		//a
+		static constexpr size_t multiplier=lambda(){
+			using namespace magic_number;
+			//https://en.wikipedia.org/wiki/Linear_congruential_generator#Period_length
+			const size_t m=modulus;
+			size_t a_off_1=1;
+			/*
+				`a − 1` is divisible by all prime factors of m
+			*/
+			{
+				//get all prime factors of BIT_POSSIBILITY
+				size_t prime_test=BIT_POSSIBILITY;
+				size_t prime_tester=2;
+				while(prime_test!=1){
+					if(prime_test%prime_tester==0){
+						prime_test/=prime_tester;
+						if(a_off_1%prime_tester)
+							a_off_1*=prime_tester;
+						//reset prime_test
+						prime_tester=2;
+					}
+					else
+						prime_tester=get_prime_num_big_than(prime_tester);
+				}
+			}
+			/*
+				`a − 1` should not be any more divisible by prime factors of m
+			*/
+			a_off_1*=get_prime_num_big_than(a_off_1);
+			/*
+				`a − 1` is divisible by 4 if m is divisible by 4.
+			*/
+			while(m%4==0 && a_off_1%4!=0)
+				a_off_1*=2;
+			//return a
+			return a_off_1+1;
+		}();
+		//c
+		static constexpr size_t increment=lambda(){
+			//https://en.wikipedia.org/wiki/Linear_congruential_generator#Period_length
+			/*
+				`c` and `m` are coprime.
+			*/
+			return 1;
+		}();
+
+		typedef unsigned_specific_size_t<sizeof(rand_value_type)/2> result_type;
+	public:
+		[[nodiscard]]static force_inline result_type base_call()noexcept{
+			const seed_type old_seed=rand_seed;
+			rand_seed=multiplier*old_seed+increment;
+			constexpr size_t half_bitnum=bitnum_of(result_type);
+			const auto old_result=rand_value_type(old_seed%modulus);
+			const auto new_result=rand_value_type(rand_seed%modulus);
+			return rotl(result_type(old_result >> half_bitnum), new_result << half_bitnum);
+		}
+		//rand
+		[[nodiscard]]T operator()()const noexcept{
+			data_block<T>aret;
+			if constexpr(sizeof(T)==sizeof(result_type))
+				data_cast<result_type>(aret)=base_call();
+			else{
+				byte*p=aret;
+				for(size_t i=0;i<sizeof(T);i+=sizeof(result_type)){
+					data_cast<result_type>(p+i)=base_call();
+				}
+			}
+			return data_cast<T>(aret);
+		}
+	};
+	template<class T>
+	constexpr rand_t<T>rand{};
+
+	//set_seed
+	void set_seed(seed_type seed)noexcept{
+		rand_seed=seed;
+	}
+}
+using rand_n::rand;
+
 //file_end
 
-		#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+#line 41 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+
+//file_end
+
+		#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
 	}
 
 	//由于vcruntime的type_info在全局定义,这里需要额外声明使用base::type_info.
@@ -3754,8 +4288,6 @@ public:
 	#pragma pop_macro("elc")
 #endif
 
-//for basic_environment.hpp
-#undef BIT_POSSIBILITY
 //
 #if defined(ELC_VOID_NAME)
 	#define void the_void
@@ -3869,7 +4401,7 @@ public:
 
 //file_end
 
-	#line 38 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+	#line 39 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
 }
 
 //file_end
@@ -4013,23 +4545,6 @@ elc依赖的基础函数.
 
 //set ELC_WARNING_LEVEL default to 4(max)
 #line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
-//basic_environment.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-/// 每个bit（不是字节）的可能性
-/// 为什么c艹委员会不定义这个？
-#define BIT_POSSIBILITY 2
-
-//file_end
-
-#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -4584,8 +5099,6 @@ namespace overhead_n{
 	#pragma pop_macro("elc")
 #endif
 
-//for basic_environment.hpp
-#undef BIT_POSSIBILITY
 //
 #if defined(ELC_VOID_NAME)
 	#define void the_void
@@ -4782,23 +5295,6 @@ namespace elc{
 
 //set ELC_WARNING_LEVEL default to 4(max)
 #line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
-//basic_environment.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-/// 每个bit（不是字节）的可能性
-/// 为什么c艹委员会不定义这个？
-#define BIT_POSSIBILITY 2
-
-//file_end
-
-#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -5133,8 +5629,6 @@ protected:\
 	#pragma pop_macro("elc")
 #endif
 
-//for basic_environment.hpp
-#undef BIT_POSSIBILITY
 //
 #if defined(ELC_VOID_NAME)
 	#define void the_void
@@ -5393,23 +5887,6 @@ namespace elc::defs::locale{
 
 //set ELC_WARNING_LEVEL default to 4(max)
 #line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
-//basic_environment.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-/// 每个bit（不是字节）的可能性
-/// 为什么c艹委员会不定义这个？
-#define BIT_POSSIBILITY 2
-
-//file_end
-
-#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -5731,8 +6208,6 @@ namespace elc::defs::locale::str{
 	#pragma pop_macro("elc")
 #endif
 
-//for basic_environment.hpp
-#undef BIT_POSSIBILITY
 //
 #if defined(ELC_VOID_NAME)
 	#define void the_void
@@ -5872,23 +6347,6 @@ namespace elc::defs{ //在elc::defs中定义内容
 
 //set ELC_WARNING_LEVEL default to 4(max)
 #line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
-//basic_environment.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-/// 每个bit（不是字节）的可能性
-/// 为什么c艹委员会不定义这个？
-#define BIT_POSSIBILITY 2
-
-//file_end
-
-#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -11918,8 +12376,6 @@ inline void test_end(){
 	#pragma pop_macro("elc")
 #endif
 
-//for basic_environment.hpp
-#undef BIT_POSSIBILITY
 //
 #if defined(ELC_VOID_NAME)
 	#define void the_void
@@ -12096,23 +12552,6 @@ namespace elc::defs{
 
 //set ELC_WARNING_LEVEL default to 4(max)
 #line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
-//basic_environment.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-/// 每个bit（不是字节）的可能性
-/// 为什么c艹委员会不定义这个？
-#define BIT_POSSIBILITY 2
-
-//file_end
-
-#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -15918,8 +16357,6 @@ using string_n::string;
 	#pragma pop_macro("elc")
 #endif
 
-//for basic_environment.hpp
-#undef BIT_POSSIBILITY
 //
 #if defined(ELC_VOID_NAME)
 	#define void the_void
@@ -16142,23 +16579,6 @@ namespace elc{
 
 //set ELC_WARNING_LEVEL default to 4(max)
 #line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
-//basic_environment.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-/// 每个bit（不是字节）的可能性
-/// 为什么c艹委员会不定义这个？
-#define BIT_POSSIBILITY 2
-
-//file_end
-
-#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -16477,8 +16897,6 @@ protected:\
 	#pragma pop_macro("elc")
 #endif
 
-//for basic_environment.hpp
-#undef BIT_POSSIBILITY
 //
 #if defined(ELC_VOID_NAME)
 	#define void the_void
@@ -16620,23 +17038,6 @@ namespace elc::defs{
 
 //set ELC_WARNING_LEVEL default to 4(max)
 #line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
-//basic_environment.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-/// 每个bit（不是字节）的可能性
-/// 为什么c艹委员会不定义这个？
-#define BIT_POSSIBILITY 2
-
-//file_end
-
-#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -17045,8 +17446,6 @@ inline void test_end(){
 	#pragma pop_macro("elc")
 #endif
 
-//for basic_environment.hpp
-#undef BIT_POSSIBILITY
 //
 #if defined(ELC_VOID_NAME)
 	#define void the_void
@@ -17218,23 +17617,6 @@ namespace elc::defs{
 
 //set ELC_WARNING_LEVEL default to 4(max)
 #line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
-//basic_environment.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-/// 每个bit（不是字节）的可能性
-/// 为什么c艹委员会不定义这个？
-#define BIT_POSSIBILITY 2
-
-//file_end
-
-#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -17544,8 +17926,6 @@ protected:\
 	#pragma pop_macro("elc")
 #endif
 
-//for basic_environment.hpp
-#undef BIT_POSSIBILITY
 //
 #if defined(ELC_VOID_NAME)
 	#define void the_void

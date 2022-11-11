@@ -79,23 +79,6 @@ namespace elc::defs{
 	#define ELC_WARNING_LEVEL 4
 #endif
 
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
-//basic_environment.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-/// 每个bit（不是字节）的可能性
-/// 为什么c艹委员会不定义这个？
-#define BIT_POSSIBILITY 2
-
-//file_end
-
-#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
 	#pragma warning(disable:4099)//class与struct混用警告diss
@@ -481,8 +464,6 @@ inline void test_end(){
 	#pragma pop_macro("elc")
 #endif
 
-//for basic_environment.hpp
-#undef BIT_POSSIBILITY
 //
 #if defined(ELC_VOID_NAME)
 	#define void the_void
