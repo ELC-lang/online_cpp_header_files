@@ -1332,6 +1332,24 @@ namespace magic_number{
 		else
 			return ::std::ceil(v);
 	}
+	//sqrt
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<class T> requires ::std::is_arithmetic_v<T>
+	[[nodiscard]]force_inline constexpr auto sqrt(const T v)noexcept{
+		if in_consteval{
+			typedef decltype(::std::sqrt(v)) RT;
+			auto sqrt_impl = recursive_lambda(const RT x,const RT curr,const RT prev)noexcept -> RT{
+				return feq(curr,prev) ? curr : self_recursion(x,(curr+x/curr)/RT{2},curr);
+			};
+			auto sqrt_impl_caller = get_recursive_lambda_caller(sqrt_impl);
+			if(v >= 0 && v < ::std::numeric_limits<RT>::infinity())
+				return sqrt_impl_caller((RT)v,(RT)v,(RT)0);
+			else
+				return ::std::numeric_limits<RT>::quiet_NaN();
+		}
+		else
+			return ::std::sqrt(v);
+	}
 
 	/*! 判断某数是否是素数 */
 	template<class T> requires ::std::is_arithmetic_v<T>
@@ -1359,7 +1377,7 @@ namespace magic_number{
 		*/
 		if(mod(mod(a,6)-1,4))
 			return false;
-		T b=static_cast<T>(::std::sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
+		T b=static_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
 		/*
 		接下来:
 		设要判定的数n(6x±1的缩写).
@@ -4192,8 +4210,14 @@ namespace rand_n{
 			}
 			/*
 				`a − 1` should not be any more divisible by prime factors of m
+				`a - 1` should not small than sqrt(m)
 			*/
-			a_off_1*=get_prime_num_big_than(a_off_1);
+			{
+				const auto sqrt_m = sqrt(m);
+				do
+					a_off_1 *= get_prime_num_big_than(a_off_1);
+				while(a_off_1 < sqrt_m);
+			}
 			/*
 				`a − 1` is divisible by 4 if m is divisible by 4.
 			*/
@@ -4214,23 +4238,26 @@ namespace rand_n{
 		typedef unsigned_specific_size_t<sizeof(rand_value_type)/2> result_type;
 	public:
 		[[nodiscard]]static force_inline result_type base_call()noexcept{
-			const seed_type old_seed=rand_seed;
-			rand_seed=multiplier*old_seed+increment;
+			rand_seed=multiplier*rand_seed+increment;
 			constexpr size_t half_bitnum=bitnum_of(result_type);
-			rand_value_type old_result,new_result;
-			if constexpr(modulus){
-				old_result=rand_value_type(old_seed%modulus);
+			rand_value_type new_result;
+			if constexpr(modulus)
 				new_result=rand_value_type(rand_seed%modulus);
-			}
-			else{
+			else
 				//若rand_value_type的max超出了当前环境支持的最宽uint最大值，它会在编译期合乎标准的溢出到0（见modulus定义）
 				//此时不用取模
-				old_result = rand_value_type(old_seed);
 				new_result = rand_value_type(rand_seed);
-			}
-			const auto result_base=result_type(old_result >> half_bitnum);
+			static result_type result_base,xor_rot_offset,result_before;
+			const auto xor_base=result_type(new_result >> half_bitnum);
+			//xor_rot_offset=result_type(old_result);
+			//result_base=result_type(old_result >> half_bitnum)^old_result;
 			const auto rot_offset=result_type(new_result);
-			return rotl(result_base,rot_offset);
+			const auto xor_value=rotr(xor_base,xor_rot_offset);
+			const result_type result=rotl(result_base,rot_offset)^xor_value;
+			//缓存以便下次计算
+			xor_rot_offset=rot_offset;
+			result_base=xor_base^result;
+			return result;
 		}
 		//rand
 		[[nodiscard]]T operator()()const noexcept{
@@ -8404,14 +8431,12 @@ inline void check_memory_lack()noexcept{
 		inline void test(){
 			ELC_TEST_EVENTNAME("alloc部分测试");
 			using ::std::time;
-			using ::std::rand;
-			using ::std::srand;
-			srand((unsigned int)time(nullptr));
-			for(int i=rand()%100+40;i--;){
+			rand_n::set_seed((rand_n::seed_type)time(nullptr));
+			for(int i=rand<int>()%100+40;i--;){
 				int*p=alloc<int>(50);
 				p[0]=72;
 				stest_accert(get_size_of_alloc(p)==50);
-				p[49]=rand();
+				p[49]=rand<int>();
 				p[19]=666;
 				realloc(p,20);
 				stest_accert(get_size_of_alloc(p)==20);
@@ -9682,8 +9707,9 @@ private:
 			return this;
 		}
 	public:
-		static void operator delete(void*a)noexcept_as(destroy(declvalue(T*))){
-			destroy(reinterpret_cast<for_delete_t*>(a)->_m);
+		static void operator delete(void*a)noexcept{}
+		static void operator delete(for_delete_t*a,std::destroying_delete_t)noexcept_as(destroy(declvalue(T*))){
+			destroy((a)->_m);
 		}
 	}for_delete{};
 public:
@@ -12288,15 +12314,13 @@ inline void test(){
 	#if!defined(_MSC_VER)
 	ELC_TEST_EVENTNAME("gc部分测试");
 	using ::std::time;
-	using ::std::rand;
-	using ::std::srand;
-	srand((unsigned)time(nullptr));
+	rand_n::set_seed((rand_n::seed_type)time(nullptr));
 	gc.add_gc_method(type_info<gc_tester>);
-	for(int t=rand()%7;t--;)
+	for(int t=rand<int>()%7;t--;)
 	{
 		int i;
 		root_ptr_t<gc_tester> name=get<gc_tester>();
-		for(i=rand()%72;i--;){
+		for(i=rand<int>()%72;i--;){
 			#pragma warning(suppress: 4189)
 			auto p=get<gc_tester>();
 		}
