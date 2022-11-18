@@ -4389,9 +4389,12 @@ namespace rand_n{
 			return num;
 		}
 		//between
+	private:
 		struct between_integral_t{
+		private:
 			T _min,_diff;
 			size_t _bitnum;
+		public:
 			constexpr between_integral_t(T amin,T amax)noexcept:_min(amin),_diff(amax-amin){
 				_bitnum=1;
 				for(;_diff>>_bitnum;_bitnum++);
@@ -4416,7 +4419,9 @@ namespace rand_n{
 			}
 		};
 		struct between_floating_t{
+		private:
 			T _min,_diff;
+		public:
 			constexpr between_floating_t(T amin,T amax)noexcept:_min(amin),_diff(amax-amin){}
 			[[nodiscard]]force_inline T operator()()const noexcept{return inclusive();}
 			[[nodiscard]]force_inline operator T()const noexcept{return operator()();}
@@ -4427,6 +4432,7 @@ namespace rand_n{
 				return _min+between_0_and_1_inclusive()*_diff;
 			}
 		};
+	public:
 		[[nodiscard]]force_inline constexpr auto between(T amin,T amax)const noexcept requires ::std::is_arithmetic_v<T>{
 			if constexpr(::std::is_integral_v<T>)
 				return between_integral_t(min(amin,amax),max(amin,amax));
@@ -8639,8 +8645,7 @@ inline void check_memory_lack()noexcept{
 		//BLOCK:for debug
 		inline void test(){
 			ELC_TEST_EVENTNAME("alloc部分测试");
-			using ::std::time;
-			rand_n::set_seed((rand_n::seed_type)time(nullptr));
+			rand_seed.set_by_time();
 			for(int i=rand<int>()%100+40;i--;){
 				int*p=alloc<int>(50);
 				p[0]=72;
@@ -9567,7 +9572,7 @@ namespace ptr_n{
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
-typedef ::std::size_t link_num_t;
+typedef size_t link_num_t;
 class ref_t:non_copyable,non_moveable{
 	mutable link_num_t _ref_num=0;
 public:
@@ -12522,8 +12527,7 @@ void destory_by_gc(gc_tester*a){
 inline void test(){
 	#if!defined(_MSC_VER)
 	ELC_TEST_EVENTNAME("gc部分测试");
-	using ::std::time;
-	rand_n::set_seed((rand_n::seed_type)time(nullptr));
+	rand_seed.set_by_time();
 	gc.add_gc_method(type_info<gc_tester>);
 	for(int t=rand<int>()%7;t--;)
 	{
