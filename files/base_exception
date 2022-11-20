@@ -997,6 +997,8 @@ inline auto template_warning_helper(U&&a)noexcept{return 0;}
 //这不比博人传燃?
 using ::std::byte;
 using ::std::size_t;
+using ::std::uintmax_t;
+using ::std::intmax_t;
 
 using ::std::forward;
 using ::std::addressof;
@@ -1117,7 +1119,7 @@ namespace magic_number{
 	template<typename T,typename U> requires ::std::is_arithmetic_v<U>
 	[[nodiscard]]force_inline constexpr T safe_arithmetic_cast(U x)noexcept{
 		if constexpr(::std::is_floating_point_v<U> && ::std::is_unsigned_v<T>)
-			return (T)(::std::intmax_t)x;
+			return (T)(intmax_t)x;
 		else
 			return (T)x;
 	}
@@ -1128,8 +1130,8 @@ namespace magic_number{
 	}
 	/*! 任意算数类型转uintmax_t */
 	template<typename T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]force_inline constexpr ::std::uintmax_t to_uintmax_t(T x)noexcept{
-		return safe_arithmetic_cast<::std::uintmax_t>(x);
+	[[nodiscard]]force_inline constexpr uintmax_t to_uintmax_t(T x)noexcept{
+		return safe_arithmetic_cast<uintmax_t>(x);
 	}
 	/*! 求余 */
 	template<typename T1,typename T2> requires ::std::is_arithmetic_v<T1> and ::std::is_arithmetic_v<T2>
@@ -1377,7 +1379,7 @@ namespace magic_number{
 	[[nodiscard]]force_inline constexpr auto trunc(const T v)noexcept{
 		if in_consteval{
 			typedef decltype(::std::trunc(v)) RT;
-			return static_cast<RT>((::std::intmax_t)v);
+			return static_cast<RT>((intmax_t)v);
 		}
 		else
 			return ::std::trunc(v);
@@ -1706,12 +1708,16 @@ struct non_copy_construct_able{
 	constexpr non_copy_construct_able()=default;
 	constexpr non_copy_construct_able(const non_copy_construct_able&)=delete;
 	constexpr non_copy_construct_able(non_copy_construct_able&&)=default;
+	constexpr non_copy_construct_able& operator=(const non_copy_construct_able&)&noexcept=default;
+	constexpr non_copy_construct_able& operator=(non_copy_construct_able&&)&noexcept=default;
 };
 /// 禁止移动构造
 struct non_move_construct_able{
 	constexpr non_move_construct_able()=default;
 	constexpr non_move_construct_able(const non_move_construct_able&)=default;
 	constexpr non_move_construct_able(non_move_construct_able&&)=delete;
+	constexpr non_move_construct_able& operator=(const non_move_construct_able&)&noexcept=default;
+	constexpr non_move_construct_able& operator=(non_move_construct_able&&)&noexcept=default;
 };
 
 /// 禁止默认合成的构造
@@ -2542,6 +2548,11 @@ namespace array_like_n{
 
 		[[nodiscard]]constexpr const_iterator cbegin()const noexcept{return remove_const(this)->begin();}
 		[[nodiscard]]constexpr const_iterator cend()const noexcept{return remove_const(this)->end();}
+		
+		[[nodiscard]]constexpr T&front()noexcept{return _begin[0];}
+		[[nodiscard]]constexpr const T&front()const noexcept{return _begin[0];}
+		[[nodiscard]]constexpr T&back()noexcept{return _begin[size()-1];}
+		[[nodiscard]]constexpr const T&back()const noexcept{return _begin[size()-1];}
 
 		[[nodiscard]]constexpr bool empty()const noexcept{return size();}
 
@@ -2603,7 +2614,7 @@ using array_like_n::array_end_by_zero_t;
 	每个T的可能性大小
 */
 template<class T> requires ::std::is_integral_v<T>
-constexpr size_t number_of_possible_values_per=max(type_info<::std::make_unsigned_t<T>>)+size_t{1};
+constexpr size_t number_of_possible_values_per=uintmax_t(max(type_info<::std::make_unsigned_t<T>>))+1;
 
 /*!
 	功能: byte* 类型数据转换为 T&，不进行任何检查
@@ -2630,7 +2641,7 @@ template<class T>
 	用法: data_block<T1,T2,...>value;
 */
 template<class...Ts>
-struct data_block:non_copyable,non_moveable{
+struct data_block:non_copy_construct_able,non_move_construct_able{
 	static constexpr size_t size=max({sizeof(Ts)...});
 	static constexpr size_t align=max({alignof(Ts)...});
 	push_and_disable_msvc_warning(4324);
@@ -2639,10 +2650,9 @@ struct data_block:non_copyable,non_moveable{
 
 	push_and_disable_msvc_warning(26495);
 	constexpr data_block()noexcept{
-		if in_consteval{
+		if in_consteval
 			for(size_t i=0;i<size;++i)
 				_data[i]=byte{};
-		}
 	};
 	template<class T> requires(sizeof(T)<=size&&alignof(T)<=align)
 	constexpr data_block(T&&t)noexcept{
@@ -2657,7 +2667,7 @@ struct data_block:non_copyable,non_moveable{
 	constexpr operator const byte*()const{return _data;}
 	template<class T> requires(sizeof(T)<=size&&alignof(T)<=align)
 	constexpr auto&operator=(T&&t){
-		return data_cast<T>(_data)=::std::forward<T>(t);
+		return data_cast<remove_cvref<T>>(_data)=::std::forward<T>(t);
 	}
 	//begin & end
 	constexpr byte*begin(){return _data;}
@@ -3892,6 +3902,7 @@ namespace constexpr_str_n{
 		range_n::reverse_match_pattern<const char_T> reverse_match_pattern;
 		range_n::bitmark_for_finds<const char_T> bitmark_for_finds;
 		range_n::bitmark_for_quick_unindex<const char_T> bitmark_for_unindex;
+		ptrdiff_t k;
 		bool is_bitmark_workable;
 		bool is_bitmark_for_unindex_workable=0;
 		constexpr constexpr_str_t(const_string_ptr_t str, size_t size):
@@ -3902,9 +3913,21 @@ namespace constexpr_str_n{
 				is_bitmark_workable = bitmark_for_finds.mark(*this);
 				if(is_bitmark_workable)
 					is_bitmark_for_unindex_workable=bitmark_for_unindex.mark(*this);
+				k=size>=2?*(str+1)-*str:0;
+				for(size_t i=2;i<size;i++)
+					if(*(str+i)-*(str+i-1)!=k){
+						k=min(type_info<ptrdiff_t>);
+						break;
+					}
 			}
 		constexpr constexpr_str_t(const_string_ptr_t str):constexpr_str_t(str,array_end_by_zero_t::get_length_of(str)){}
 		[[nodiscard]]constexpr hash_t hash()const noexcept{return hash_result;}
+		[[nodiscard]]constexpr bool is_k_work_able()const noexcept{return k!=min(type_info<ptrdiff_t>);}
+		[[nodiscard]]constexpr bool is_not_in_k_range(const char_T&ch)const noexcept{
+			const auto&back=this->back();
+			const auto&front=this->front();
+			return is_negative(k)?ch<back||ch>front:ch>back||ch<front;
+		}
 	};
 	template<class char_T,size_t N>
 	struct constexpr_str_t_literal_helper{
@@ -3997,7 +4020,15 @@ namespace range_n {
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr const T* in_range(const remove_cvref<T>&pattern,const constexpr_str_t<T>&range){
-		if(range.is_bitmark_for_unindex_workable){
+		if(range.is_k_work_able()){
+			if(range.is_not_in_k_range(pattern))
+				return nullptr;
+			auto diff=pattern-*range.begin();
+			if(diff%range.k)
+				return nullptr;
+			return (diff/range.k)+range.begin();
+		}
+		elseif(range.is_bitmark_for_unindex_workable){
 			auto result = range.bitmark_for_unindex[pattern];
 			return result==range_n::npos?nullptr:range.begin()+result;
 		}
@@ -4008,7 +4039,15 @@ namespace range_n {
 	/// 若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
 	[[nodiscard]]constexpr size_t in_range_size_t(const remove_cvref<T>&pattern,const constexpr_str_t<T>&range){
-		if(range.is_bitmark_for_unindex_workable){
+		if(range.is_k_work_able()){
+			if(range.is_not_in_k_range(pattern))
+				return range_n::npos;
+			auto diff=pattern-*range.begin();
+			if(diff%range.k)
+				return range_n::npos;
+			return (diff/range.k);
+		}
+		elseif(range.is_bitmark_for_unindex_workable){
 			return range.bitmark_for_unindex[pattern];
 		}
 		else{
@@ -4018,7 +4057,15 @@ namespace range_n {
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr const T* in_range_but_reverse(const remove_cvref<T>&pattern,const constexpr_str_t<T>&range){
-		if(range.is_bitmark_for_unindex_workable){
+		if(range.is_k_work_able()){
+			if(range.is_not_in_k_range(pattern))
+				return nullptr;
+			auto diff=pattern-*range.begin();
+			if(diff%range.k)
+				return nullptr;
+			return (diff/range.k)+range.begin();
+		}
+		elseif(range.is_bitmark_for_unindex_workable){
 			auto result = range.bitmark_for_unindex[pattern];
 			return result==range_n::npos?nullptr:range.begin()+result;
 		}
@@ -4029,7 +4076,15 @@ namespace range_n {
 	/// 若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
 	[[nodiscard]]constexpr size_t in_range_but_reverse_size_t(const remove_cvref<T>&pattern,const constexpr_str_t<T>&range){
-		if(range.is_bitmark_for_unindex_workable){
+		if(range.is_k_work_able()){
+			if(range.is_not_in_k_range(pattern))
+				return range_n::npos;
+			auto diff=pattern-*range.begin();
+			if(diff%range.k)
+				return range_n::npos;
+			return (diff/range.k);
+		}
+		elseif(range.is_bitmark_for_unindex_workable){
 			return range.bitmark_for_unindex[pattern];
 		}
 		else{
@@ -4272,7 +4327,7 @@ namespace rand_n{
 			//由于rand_value_type一定是无符号整数，所以max(type_info<rand_value_type>)+1等价于pow(BIT_POSSIBILITY,bitnum_of(rand_value_type))
 			//同时可以简化编译期计算
 			//若rand_value_type的max超出了当前环境支持的最宽uint最大值，它会在编译期合乎标准的溢出到0
-			return max(type_info<rand_value_type<T>>)+1;
+			return uintmax_t(max(type_info<rand_value_type<T>>))+1;
 		}
 		//a
 		[[nodiscard]]inline constexpr size_t get_multiplier_by_modulus(auto m){
@@ -4342,27 +4397,44 @@ namespace rand_n{
 		typedef unsigned_specific_size_t<sizeof(seed_type)/2> value_gen_cache_base_t;
 		typedef data_block<value_gen_cache_base_t> value_gen_cache_t;
 
-		seed_type			_seed,_seed_origin;
-		value_gen_cache_t	_result_base_data, _xor_rot_offset_data;
+		seed_type			   _seed, _seed_origin;
+		value_gen_cache_base_t _next_data_index;
+		static constexpr auto  data_cache_size = size_t(pow(BIT_POSSIBILITY, 7));
+		value_gen_cache_t	   _result_base_data[data_cache_size],
+							   _xor_rot_offset_data[data_cache_size];
 	public:
+		inline static constexpr void sowing_seed_one_step(seed_type&seed)noexcept{seed=13*seed+7;}
 		[[nodiscard]]inline static constexpr seed_type sowing_seed(seed_type seed)noexcept{
 			for(size_t i=bitnum_of(seed_type);i--;)
-				seed=13*seed+7;
+				sowing_seed_one_step(seed);
 			return seed;
 		}
 		[[nodiscard]]inline constexpr seed_type get_origin()const noexcept{return _seed_origin;}
-		[[nodiscard]]inline constexpr seed_type get_now()const noexcept{return _seed;}
 		inline constexpr void set(seed_type seed)noexcept{
 			this->set_with_out_sowing(sowing_seed(seed));
 		}
 		inline constexpr void set_with_out_sowing(seed_type seed)noexcept{
 			_seed					= seed;
 			_seed_origin			= seed;
-			_result_base_data		= value_gen_cache_base_t(_seed >> bitnum_of(value_gen_cache_base_t));
-			_xor_rot_offset_data	= value_gen_cache_base_t(_seed);
+			for(size_t i=data_cache_size;i--;){
+				_result_base_data[i]	= value_gen_cache_base_t(seed >> bitnum_of(value_gen_cache_base_t));
+				_xor_rot_offset_data[i]	= value_gen_cache_base_t(seed);
+				sowing_seed_one_step(seed);
+			}
+			_next_data_index = value_gen_cache_base_t(seed >> bitnum_of(value_gen_cache_base_t));
+			_next_data_index %= data_cache_size;
 		}
 		void set_by_time()noexcept{this->set(seed_type(::std::time(nullptr)));}
 		constexpr rand_seed_t(seed_type seed=magic_number::god)noexcept{this->set(seed);}
+		constexpr rand_seed_t(const rand_seed_t&other)noexcept{
+			_seed					= other._seed;
+			_seed_origin			= other._seed_origin;
+			_next_data_index		= other._next_data_index;
+			for(size_t i=data_cache_size;i--;){
+				_result_base_data[i]	= other._result_base_data[i];
+				_xor_rot_offset_data[i]	= other._xor_rot_offset_data[i];
+			}
+		}
 	private:
 		//friend 
 		template<class T>
@@ -4377,14 +4449,15 @@ namespace rand_n{
 			const auto		 new_result	 = rand_value_type(modulus?_seed%modulus:_seed);//若modulus溢出到0时不用取模
 			//
 			const auto		  xor_base		 = result_type(new_result >> half_bitnum);
-			auto&			  xor_rot_offset = data_cast<result_type>(_xor_rot_offset_data);
-			auto&			  result_base	 = data_cast<result_type>(_result_base_data);
+			auto&			  xor_rot_offset = data_cast<result_type>(_xor_rot_offset_data[_next_data_index]);
+			auto&			  result_base	 = data_cast<result_type>(_result_base_data[_next_data_index]);
 			const auto		  rot_offset	 = result_type(new_result);
 			const auto		  xor_value		 = rotr(xor_base, xor_rot_offset);
 			const result_type result		 = rotl(result_base, rot_offset) ^ xor_value;
-			//缓存以便下次计算
-			xor_rot_offset = rot_offset;
-			result_base	   = xor_base ^ result;
+			//
+			xor_rot_offset	 = rot_offset;
+			result_base		 = xor_base^result;
+			_next_data_index = result_base%data_cache_size;
 			return result;
 		}
 		template<typename T> requires(sizeof(seed_type)/2 >= sizeof(T))
@@ -4416,21 +4489,32 @@ namespace rand_n{
 	struct rand_t{
 		static constexpr bool able=::std::is_trivially_constructible_v<T>;
 		static constexpr bool nothrow=able;
+	private:
+		typedef rand_t<T> this_t;
+		rand_seed_t& _seed;
+	public:
+		constexpr rand_t(rand_seed_t&seed)noexcept:_seed(seed){}
+		constexpr rand_t(const rand_t&other)noexcept=default;
+		constexpr rand_t(rand_t&&other)noexcept=default;
+		[[nodiscard]]force_inline static constexpr this_t with_seed(rand_seed_t&seed)noexcept{return this_t(seed);}
+		//delete operator=
+		this_t& operator=(const this_t&other)=delete;
+		this_t& operator=(this_t&&other)=delete;
 		//rand
 		[[nodiscard]]force_inline T operator()()const noexcept{
-			return rand_seed.gen_randbit<T>();
+			return _seed.gen_randbit<T>();
 		}
 		//浮点特供：[0,1)和[0,1]
 		/// [0,1)
-		[[nodiscard]]force_inline static constexpr T between_0_and_1_exclusive()noexcept requires(::std::is_floating_point_v<T>){
-			T base=T(rand_seed.gen_randbit<unsigned_specific_size_t<sizeof(T)>>());
+		[[nodiscard]]force_inline constexpr T between_0_and_1_exclusive()noexcept requires(::std::is_floating_point_v<T>){
+			T base=T(_seed.gen_randbit<unsigned_specific_size_t<sizeof(T)>>());
 			constexpr size_t div_times=bitnum_of(base);
 			constexpr auto div_num=pow(BIT_POSSIBILITY,div_times);
 			return T(base/div_num);
 		}
 		/// [0,1]
-		[[nodiscard]]force_inline static constexpr T between_0_and_1_inclusive()noexcept requires(::std::is_floating_point_v<T>){
-			auto rnd=rand_seed.gen_randbit<unsigned_specific_size_t<sizeof(T)>>();
+		[[nodiscard]]force_inline constexpr T between_0_and_1_inclusive()noexcept requires(::std::is_floating_point_v<T>){
+			auto rnd=_seed.gen_randbit<unsigned_specific_size_t<sizeof(T)>>();
 			//考虑到浮点数总会使用一些位来表示指数，取rnd的最低位来表示rand到1.0或以上的概率也不会影响到结果
 			const bool is_one=rnd&1;rnd>>=1;
 			if(is_one)return rnd==0?1:between_0_and_1_inclusive();//若rnd!=0，为了概率均匀需要reroll
@@ -4440,19 +4524,20 @@ namespace rand_n{
 			return T(base/div_num);
 		}
 		//not nan.
-		[[nodiscard]]force_inline static constexpr T not_NaN()noexcept{
+		[[nodiscard]]force_inline constexpr T not_NaN()noexcept{
 			T num;
-			do num=rand_seed.gen_randbit<T>();while(isNaN(num));
+			do num=_seed.gen_randbit<T>();while(isNaN(num));
 			return num;
 		}
 		//between
 	private:
 		struct between_integral_t{
 		private:
+			rand_seed_t& _seed;
 			T _min,_diff;
 			size_t _bitnum;
 		public:
-			constexpr between_integral_t(T amin,T amax)noexcept:_min(amin),_diff(amax-amin){
+			constexpr between_integral_t(rand_seed_t&seed,T amin,T amax)noexcept:_seed(seed),_min(amin),_diff(amax-amin){
 				_bitnum=1;
 				for(;_diff>>_bitnum;_bitnum++);
 			}
@@ -4461,7 +4546,7 @@ namespace rand_n{
 			[[nodiscard]]force_inline T exclusive()const noexcept{
 				T ret;
 				do{
-					ret=rand_seed.gen_randbit<T>();
+					ret=_seed.gen_randbit<T>();
 					ret&=(1<<_bitnum)-1;
 				}while(ret>=_diff);
 				return ret+_min;
@@ -4469,7 +4554,7 @@ namespace rand_n{
 			[[nodiscard]]force_inline T inclusive()const noexcept{
 				T ret;
 				do{
-					ret=rand_seed.gen_randbit<T>();
+					ret=_seed.gen_randbit<T>();
 					ret&=(1<<_bitnum)-1;
 				}while(ret>_diff);
 				return ret+_min;
@@ -4477,28 +4562,29 @@ namespace rand_n{
 		};
 		struct between_floating_t{
 		private:
+			rand_seed_t& _seed;
 			T _min,_diff;
 		public:
-			constexpr between_floating_t(T amin,T amax)noexcept:_min(amin),_diff(amax-amin){}
+			constexpr between_floating_t(rand_seed_t&seed,T amin,T amax)noexcept:_seed(seed),_min(amin),_diff(amax-amin){}
 			[[nodiscard]]force_inline T operator()()const noexcept{return inclusive();}
 			[[nodiscard]]force_inline operator T()const noexcept{return operator()();}
 			[[nodiscard]]force_inline T exclusive()const noexcept{
-				return _min+between_0_and_1_exclusive()*_diff;
+				return _min+rand_t<T>{_seed}.between_0_and_1_exclusive()*_diff;
 			}
 			[[nodiscard]]force_inline T inclusive()const noexcept{
-				return _min+between_0_and_1_inclusive()*_diff;
+				return _min+rand_t<T>{_seed}.between_0_and_1_inclusive()*_diff;
 			}
 		};
 	public:
 		[[nodiscard]]force_inline constexpr auto between(T amin,T amax)const noexcept requires ::std::is_arithmetic_v<T>{
 			if constexpr(::std::is_integral_v<T>)
-				return between_integral_t(min(amin,amax),max(amin,amax));
+				return between_integral_t(_seed,min(amax,amin),max(amax,amin));
 			else
-				return between_floating_t(min(amin,amax),max(amin,amax));
+				return between_floating_t(_seed,min(amax,amin),max(amax,amin));
 		}
 	};
 	template<class T>
-	constexpr rand_t<T>rand{};
+	constexpr rand_t<T>rand{rand_seed};
 }
 using rand_n::rand;
 using rand_n::rand_seed;
