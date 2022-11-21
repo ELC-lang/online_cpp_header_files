@@ -4413,8 +4413,9 @@ namespace rand_n{
 		seed_type			   _seed, _seed_origin;
 		value_gen_cache_base_t _next_data_index;
 		static constexpr auto  data_cache_size = size_t(pow(BIT_POSSIBILITY, 7));
-		value_gen_cache_t	   _result_base_data[data_cache_size],
-							   _xor_rot_offset_data[data_cache_size];
+		struct data_cache_t{
+			value_gen_cache_t _result_base_data,_xor_rot_offset_data;
+		} _data_cache[data_cache_size];
 	public:
 		inline static constexpr void sowing_seed_one_step(seed_type&seed)noexcept{seed=13*seed+7;}
 		[[nodiscard]]inline static constexpr seed_type sowing_seed(seed_type seed)noexcept{
@@ -4430,8 +4431,9 @@ namespace rand_n{
 			_seed					= seed;
 			_seed_origin			= seed;
 			for(size_t i=data_cache_size;i--;){
-				_result_base_data[i]	= value_gen_cache_base_t(seed >> bitnum_of(value_gen_cache_base_t));
-				_xor_rot_offset_data[i]	= value_gen_cache_base_t(seed);
+				auto& cache = _data_cache[i];
+				cache._result_base_data		= value_gen_cache_base_t(seed >> bitnum_of(value_gen_cache_base_t));
+				cache._xor_rot_offset_data	= value_gen_cache_base_t(seed);
 				sowing_seed_one_step(seed);
 			}
 			_next_data_index = value_gen_cache_base_t(seed >> bitnum_of(value_gen_cache_base_t));
@@ -4444,8 +4446,10 @@ namespace rand_n{
 			_seed_origin			= other._seed_origin;
 			_next_data_index		= other._next_data_index;
 			for(size_t i=data_cache_size;i--;){
-				_result_base_data[i]	= other._result_base_data[i];
-				_xor_rot_offset_data[i]	= other._xor_rot_offset_data[i];
+				auto&		cache		= _data_cache[i];
+				const auto& other_cache = other._data_cache[i];
+				cache._result_base_data		= other_cache._result_base_data;
+				cache._xor_rot_offset_data	= other_cache._xor_rot_offset_data;
 			}
 		}
 	private:
@@ -4462,8 +4466,9 @@ namespace rand_n{
 			const auto		 new_result	 = rand_value_type(modulus?_seed%modulus:_seed);//若modulus溢出到0时不用取模
 			//
 			const auto		  xor_base		 = result_type(new_result >> half_bitnum);
-			auto&			  xor_rot_offset = data_cast<result_type>(_xor_rot_offset_data[_next_data_index]);
-			auto&			  result_base	 = data_cast<result_type>(_result_base_data[_next_data_index]);
+			auto&			  cache			 = _data_cache[_next_data_index];
+			auto&			  xor_rot_offset = data_cast<result_type>(cache._xor_rot_offset_data);
+			auto&			  result_base	 = data_cast<result_type>(cache._result_base_data);
 			const auto		  rot_offset	 = result_type(new_result);
 			const auto		  xor_value		 = rotr(xor_base, xor_rot_offset);
 			const result_type result		 = rotl(result_base, rot_offset) ^ xor_value;
@@ -4498,35 +4503,40 @@ namespace rand_n{
 		}
 	}rand_seed{};
 
+	struct base_rand_t{
+	protected:
+		typedef base_rand_t this_t;
+		rand_seed_t& _seed;
+	public:
+		constexpr base_rand_t(rand_seed_t&seed)noexcept:_seed(seed){}
+		constexpr base_rand_t(const this_t&other)noexcept=default;
+		constexpr base_rand_t(this_t&&other)noexcept=default;
+		//delete operator=
+		this_t& operator=(const this_t&other)=delete;
+		this_t& operator=(this_t&&other)=delete;
+	};
 	template<class T>
-	struct rand_t{
+	struct rand_t:base_rand_t{
 		static constexpr bool able=::std::is_trivially_constructible_v<T>;
 		static constexpr bool nothrow=able;
 	private:
 		typedef rand_t<T> this_t;
-		rand_seed_t& _seed;
+		typedef base_rand_t base_t;
 	public:
-		constexpr rand_t(rand_seed_t&seed)noexcept:_seed(seed){}
-		constexpr rand_t(const rand_t&other)noexcept=default;
-		constexpr rand_t(rand_t&&other)noexcept=default;
+		using base_t::base_t;
 		[[nodiscard]]force_inline static constexpr this_t with_seed(rand_seed_t&seed)noexcept{return this_t(seed);}
-		//delete operator=
-		this_t& operator=(const this_t&other)=delete;
-		this_t& operator=(this_t&&other)=delete;
 		//rand
-		[[nodiscard]]force_inline T operator()()const noexcept{
-			return _seed.gen_randbit<T>();
-		}
+		[[nodiscard]]force_inline T operator()()const noexcept{return _seed.gen_randbit<T>();}
 		//浮点特供：[0,1)和[0,1]
 		/// [0,1)
-		[[nodiscard]]force_inline constexpr T between_0_and_1_exclusive()noexcept requires(::std::is_floating_point_v<T>){
+		[[nodiscard]]force_inline constexpr T between_0_and_1_exclusive()const noexcept requires(::std::is_floating_point_v<T>){
 			T base=T(_seed.gen_randbit<unsigned_specific_size_t<sizeof(T)>>());
 			constexpr size_t div_times=bitnum_of(base);
 			constexpr auto div_num=pow(BIT_POSSIBILITY,div_times);
 			return T(base/div_num);
 		}
 		/// [0,1]
-		[[nodiscard]]force_inline constexpr T between_0_and_1_inclusive()noexcept requires(::std::is_floating_point_v<T>){
+		[[nodiscard]]force_inline constexpr T between_0_and_1_inclusive()const noexcept requires(::std::is_floating_point_v<T>){
 			auto rnd=_seed.gen_randbit<unsigned_specific_size_t<sizeof(T)>>();
 			//考虑到浮点数总会使用一些位来表示指数，取rnd的最低位来表示rand到1.0或以上的概率也不会影响到结果
 			const bool is_one=rnd&1;rnd>>=1;
@@ -4537,7 +4547,7 @@ namespace rand_n{
 			return T(base/div_num);
 		}
 		//not nan.
-		[[nodiscard]]force_inline constexpr T not_NaN()noexcept{
+		[[nodiscard]]force_inline constexpr T not_NaN()const noexcept{
 			T num;
 			do num=_seed.gen_randbit<T>();while(isNaN(num));
 			return num;
@@ -4551,25 +4561,18 @@ namespace rand_n{
 			size_t _bitnum;
 		public:
 			constexpr between_integral_t(rand_seed_t&seed,T amin,T amax)noexcept:_seed(seed),_min(amin),_diff(amax-amin){
-				_bitnum=1;
-				for(;_diff>>_bitnum;_bitnum++);
+				for(_bitnum=1;_diff>>_bitnum;_bitnum++);
 			}
 			[[nodiscard]]force_inline T operator()()const noexcept{return inclusive();}
 			[[nodiscard]]force_inline operator T()const noexcept{return operator()();}
 			[[nodiscard]]force_inline T exclusive()const noexcept{
 				T ret;
-				do{
-					ret=_seed.gen_randbit<T>();
-					ret&=(1<<_bitnum)-1;
-				}while(ret>=_diff);
+				do ret=_seed.gen_randbit<T>()&(T{1}<<_bitnum)-1;while(ret>=_diff);
 				return ret+_min;
 			}
 			[[nodiscard]]force_inline T inclusive()const noexcept{
 				T ret;
-				do{
-					ret=_seed.gen_randbit<T>();
-					ret&=(1<<_bitnum)-1;
-				}while(ret>_diff);
+				do ret=_seed.gen_randbit<T>()&(T{1}<<_bitnum)-1;while(ret>_diff);
 				return ret+_min;
 			}
 		};
@@ -4590,10 +4593,27 @@ namespace rand_n{
 		};
 	public:
 		[[nodiscard]]force_inline constexpr auto between(T amin,T amax)const noexcept requires ::std::is_arithmetic_v<T>{
+			#define args _seed,min(amax,amin),max(amax,amin)
 			if constexpr(::std::is_integral_v<T>)
-				return between_integral_t(_seed,min(amax,amin),max(amax,amin));
+				return between_integral_t(args);
 			else
-				return between_floating_t(_seed,min(amax,amin),max(amax,amin));
+				return between_floating_t(args);
+			#undef args
+		}
+	};
+	//bool rand
+	template<>struct rand_t<bool>:base_rand_t{
+		static constexpr bool able=true;
+		static constexpr bool nothrow=true;
+	private:
+		typedef bool T;
+		typedef rand_t<T> this_t;
+		typedef base_rand_t base_t;
+	public:
+		using base_t::base_t;
+		[[nodiscard]]force_inline static constexpr this_t with_seed(rand_seed_t&seed)noexcept{return this_t(seed);}
+		[[nodiscard]]force_inline T operator()()const noexcept{
+			return _seed.gen_randbit<unsigned char>()&unsigned char{1};
 		}
 	};
 	template<class T>
