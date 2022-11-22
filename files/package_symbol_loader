@@ -1567,6 +1567,7 @@ using magic_number::abs;
 using magic_number::exp;
 using magic_number::log;
 using magic_number::pow;
+using magic_number::sqrt;
 using magic_number::ceil;
 using magic_number::trunc;
 using magic_number::is_prime_num;
@@ -2635,6 +2636,12 @@ constexpr size_t number_of_possible_values_per=uintmax_t(max(type_info<::std::ma
 */
 template<class T>
 [[nodiscard]]constexpr T&data_cast(byte*p){return*::std::launder(reinterpret_cast<T*>(p));}
+/*!
+	功能: byte* 类型数据转换为 T*，不进行任何检查
+	用法: data_ptr_cast<T>(byte*) -> T*
+*/
+template<class T>
+[[nodiscard]]constexpr T*data_ptr_cast(byte*p){return::std::launder(reinterpret_cast<T*>(p));}
 /*!
 	功能: T* 指针转换为 byte*，不进行任何检查
 	用法: cast_to_data(T*) -> byte*
@@ -4344,6 +4351,7 @@ namespace rand_n{
 		}
 		//a
 		[[nodiscard]]inline constexpr size_t get_multiplier_by_modulus(auto m){
+			if(m==0)m-=4;//考虑到m可能溢出到0，此时对m进行约等计算
 			//https://en.wikipedia.org/wiki/Linear_congruential_generator#Period_length
 			size_t a_off_1=1;
 			/*
@@ -4458,7 +4466,11 @@ namespace rand_n{
 		friend struct rand_t;
 
 		template<typename T> requires(sizeof(seed_type)/2 >= sizeof(T))
-		[[nodiscard]]force_inline constexpr auto base_gen_randbit(size_t modulus,size_t multiplier,size_t increment)noexcept{
+		[[nodiscard]]force_inline constexpr auto base_gen_randbit()noexcept{
+			constexpr auto modulus=get_modulus_of<T>();
+			constexpr auto multiplier=get_multiplier_of<T>();
+			constexpr auto increment=get_increment_of<T>();
+			//
 			typedef unsigned_specific_size_t<sizeof(T)>		result_type;
 			typedef unsigned_specific_size_t<2*sizeof(T)>	rand_value_type;
 			_seed						 = multiplier * _seed + increment;
@@ -4482,7 +4494,7 @@ namespace rand_n{
 		[[nodiscard]]force_inline constexpr T gen_randbit()noexcept{
 			using namespace linear_congruential_arguments_n;
 			typedef unsigned_specific_size_t<sizeof(T)> result_type;
-			data_block<T,result_type>aret=base_gen_randbit<T>(get_modulus_of<T>(),get_multiplier_of<T>(),get_increment_of<T>());
+			data_block<T,result_type>aret=base_gen_randbit<T>();
 			return data_cast<T>(aret);
 		}
 		
