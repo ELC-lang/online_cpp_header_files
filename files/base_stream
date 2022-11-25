@@ -132,6 +132,10 @@ namespace elc::defs{
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -490,6 +494,8 @@ inline void test_end(){
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 

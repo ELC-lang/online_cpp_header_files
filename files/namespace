@@ -302,6 +302,10 @@ namespace elc::defs{
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -547,6 +551,8 @@ protected:\
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -745,6 +751,10 @@ namespace elc::defs{ //在elc::defs中定义内容
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -3135,9 +3145,8 @@ namespace range_n{
 			const size_t m=pattern.size();
 			if(!m)
 				return;
-			for(size_t i=0;i<number_of_possible_values_per<index_type>;i++){
+			for(size_t i=0;i<number_of_possible_values_per<index_type>;i++)
 				skip_table[i]=radical_skip_table[i]=m;
-			}
 			skip_table[get_index_of(pattern[0])]=radical_skip_table[get_index_of(pattern[0])]=m-1;//单独处理pattern[0]的情况
 			for(size_t i=1;i<m-1;i++){
 				index_type index=get_index_of(pattern[i]);//radical_skip_table[index]表示pattern中倒数第二次出现的index到pattern末尾的距离
@@ -3191,9 +3200,8 @@ namespace range_n{
 			const size_t m=pattern.size();
 			if(!m)
 				return;
-			for(size_t i=0;i<number_of_possible_values_per<index_type>;i++){
+			for(size_t i=0;i<number_of_possible_values_per<index_type>;i++)
 				skip_table[i]=radical_skip_table[i]=m;
-			}
 			skip_table[get_index_of(pattern[m-1])]=radical_skip_table[get_index_of(pattern[m-1])]=m-1;//单独处理pattern[m-1]的情况
 			for(ptrdiff_t i=m-2;i>=0;i--){
 				index_type index=get_index_of(pattern[i]);//radical_skip_table[index]表示pattern中倒数第二次出现的index到pattern末尾的距离
@@ -3922,7 +3930,6 @@ namespace constexpr_str_n{
 		range_n::reverse_match_pattern<const char_T> reverse_match_pattern;
 		range_n::bitmark_for_finds<const char_T> bitmark_for_finds;
 		range_n::bitmark_for_quick_unindex<const char_T> bitmark_for_unindex;
-		ptrdiff_t k;
 		bool is_bitmark_workable;
 		bool is_bitmark_for_unindex_workable=0;
 		constexpr constexpr_str_t(const_string_ptr_t str, size_t size):
@@ -3933,21 +3940,9 @@ namespace constexpr_str_n{
 				is_bitmark_workable = bitmark_for_finds.mark(*this);
 				if(is_bitmark_workable)
 					is_bitmark_for_unindex_workable=bitmark_for_unindex.mark(*this);
-				k=size>=2?*(str+1)-*str:0;
-				for(size_t i=2;i<size;i++)
-					if(*(str+i)-*(str+i-1)!=k){
-						k=min(type_info<ptrdiff_t>);
-						break;
-					}
 			}
 		constexpr constexpr_str_t(const_string_ptr_t str):constexpr_str_t(str,array_end_by_zero_t::get_length_of(str)){}
 		[[nodiscard]]constexpr hash_t hash()const noexcept{return hash_result;}
-		[[nodiscard]]constexpr bool is_k_work_able()const noexcept{return k!=min(type_info<ptrdiff_t>);}
-		[[nodiscard]]constexpr bool is_not_in_k_range(const char_T&ch)const noexcept{
-			const auto&back=this->back();
-			const auto&front=this->front();
-			return is_negative(k)?ch<back||ch>front:ch>back||ch<front;
-		}
 	};
 	template<class char_T,size_t N>
 	struct constexpr_str_t_literal_helper{
@@ -3994,45 +3989,37 @@ namespace range_n {
 	//若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr T* find_first_of(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
-		if(pattern.is_bitmark_workable){
+		if(pattern.is_bitmark_workable)
 			return find_first_of_bitmark(pattern.bitmark_for_finds,range);
-		}
-		else{
+		else
 			return find_first_of((const constexpr_str_view_t<T>&)pattern,range);
-		}
 	}
 	//find_last_of
 	//若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr T* find_last_of(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
-		if(pattern.is_bitmark_workable){
+		if(pattern.is_bitmark_workable)
 			return find_last_of_bitmark(pattern.bitmark_for_finds,range);
-		}
-		else{
+		else
 			return find_last_of((const constexpr_str_view_t<T>&)pattern,range);
-		}
 	}
 	//find_first_not_of
 	//若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr T* find_first_not_of(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
-		if(pattern.is_bitmark_workable){
+		if(pattern.is_bitmark_workable)
 			return find_first_not_of_bitmark(pattern.bitmark_for_finds,range);
-		}
-		else{
+		else
 			return find_first_not_of((const constexpr_str_view_t<T>&)pattern,range);
-		}
 	}
 	//find_last_not_of
 	//若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr T* find_last_not_of(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
-		if(pattern.is_bitmark_workable){
+		if(pattern.is_bitmark_workable)
 			return find_last_not_of_bitmark(pattern.bitmark_for_finds,range);
-		}
-		else{
+		else
 			return find_last_not_of((const constexpr_str_view_t<T>&)pattern,range);
-		}
 	}
 
 	// 单字匹配相关
@@ -4040,76 +4027,38 @@ namespace range_n {
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr const T* in_range(const remove_cvref<T>&pattern,const constexpr_str_t<T>&range){
-		if(range.is_k_work_able()){
-			if(range.is_not_in_k_range(pattern))
-				return nullptr;
-			auto diff=pattern-*range.begin();
-			if(diff%range.k)
-				return nullptr;
-			return (diff/range.k)+range.begin();
-		}
-		elseif(range.is_bitmark_for_unindex_workable){
+		if(range.is_bitmark_for_unindex_workable){
 			auto result = range.bitmark_for_unindex[pattern];
 			return result==range_n::npos?nullptr:range.begin()+result;
 		}
-		else{
+		else
 			return in_range(pattern,(const constexpr_str_view_t<T>&)range);
-		}
 	}
 	/// 若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
 	[[nodiscard]]constexpr size_t in_range_size_t(const remove_cvref<T>&pattern,const constexpr_str_t<T>&range){
-		if(range.is_k_work_able()){
-			if(range.is_not_in_k_range(pattern))
-				return range_n::npos;
-			auto diff=pattern-*range.begin();
-			if(diff%range.k)
-				return range_n::npos;
-			return (diff/range.k);
-		}
-		elseif(range.is_bitmark_for_unindex_workable){
+		if(range.is_bitmark_for_unindex_workable)
 			return range.bitmark_for_unindex[pattern];
-		}
-		else{
+		else
 			return in_range_size_t(pattern,(const constexpr_str_view_t<T>&)range);
-		}
 	}
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr const T* in_range_but_reverse(const remove_cvref<T>&pattern,const constexpr_str_t<T>&range){
-		if(range.is_k_work_able()){
-			if(range.is_not_in_k_range(pattern))
-				return nullptr;
-			auto diff=pattern-*range.begin();
-			if(diff%range.k)
-				return nullptr;
-			return (diff/range.k)+range.begin();
-		}
-		elseif(range.is_bitmark_for_unindex_workable){
+		if(range.is_bitmark_for_unindex_workable){
 			auto result = range.bitmark_for_unindex[pattern];
 			return result==range_n::npos?nullptr:range.begin()+result;
 		}
-		else{
+		else
 			return in_range_but_reverse(pattern,(const constexpr_str_view_t<T>&)range);
-		}
 	}
 	/// 若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
 	[[nodiscard]]constexpr size_t in_range_but_reverse_size_t(const remove_cvref<T>&pattern,const constexpr_str_t<T>&range){
-		if(range.is_k_work_able()){
-			if(range.is_not_in_k_range(pattern))
-				return range_n::npos;
-			auto diff=pattern-*range.begin();
-			if(diff%range.k)
-				return range_n::npos;
-			return (diff/range.k);
-		}
-		elseif(range.is_bitmark_for_unindex_workable){
+		if(range.is_bitmark_for_unindex_workable)
 			return range.bitmark_for_unindex[pattern];
-		}
-		else{
+		else
 			return in_range_but_reverse_size_t(pattern,(const constexpr_str_view_t<T>&)range);
-		}
 	}
 };
 using range_n::in_range;
@@ -4675,6 +4624,8 @@ using rand_n::rand_seed;
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -4993,6 +4944,10 @@ elc依赖的基础函数.
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -5499,6 +5454,8 @@ namespace overhead_n{
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -5756,6 +5713,10 @@ namespace elc{
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -6042,6 +6003,8 @@ protected:\
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -6361,6 +6324,10 @@ namespace elc::defs::locale{
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -6634,6 +6601,8 @@ namespace elc::defs::locale::str{
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -6834,6 +6803,10 @@ namespace elc::defs{ //在elc::defs中定义内容
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -7630,10 +7603,9 @@ namespace lifetime_n{
 		static T* base_call(T*to,const T*from,size_t size)noexcept(nothrow<T>){
 			if constexpr(trivial<T>)
 				::std::memcpy(to,add_const(from),size*sizeof(T));
-			else{
+			else
 				while(size--)
 					base_call(to[size],from[size]);
-			}
 			return to;
 		}
 		template<class T> requires able<T>
@@ -7691,19 +7663,17 @@ namespace lifetime_n{
 		static T& base_call(T&a,T&&b)noexcept(nothrow<T>){
 			if constexpr(r_able<T>)
 				a=move(b);
-			else{
+			else
 				copy_assign(a,b);
-			}
 			return a;
 		}
 		template<class T> requires able<T>
 		static T* base_call(T*to,T*from,size_t size)noexcept(nothrow<T>){
 			if constexpr(trivial<T>)
 				::std::memcpy(to,add_const(from),size*sizeof(T));
-			else{
+			else
 				while(size--)
 					base_call(to[size],from[size]);
-			}
 			return to;
 		}
 
@@ -10321,9 +10291,8 @@ template<class T,class func_t>
 inline void map_all_helper(func_t&&a){
 	auto tmp=can_map_all<T>::type_list.begin();
 	auto end=can_map_all<T>::type_list.end();
-	while(tmp!=end){
+	while(tmp!=end)
 		a(get_handle<T,can_map_all>(tmp++));
-	}
 }
 #define expr declvalue(func_t)(declvalue(T*))
 template<class T,class func_t,enable_if(was_not_an_ill_form(expr))>
@@ -12810,6 +12779,8 @@ inline void test_end(){
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -13138,6 +13109,10 @@ namespace elc::defs{
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -13444,6 +13419,8 @@ inline void test_end(){
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -13726,6 +13703,10 @@ namespace elc::defs{
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -14084,6 +14065,8 @@ inline void test_end(){
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -14328,6 +14311,10 @@ namespace elc::defs{
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -15654,6 +15641,8 @@ inline void test_end(){
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -15894,6 +15883,10 @@ namespace elc::defs{
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -16155,6 +16148,8 @@ protected:\
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -16470,6 +16465,10 @@ namespace elc::defs{
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -16804,7 +16803,20 @@ no_vtable_struct base_string_data_t:type_info_t<base_string_data_t<char_T>>::tem
 	[[nodiscard]]virtual ptr_t do_insert(size_t pos,ptr_t str)noexcept;
 	[[nodiscard]]virtual ptr_t do_erase(size_t pos,size_t size)noexcept;
 
+	[[nodiscard]]virtual ptr_t do_remove_back(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow){
+		if(size==0)return this;
+		const auto pos	  = this->get_size()-size;
+		const auto before = get_substr_data(0,pos);
+		return before;
+	}
+	[[nodiscard]]virtual ptr_t do_remove_front(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow){
+		if(size==0)return this;
+		const auto pos	  = size;
+		const auto after  = get_substr_data(pos,this->get_size()-size);
+		return after;
+	}
 	[[nodiscard]]virtual ptr_t do_pop_back(size_t size,ptr_t& self)noexcept(construct_nothrow&&copy_assign_nothrow){
+		if(size==0)return null_ptr;
 		const auto pos	  = this->get_size()-size;
 		const auto before = get_substr_data(0,pos);
 		const auto after  = get_substr_data(pos,size);
@@ -16812,6 +16824,7 @@ no_vtable_struct base_string_data_t:type_info_t<base_string_data_t<char_T>>::tem
 		return after;
 	}
 	[[nodiscard]]virtual ptr_t do_pop_front(size_t size,ptr_t& self)noexcept(construct_nothrow&&copy_assign_nothrow){
+		if(size==0)return null_ptr;
 		const auto pos	  = size;
 		const auto before = get_substr_data(0,pos);
 		const auto after  = get_substr_data(pos,this->get_size()-size);
@@ -17232,6 +17245,8 @@ protected:
 public:
 	[[nodiscard]]virtual char_T arec([[maybe_unused]]size_t index)noexcept override final{ return char_T{}; }
 	virtual void arec_set([[maybe_unused]]size_t index,[[maybe_unused]]char_T a,[[maybe_unused]]ptr_t& p)noexcept override final{ nothing; }
+	[[nodiscard]]virtual ptr_t do_remove_front([[maybe_unused]]size_t size)noexcept override final{ return this; }
+	[[nodiscard]]virtual ptr_t do_remove_back([[maybe_unused]]size_t size)noexcept override final{ return this; }
 	[[nodiscard]]virtual ptr_t do_pop_back([[maybe_unused]]size_t size,[[maybe_unused]]ptr_t& self)noexcept override final{ return this; }
 	[[nodiscard]]virtual ptr_t do_pop_front([[maybe_unused]]size_t size,[[maybe_unused]]ptr_t& self)noexcept override final{ return this; }
 protected:
@@ -17487,15 +17502,13 @@ protected:
 	}
 public:
 	[[nodiscard]]virtual const range_n::match_pattern<const char_T>& get_match_pattern_from_self(ptr_t&self)noexcept(copy_assign_nothrow&&move_construct_nothrow)override final{
-		if(!_p_match_pattern){
+		if(!_p_match_pattern)
 			_p_match_pattern=get<range_n::match_pattern<const char_T>>(array_like_view_t{this->get_data(self),this->get_size()});
-		}
 		return *_p_match_pattern;
 	}
 	[[nodiscard]]virtual const range_n::reverse_match_pattern<const char_T>&get_reverse_match_pattern_from_self(ptr_t&self)noexcept(copy_assign_nothrow&&move_construct_nothrow)override final{
-		if(!_p_reverse_match_pattern){
+		if(!_p_reverse_match_pattern)
 			_p_reverse_match_pattern=get<range_n::reverse_match_pattern<const char_T>>(array_like_view_t{this->get_data(self),this->get_size()});
-		}
 		return *_p_reverse_match_pattern;
 	}
 };
@@ -17671,6 +17684,35 @@ public:
 		}
 		else
 			return base_t::do_pop_back(size,self);
+	}
+	[[nodiscard]]virtual ptr_t do_remove_front(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		if(this->is_unique()){
+			if(_sub_begin==0){
+				_to=_to->do_remove_front(size);
+				_sub_size-=size;
+			}
+			else{
+				_sub_begin+=size;
+				_sub_size-=size;
+			}
+			null_equivalent_check();
+			self_changed();
+			return this;
+		}
+		else
+			return base_t::do_remove_front(size);
+	}
+	[[nodiscard]]virtual ptr_t do_remove_back(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		if(this->is_unique()){
+			if(_sub_begin+_sub_size==_to->get_size())
+				_to=_to->do_remove_back(size);
+			_sub_size-=size;
+			null_equivalent_check();
+			self_changed();
+			return this;
+		}
+		else
+			return base_t::do_remove_back(size);
 	}
 protected:
 	virtual hash_t get_hash_detail(ptr_t&)noexcept(hash_nothrow)override final{
@@ -17902,6 +17944,33 @@ public:
 		else
 			return base_t::apply_str_to_end(str);
 	}
+	[[nodiscard]]virtual ptr_t do_remove_front(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		if(size>=_used_size)
+			return _to->do_remove_front(size-_used_size);
+		if(this->is_unique()){//&& size<_used_size
+			_used_size-=size;
+			self_changed();
+			return this;
+		}
+		else
+			return base_t::do_remove_front(size);
+	}
+	[[nodiscard]]virtual ptr_t do_remove_back(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		/*
+		if(size>=_to_size){
+			const auto size_left=_used_size+_to_size-size;
+			return get<comn_string_data_t<char_T>>(string_view_t{(char_T*)_m.end()-_used_size,size_left});
+		}
+		*/
+		if(this->is_unique() && size<_to_size){
+			_to=_to->do_remove_back(size);
+			_to_size-=size;
+			self_changed();
+			return this;
+		}
+		else
+			return base_t::do_remove_back(size);
+	}
 	[[nodiscard]]virtual ptr_t do_pop_front(size_t size,ptr_t& self)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
 		if(this->is_unique() && _used_size>=size){
 			_used_size-=size;
@@ -17989,9 +18058,8 @@ public:
 	[[nodiscard]]virtual ptr_t pre_alloc_before_begin(size_t size)noexcept override final{
 		if(this->is_unique()){
 			const auto size_new=_used_size+size;
-			if(size_new>_m.size()){
+			if(size_new>_m.size())
 				_m.forward_resize(size_new);
-			}
 			return this;
 		}
 		return base_t::pre_alloc_before_begin(size);
@@ -18210,8 +18278,33 @@ public:
 		else
 			return base_t::apply_str_to_begin(str);
 	}
+	[[nodiscard]]virtual ptr_t do_remove_front(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		/*
+		if(size>=_to_size)
+			return get<comn_string_data_t<char_T>>(string_view_t{_m.begin(),_used_size+_to_size-size});
+		*/
+		if(this->is_unique() && size<_to_size){
+			_to=_to->do_remove_front(size);
+			_to_size-=size;
+			self_changed();
+			return this;
+		}
+		else
+			return base_t::do_remove_front(size);
+	}
+	[[nodiscard]]virtual ptr_t do_remove_back(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		if(size>=_used_size)
+			return _to->do_remove_back(size-_used_size);
+		if(this->is_unique()){//&& size<_used_size
+			_used_size-=size;
+			self_changed();
+			return this;
+		}
+		else
+			return base_t::do_remove_back(size);
+	}
 	[[nodiscard]]virtual ptr_t do_pop_front(size_t size,ptr_t& self)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
-		if(this->is_unique()){
+		if(this->is_unique() && size<_to_size){
 			auto aret=_to->do_pop_front(size,_to);
 			_to_size-=size;
 			self_changed();
@@ -18259,9 +18352,8 @@ protected:
 		return _used_size==wp->_used_size;// && _to_size==wp->_to_size; //总size被保证一样
 	}
 	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form(size_t begin)noexcept override final{
-		if(begin < _to_size){
+		if(begin < _to_size)
 			return _to->get_the_largest_complete_data_block_begin_form(begin);
-		}
 		else {
 			begin-=_to_size;
 			return {_m.begin()+begin,note::size(_used_size-begin)};
@@ -18284,9 +18376,8 @@ public:
 	[[nodiscard]]virtual ptr_t pre_alloc_after_end(size_t size)noexcept override final{
 		if(this->is_unique()){
 			const auto size_new=_used_size+size;
-			if(size_new>_m.size()){
+			if(size_new>_m.size())
 				_m.resize(size_new);
-			}
 			return this;
 		}
 		return base_t::pre_alloc_after_end(size);
@@ -18451,6 +18542,34 @@ public:
 		else
 			return base_t::apply_str_to_end(str);
 	}
+	[[nodiscard]]virtual ptr_t do_remove_front(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		if(_before_size==size)
+			return _after;
+		if(_before_size<size)
+			return _after->do_remove_front(size-_before_size);
+		if(this->is_unique()){
+			_before=_before->do_remove_front(size);
+			_before_size-=size;
+			self_changed();
+			return this;
+		}
+		else
+			return base_t::do_remove_front(size);
+	}
+	[[nodiscard]]virtual ptr_t do_remove_back(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		if(_after_size==size)
+			return _before;
+		if(_after_size<size)
+			return _before->do_remove_back(size-_after_size);
+		if(this->is_unique()){
+			_after=_after->do_remove_back(size);
+			_after_size-=size;
+			self_changed();
+			return this;
+		}
+		else
+			return base_t::do_remove_back(size);
+	}
 	[[nodiscard]]virtual ptr_t do_pop_front(size_t size,ptr_t& self)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
 		if(this->is_unique() && _before_size>=size){
 			ptr_t aret;
@@ -18598,7 +18717,7 @@ struct erased_string_data_t final:base_string_data_t<char_T>,instance_struct<era
 	[[nodiscard]]virtual ptr_t get_substr_data(size_t begin,size_t size)noexcept override final{
 		if(begin+size<_erase_pos)
 			return _to->get_substr_data(begin,size);
-		elseif(begin>_erase_pos)
+		elseif(begin>=_erase_pos)
 			return _to->get_substr_data(begin+_erase_size,size);
 		else
 			return base_t::get_substr_data(begin,size);
@@ -18617,7 +18736,7 @@ protected:
 	virtual void copy_part_data_to(char_T* to,size_t pos,size_t size)noexcept(copy_assign_nothrow)override final{
 		if(pos+size<_erase_pos)
 			_to->copy_part_data_to(to,pos,size);
-		elseif(pos>_erase_pos)
+		elseif(pos>=_erase_pos)
 			_to->copy_part_data_to(to,pos+_erase_size,size);
 		else{
 			const auto size_before_erase_pos=_erase_pos-pos;
@@ -18639,7 +18758,7 @@ public:
 		return base_t::do_erase(pos,size);
 	}
 	[[nodiscard]]virtual char_T arec(size_t index)noexcept(copy_construct_nothrow&&move_construct_nothrow)override final{
-		if(index>_erase_pos)
+		if(index>=_erase_pos)
 			return _to->arec(index+_erase_size);
 		else
 			return _to->arec(index);
@@ -18647,7 +18766,7 @@ public:
 
 	virtual void arec_set(size_t index,char_T a,ptr_t& p)noexcept(copy_assign_nothrow&&move_construct_nothrow)override final{
 		if(this->is_unique()){
-			if(index>_erase_pos)
+			if(index>=_erase_pos)
 				_to->arec_set(index+_erase_size,a,_to);
 			else
 				_to->arec_set(index,a,_to);
@@ -18700,6 +18819,31 @@ public:
 		else
 			return base_t::apply_str_to_end(str);
 	}
+	[[nodiscard]]virtual ptr_t do_remove_front(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		if(size>=_erase_pos)
+			return _to->do_remove_front(size+_erase_size);
+		if(this->is_unique()){//&& size<_erase_pos
+			_to=_to->do_remove_front(size);
+			_to_size-=size;
+			_erase_pos-=size;
+			self_changed();
+			return this;
+		}
+		else
+			return base_t::do_remove_front(size);
+	}
+	[[nodiscard]]virtual ptr_t do_remove_back(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		if(size>=_to_size-_erase_pos-_erase_size)
+			return _to->do_remove_back(size+_erase_size);
+		if(this->is_unique()){//&& size<_to_size-_erase_pos-_erase_size
+			_to=_to->do_remove_back(size);
+			_to_size-=size;
+			self_changed();
+			return this;
+		}
+		else
+			return base_t::do_remove_back(size);
+	}
 	[[nodiscard]]virtual ptr_t do_pop_front(size_t size,ptr_t& self)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
 		if(this->is_unique() && _erase_pos > size){
 			auto aret=_to->do_pop_front(size,_to);
@@ -18736,7 +18880,7 @@ protected:
 	virtual hash_t get_others_hash_with_calculated_before_detail(hash_t before,size_t before_size,ptr_t&,size_t pos,size_t size)noexcept(hash_nothrow)override final{
 		if(pos+size<_erase_pos)
 			before=_to->get_others_hash_with_calculated_before(before,before_size,_to,pos,size);
-		elseif(pos>_erase_pos)
+		elseif(pos>=_erase_pos)
 			before=_to->get_others_hash_with_calculated_before(before,before_size,_to,pos+_erase_size,size);
 		else{
 			const auto size_before_erase_pos=_erase_pos-pos;
@@ -18754,9 +18898,8 @@ protected:
 	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form(size_t begin)noexcept override final{
 		if(begin < _erase_pos){
 			auto aret=_to->get_the_largest_complete_data_block_begin_form(begin);
-			if(aret.size() > _erase_pos){
+			if(aret.size() > _erase_pos)
 				aret = {aret.begin(),_erase_pos};
-			}
 			return aret;
 		}
 		else
@@ -19007,6 +19150,45 @@ public:
 		else
 			return base_t::apply_str_to_end(str);
 	}
+	[[nodiscard]]virtual ptr_t do_remove_front(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		if(size>=_insert_pos+_insert_size)
+			return _to->do_remove_front(size-_insert_size);
+		if(this->is_unique()){
+			if(_insert_pos > size){
+				_to=_to->do_remove_front(size);
+				_to_size-=size;
+				_insert_pos-=size;
+				self_changed();
+				return this;
+			}
+			elseif(_insert_pos==0 && _insert_size>=size){
+				_insert_data=_insert_data->do_remove_front(size);
+				_insert_size-=size;
+				self_changed();
+				return this;
+			}
+		}
+		return base_t::do_remove_front(size);
+	}
+	[[nodiscard]]virtual ptr_t do_remove_back(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		if(size>=_to_size-_insert_pos)
+			return _to->do_remove_back(size-_insert_pos);
+		if(this->is_unique()){
+			if(_insert_pos+_insert_size <= _to_size-size){
+				_to=_to->do_remove_back(size);
+				_to_size-=size;
+				self_changed();
+				return this;
+			}
+			elseif(_insert_pos==_to_size && _insert_size>=size){
+				_insert_data=_insert_data->do_remove_front(size);
+				_insert_size-=size;
+				self_changed();
+				return this;
+			}
+		}
+		return base_t::do_remove_back(size);
+	}
 	[[nodiscard]]virtual ptr_t do_pop_front(size_t size,ptr_t& self)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
 		if(this->is_unique()){
 			if(_insert_pos > size){
@@ -19045,9 +19227,8 @@ public:
 protected:
 	virtual hash_t get_hash_detail(ptr_t&)noexcept(hash_nothrow)override final{
 		auto result=hash(nothing);
-		if(_insert_pos){
+		if(_insert_pos)
 			result=_to->get_others_hash_with_calculated_before(result,0,_to,0,_insert_pos);
-		}
 		result=hash.merge_array_hash_results(result,_insert_pos,_insert_data->get_hash(_insert_data),_insert_size);
 		const auto size=_to_size-_insert_pos;
 		if(size)
@@ -19182,7 +19363,7 @@ public:
 	virtual void arec_set(size_t index,char_T a,ptr_t& p)noexcept(copy_assign_nothrow&&move_construct_nothrow)override final{
 		base_t::arec_set(index,a,p);
 	}
-	[[nodiscard]]virtual ptr_t do_pop_front(size_t size,ptr_t&)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+	[[nodiscard]]virtual ptr_t do_remove_front(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
 		if(this->is_unique()){
 			_size-=size;
 			self_changed();
@@ -19191,7 +19372,7 @@ public:
 		else
 			return get<same_value_compress_string_data_t<char_T>>(_size-size,_value);
 	}
-	[[nodiscard]]virtual ptr_t do_pop_back(size_t size,ptr_t&)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+	[[nodiscard]]virtual ptr_t do_remove_back(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
 		if(this->is_unique()){
 			_size-=size;
 			self_changed();
@@ -19199,6 +19380,28 @@ public:
 		}
 		else
 			return get<same_value_compress_string_data_t<char_T>>(_size-size,_value);
+	}
+	[[nodiscard]]virtual ptr_t do_pop_front(size_t size,ptr_t&self)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		if(this->is_unique()){
+			_size-=size;
+			self_changed();
+			return get<same_value_compress_string_data_t<char_T>>(size,_value);
+		}
+		else{
+			self=get<same_value_compress_string_data_t<char_T>>(_size-size,_value);
+			return get<same_value_compress_string_data_t<char_T>>(size,_value);
+		}
+	}
+	[[nodiscard]]virtual ptr_t do_pop_back(size_t size,ptr_t&self)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
+		if(this->is_unique()){
+			_size-=size;
+			self_changed();
+			return get<same_value_compress_string_data_t<char_T>>(size,_value);
+		}
+		else{
+			self=get<same_value_compress_string_data_t<char_T>>(_size-size,_value);
+			return get<same_value_compress_string_data_t<char_T>>(size,_value);
+		}
 	}
 protected:
 	virtual hash_t get_hash_detail(ptr_t&)noexcept(hash_nothrow)override final{
@@ -19744,9 +19947,8 @@ protected:
 			full_copy_cso_check(str);
 			if(_in_cso()&&!str._in_cso())
 				_cso_fin(str._m->apply_str_to_begin(to_string_view_t()));
-			elseif(str._in_cso()){
+			elseif(str._in_cso())
 				push_back(str.to_string_view_t());
-			}
 			else{
 				_cso_check();
 				_m=_m->apply_str_to_end(str._m);
@@ -19762,9 +19964,8 @@ protected:
 			full_copy_cso_check(str);
 			if(_in_cso()&&!str._in_cso())
 				_cso_fin(str._m->apply_str_to_end(to_string_view_t()));
-			elseif(str._in_cso()){
+			elseif(str._in_cso())
 				push_front(str.to_string_view_t());
-			}
 			else{
 				_cso_check();
 				_m=_m->apply_str_to_begin(str._m);
@@ -19775,10 +19976,14 @@ protected:
 		void push_front(const arec_t&& ch)&noexcept{ push_front(move(ch).operator char_T()); }
 		void push_front(const_string_ptr_t str)&noexcept{ push_front(string_view_t(str)); }
 
-		string_t pop_back(size_t size)noexcept{ _cso_check();return _m->do_pop_back(size,_m); }
-		string_t pop_front(size_t size)noexcept{ _cso_check();return _m->do_pop_front(size,_m); }
-		char_T pop_back()noexcept{ return pop_back(1)[0]; }
-		char_T pop_front()noexcept{ return pop_front(1)[0]; }
+		void remove_back(size_t size=1)noexcept{ _cso_check();_m=_m->do_remove_back(size); }
+		void remove_front(size_t size=1)noexcept{ _cso_check();_m=_m->do_remove_front(size); }
+		#define pop_function_nodiscard nodiscard("if you don't want to use the return value, use remove_back() or remove_front() instead to avoid unnecessary cost")
+		[[pop_function_nodiscard]]string_t pop_back(size_t size)noexcept{ _cso_check();return _m->do_pop_back(size,_m); }
+		[[pop_function_nodiscard]]string_t pop_front(size_t size)noexcept{ _cso_check();return _m->do_pop_front(size,_m); }
+		[[pop_function_nodiscard]]char_T pop_back()noexcept{ return pop_back(1)[0]; }
+		[[pop_function_nodiscard]]char_T pop_front()noexcept{ return pop_front(1)[0]; }
+		#undef pop_function_nodiscard
 
 		//
 
@@ -20227,6 +20432,8 @@ using string_n::string;
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -20510,6 +20717,10 @@ namespace elc{
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -20780,6 +20991,8 @@ protected:\
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -20982,6 +21195,10 @@ namespace elc::defs{
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -21342,6 +21559,8 @@ inline void test_end(){
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -21574,6 +21793,10 @@ namespace elc::defs{
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -21835,6 +22058,8 @@ protected:\
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
@@ -22059,6 +22284,10 @@ namespace elc::defs{
 	#undef abs
 	#pragma push_macro("export")
 	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -22392,6 +22621,8 @@ inline void test_end{
 	#pragma pop_macro("max")
 	#pragma pop_macro("abs")
 	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
 	#pragma pop_macro("elc")
 #endif
 
