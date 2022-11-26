@@ -513,11 +513,11 @@ protected:\
 		using unsigned_specific_size_t=decltype(lambda(){
 			if constexpr(size==1)
 				return uint8_t{};
-			else if constexpr(size==2)
+			elseif constexpr(size==2)
 				return uint16_t{};
-			else if constexpr(size==4)
+			elseif constexpr(size==4)
 				return uint32_t{};
-			else if constexpr(size==8)
+			elseif constexpr(size==8)
 				return uint64_t{};
 		}());
 	}
@@ -2562,7 +2562,7 @@ namespace array_like_n{
 			swap(_size,b._size);
 		}
 
-		[[nodiscard]]constexpr const_iterator c_str()const noexcept{return _begin;}
+		[[nodiscard]]constexpr const_iterator data()const noexcept{return _begin;}
 		[[nodiscard]]constexpr size_t size()const noexcept{return _size;}
 
 		[[nodiscard]]constexpr iterator begin()noexcept requires(type_info<iterator>!=type_info<const_iterator>){return _begin;}
@@ -2645,25 +2645,41 @@ constexpr size_t number_of_possible_values_per=uintmax_t(max(type_info<::std::ma
 	用法: data_cast<T>(byte*) -> T&
 */
 template<class T>
-[[nodiscard]]constexpr T&data_cast(byte*p){return*::std::launder(reinterpret_cast<T*>(p));}
+[[nodiscard]]force_inline constexpr T&data_cast(byte*p){return*::std::launder(reinterpret_cast<T*>(p));}
+template<class T>
+[[nodiscard]]force_inline constexpr T&fast_data_cast(byte*p){return*reinterpret_cast<T*>(p);}
 /*!
 	功能: byte* 类型数据转换为 T*，不进行任何检查
 	用法: data_ptr_cast<T>(byte*) -> T*
 */
 template<class T>
-[[nodiscard]]constexpr T*data_ptr_cast(byte*p){return::std::launder(reinterpret_cast<T*>(p));}
+[[nodiscard]]force_inline constexpr T*data_ptr_cast(byte*p){return::std::launder(reinterpret_cast<T*>(p));}
+template<class T>
+[[nodiscard]]force_inline constexpr T*fast_data_ptr_cast(byte*p){return reinterpret_cast<T*>(p);}
 /*!
 	功能: T* 指针转换为 byte*，不进行任何检查
 	用法: cast_to_data(T*) -> byte*
 */
 template<class T>
-[[nodiscard]]constexpr byte*cast_to_data(T*p){return ::std::launder(reinterpret_cast<byte*>(p));}
+[[nodiscard]]force_inline constexpr byte*cast_to_data(T*p){return ::std::launder(reinterpret_cast<byte*>(p));}
+template<class T>
+[[nodiscard]]force_inline constexpr byte*fast_cast_to_data(T*p){return reinterpret_cast<byte*>(p);}
+/*!
+	功能: T& 转换为 U&，不进行任何检查
+	用法: union_cast<U>(T&) -> U&
+*/
+template<class U,class T>
+[[nodiscard]]force_inline constexpr U&union_cast(T&t){return*::std::launder(reinterpret_cast<U*>(&t));}
+template<class U,class T>
+[[nodiscard]]force_inline constexpr U&fast_union_cast(T&t){return*reinterpret_cast<U*>(&t);}
 /*!
 	功能: const T* 指针转换为 const byte*，不进行任何检查
 	用法: cast_to_data(const T*) -> const byte*
 */
 template<class T>
-[[nodiscard]]constexpr const byte*cast_to_data(const T*p){return ::std::launder(reinterpret_cast<const byte*>(p));}
+[[nodiscard]]force_inline constexpr const byte*cast_to_data(const T*p){return ::std::launder(reinterpret_cast<const byte*>(p));}
+template<class T>
+[[nodiscard]]force_inline constexpr const byte*fast_cast_to_data(const T*p){return reinterpret_cast<const byte*>(p);}
 
 /*!
 	功能: data_block类模板,接受多个类型参数,实例化为内含最大体积最大对齐要求的byte数组的结构体
@@ -2679,13 +2695,13 @@ struct data_block:non_copy_construct_able,non_move_construct_able{
 	pop_msvc_warning();
 
 	push_and_disable_msvc_warning(26495);
-	constexpr data_block()noexcept{
+	force_inline constexpr data_block()noexcept{
 		if in_consteval
 			for(size_t i=0;i<size;++i)
 				_data[i]=byte{};
 	};
 	template<class T> requires(sizeof(T)<=size&&alignof(T)<=align)
-	constexpr data_block(T&&t)noexcept{
+	force_inline constexpr data_block(T&&t)noexcept{
 		data_cast<T>(_data)=::std::forward<T>(t);
 		if constexpr(sizeof(T)<size)
 			if in_consteval
@@ -2693,17 +2709,17 @@ struct data_block:non_copy_construct_able,non_move_construct_able{
 					_data[i]=byte{};
 	}
 	pop_msvc_warning();
-	constexpr operator byte*(){return _data;}
-	constexpr operator const byte*()const{return _data;}
+	force_inline constexpr operator byte*(){return _data;}
+	force_inline constexpr operator const byte*()const{return _data;}
 	template<class T> requires(sizeof(T)<=size&&alignof(T)<=align)
-	constexpr auto&operator=(T&&t){
+	force_inline constexpr auto&operator=(T&&t){
 		return data_cast<remove_cvref<T>>(_data)=::std::forward<T>(t);
 	}
 	//begin & end
-	constexpr byte*begin(){return _data;}
-	constexpr byte*end(){return _data+size;}
-	constexpr const byte*begin()const{return _data;}
-	constexpr const byte*end()const{return _data+size;}
+	force_inline constexpr byte*begin(){return _data;}
+	force_inline constexpr byte*end(){return _data+size;}
+	force_inline constexpr const byte*begin()const{return _data;}
+	force_inline constexpr const byte*end()const{return _data+size;}
 };
 
 /*!
@@ -4364,32 +4380,24 @@ namespace rand_n{
 
 	distinctive inline struct rand_seed_t{
 	private:
-		typedef unsigned_specific_size_t<sizeof(seed_type)/2> value_gen_cache_base_t;
-		typedef data_block<value_gen_cache_base_t> value_gen_cache_t;
-
 		seed_type			   _seed, _seed_origin;
 		static constexpr auto  εντροπία_bitnum = CHAR_BIT;
 		static constexpr auto  εντροπία_num = size_t(pow(BIT_POSSIBILITY, εντροπία_bitnum));
-		static constexpr auto  εντροπία_size = εντροπία_num * sizeof(value_gen_cache_base_t);
+		static constexpr auto  εντροπία_size = εντροπία_num * sizeof(seed_type);
 		byte _εντροπία_data[εντροπία_size];
-	public:
+
 		inline static constexpr void sowing_seed_one_step(seed_type&seed)noexcept{seed=13*seed+7;}
-		[[nodiscard]]inline static constexpr seed_type sowing_seed(seed_type seed)noexcept{
-			for(size_t i=bitnum_of(seed_type);i--;)
-				sowing_seed_one_step(seed);
-			return seed;
-		}
+	public:
 		[[nodiscard]]inline constexpr seed_type get_origin()const noexcept{return _seed_origin;}
 		inline constexpr void set(seed_type seed)noexcept{
-			this->set_with_out_sowing(sowing_seed(seed));
-		}
-		inline constexpr void set_with_out_sowing(seed_type seed)noexcept{
 			_seed					= seed;
 			_seed_origin			= seed;
+			constexpr auto half_bitnum = bitnum_of(seed_type)/2;
+			static_assert(εντροπία_num>=bitnum_of(seed_type));
 			for(size_t i=εντροπία_num;i--;){
-				auto& cache = data_ptr_cast<value_gen_cache_base_t>(_εντροπία_data)[i];
-				cache		= value_gen_cache_base_t(seed^(seed >> bitnum_of(value_gen_cache_base_t)));
-				sowing_seed_one_step(seed);
+				auto& cache = fast_data_ptr_cast<seed_type>(_εντροπία_data)[i];
+				cache		= _seed^(_seed >> half_bitnum);
+				sowing_seed_one_step(_seed);
 			}
 		}
 		void set_by_time()noexcept{this->set(seed_type(::std::time(nullptr)));}
@@ -4397,8 +4405,11 @@ namespace rand_n{
 		constexpr rand_seed_t(const rand_seed_t&other)noexcept{
 			_seed					= other._seed;
 			_seed_origin			= other._seed_origin;
-			for(size_t i=εντροπία_size;i--;)
-				_εντροπία_data[i]	= other._εντροπία_data[i];
+			if in_consteval
+				for(size_t i=εντροπία_size;i--;)
+					_εντροπία_data[i]	= other._εντροπία_data[i];
+			else
+				::std::memcpy(_εντροπία_data, other._εντροπία_data, εντροπία_size);
 		}
 	private:
 		//friend 
@@ -4424,7 +4435,7 @@ namespace rand_n{
 			const auto		  result_base	= result_type(new_result >> half_bitnum);
 			const auto		  rot_offset	= result_type(old_result_base >> half_bitnum);
 			constexpr auto	  εντροπία_max	= εντροπία_size/sizeof(result_type);
-			auto&			  xor_value		= data_ptr_cast<result_type>(_εντροπία_data)[rot_offset % εντροπία_max];
+			auto&			  xor_value		= fast_data_ptr_cast<result_type>(_εντροπία_data)[rot_offset % εντροπία_max];
 			const result_type result		= rotl(result_base, rot_offset) ^ xor_value;
 			//
 			xor_value = result;
@@ -4433,24 +4444,34 @@ namespace rand_n{
 		template<typename T> requires(sizeof(seed_type)/2 >= sizeof(T))
 		[[nodiscard]]force_inline constexpr T gen_randbit()noexcept{
 			typedef unsigned_specific_size_t<sizeof(T)> result_type;
-			data_block<T,result_type>aret=base_gen_randbit<result_type>();
-			return data_cast<T>(aret);
+			alignas(max(alignof(T),alignof(result_type)))auto aret=base_gen_randbit<result_type>();
+			return fast_union_cast<T>(aret);
+		}
+		//为了加速而进行特化，这不影响通用性并且大多数时候能节省2ns左右（将内存访问转为位操作）
+		template<typename T> requires(sizeof(seed_type) == sizeof(T))
+		[[nodiscard]]force_inline constexpr T gen_randbit()noexcept{
+			typedef unsigned_specific_size_t<sizeof(T)> result_type;
+			typedef unsigned_specific_size_t<sizeof(T)/2> sand_type;
+			alignas(max(alignof(T),alignof(result_type)))result_type aret=result_type(gen_randbit<sand_type>())<<bitnum_of(sand_type);
+			aret&=result_type(gen_randbit<sand_type>());
+			return fast_union_cast<T>(aret);
 		}
 		
 		template<size_t sand_size,size_t size>
 		[[nodiscard]]force_inline constexpr void gen_randbit_with_sand_size_to_pointer(byte*to)noexcept{
 			typedef unsigned_specific_size_t<sand_size> sand_type;
-			if constexpr(size/sand_size)
-				for(size_t i=size/sand_size;i--;to+=sand_size)
-					data_cast<sand_type>(to)=gen_randbit<sand_type>();
+			constexpr size_t sand_num = size/sand_size;
+			if constexpr(sand_num)
+				for(size_t i=sand_num;i--;to+=sand_size)
+					fast_data_cast<sand_type>(to)=gen_randbit<sand_type>();
 			if constexpr(size%sand_size)
 				gen_randbit_with_sand_size_to_pointer<sand_size/BIT_POSSIBILITY,size%sand_size>(to);
 		}
-		template<typename T> requires(sizeof(seed_type)/2 < sizeof(T))
+		template<typename T> requires(sizeof(seed_type)/2 < sizeof(T) && sizeof(seed_type) != sizeof(T))//避免与加速特化重叠
 		[[nodiscard]]force_inline constexpr T gen_randbit()noexcept{
-			alignas(max(sizeof(T),sizeof(seed_type)))byte aret[sizeof(T)];
-			gen_randbit_with_sand_size_to_pointer<sizeof(seed_type)/2,sizeof(T)>(aret);
-			return data_cast<T>(aret);
+			alignas(max(alignof(T),alignof(seed_type)))byte aret[sizeof(T)];
+			gen_randbit_with_sand_size_to_pointer<sizeof(seed_type),sizeof(T)>(aret);
+			return fast_data_cast<T>(aret);
 		}
 	}rand_seed{};
 
@@ -8203,15 +8224,15 @@ namespace function_base_n{
 	小包装工具，能在意想不到的地方发挥效果（比如要额外携带数据的callable类型定义！见"../../lib_loader/lib_loader.hpp"）
 	*/
 	template<class T,class Func_t=get_function_type<T>>
-	class function_data_warpper_t;
+	class function_data_wrapper_t;
 	template<class T,bool nothrow,class Ret_t,class...Args_t>
-	struct function_data_warpper_t<T,Ret_t(Args_t...)noexcept(nothrow)>{
+	struct function_data_wrapper_t<T,Ret_t(Args_t...)noexcept(nothrow)>{
 		static_assert(!::std::is_function_v<T>);
 
 		T _value;
 
-		function_data_warpper_t(T a)noexcept(construct<T>.nothrow<T>):_value(a){}
-		~function_data_warpper_t()noexcept(destruct.nothrow<T>)=default;
+		function_data_wrapper_t(T a)noexcept(construct<T>.nothrow<T>):_value(a){}
+		~function_data_wrapper_t()noexcept(destruct.nothrow<T>)=default;
 		Ret_t operator()(Args_t...args)noexcept(nothrow || invoke<T>.nothrow<Args_t...>){
 			//BLOCK:constexpr checks
 			if constexpr(!invoke<T>.able<Args_t...>)
@@ -8301,15 +8322,15 @@ namespace function_base_n{
 	小包装工具，能在意想不到的地方发挥效果（比如要额外携带数据的callable类型定义！见"../../lib_loader/lib_loader.hpp"）
 	*/
 	template<class T,class Func_t=get_function_type<T>>
-	class function_data_warpper_t;
+	class function_data_wrapper_t;
 	template<class T,class Ret_t,class...Args_t>
-	struct function_data_warpper_t<T,Ret_t(Args_t...)noexcept>{
+	struct function_data_wrapper_t<T,Ret_t(Args_t...)noexcept>{
 		static_assert(!::std::is_function_v<T>);
 
 		T _value;
 
-		function_data_warpper_t(T a)noexcept(construct<T>.nothrow<T>):_value(a){}
-		~function_data_warpper_t()noexcept(destruct.nothrow<T>)=default;
+		function_data_wrapper_t(T a)noexcept(construct<T>.nothrow<T>):_value(a){}
+		~function_data_wrapper_t()noexcept(destruct.nothrow<T>)=default;
 		Ret_t operator()(Args_t...args)noexcept{
 			//BLOCK:constexpr checks
 			if constexpr(!invoke<T>.able<Args_t...>)
@@ -8341,13 +8362,13 @@ namespace function_base_n{
 	小包装工具，能在意想不到的地方发挥效果（比如要额外携带数据的callable类型定义！见"../../lib_loader/lib_loader.hpp"）
 	*/
 	template<class T,class Ret_t,class...Args_t>
-	struct function_data_warpper_t<T,Ret_t(Args_t...)>{
+	struct function_data_wrapper_t<T,Ret_t(Args_t...)>{
 		static_assert(!::std::is_function_v<T>);
 
 		T _value;
 
-		function_data_warpper_t(T a)noexcept(construct<T>.nothrow<T>):_value(a){}
-		~function_data_warpper_t()noexcept(destruct.nothrow<T>)=default;
+		function_data_wrapper_t(T a)noexcept(construct<T>.nothrow<T>):_value(a){}
+		~function_data_wrapper_t()noexcept(destruct.nothrow<T>)=default;
 		Ret_t operator()(Args_t...args)noexcept(invoke<T>.nothrow<Args_t...>){
 			//BLOCK:constexpr checks
 			if constexpr(!invoke<T>.able<Args_t...>)
@@ -8378,7 +8399,7 @@ namespace function_base_n{
 	#endif
 }
 using function_base_n::get_function_type;
-using function_base_n::function_data_warpper_t;
+using function_base_n::function_data_wrapper_t;
 
 //file_end
 
@@ -10766,11 +10787,11 @@ namespace function_n{
 	template<class T,class Ret_t,class...Args_t>
 	struct func_data_t<T,Ret_t(Args_t...)>final:
 	type_info_t<func_data_t<T,Ret_t(Args_t...)>>::template_name with_common_attribute<instance_struct>,
-	base_func_data_t<Ret_t(Args_t...)>,function_data_warpper_t<T,Ret_t(Args_t...)>{
+	base_func_data_t<Ret_t(Args_t...)>,function_data_wrapper_t<T,Ret_t(Args_t...)>{
 		static_assert(!::std::is_function_v<T>);
 		typedef base_func_data_t<Ret_t(Args_t...)>base_t;
 		typedef func_data_t<T,Ret_t(Args_t...)>this_t;
-		typedef function_data_warpper_t<T,Ret_t(Args_t...)>data_t;
+		typedef function_data_wrapper_t<T,Ret_t(Args_t...)>data_t;
 		typedef base_t::ptr_t ptr_t;
 		typedef base_t::func_ptr_t func_ptr_t;
 
@@ -12930,6 +12951,1029 @@ namespace elc{
 //file_end
 
 	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
+	//operator<< & operator>>
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_stream"
+//base_stream
+//at namespace ::
+/*
+未完成的elc解释器include文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/pre_checks.hpp"
+//pre_checks.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//__cplusplus needs 20+
+#if !defined(__cplusplus)||__cplusplus<202002L
+	//if msvc, check _MSVC_LANG
+	#if defined(_MSVC_LANG) && _MSVC_LANG>=202002L
+		//ok
+	#else
+		#error "elc files needs c++20 or higher"
+	#endif
+#endif
+
+//check if the compiler is msvc
+#if defined(_MSC_VER)
+	//check if _CPPRTTI
+	#if !defined(_CPPRTTI)
+		#error "elc files needs rtti"
+	#endif
+	//check _MSC_VER at last 1932
+	#if _MSC_VER<1932
+		#error "elc files needs at last msvc 19.32 or higher, keep moving!"
+	#endif
+#endif
+
+//file_end
+
+#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_stream"
+#if !defined(ELC_BASE_STREAM)
+	#define ELC_BASE_STREAM
+	//abstract_base
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
+//base
+//at namespace ::
+/*
+未完成的elc解释器include文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/pre_checks.hpp"
+//pre_checks.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//__cplusplus needs 20+
+#if !defined(__cplusplus)||__cplusplus<202002L
+	//if msvc, check _MSVC_LANG
+	#if defined(_MSVC_LANG) && _MSVC_LANG>=202002L
+		//ok
+	#else
+		#error "elc files needs c++20 or higher"
+	#endif
+#endif
+
+//check if the compiler is msvc
+#if defined(_MSC_VER)
+	//check if _CPPRTTI
+	#if !defined(_CPPRTTI)
+		#error "elc files needs rtti"
+	#endif
+	//check _MSC_VER at last 1932
+	#if _MSC_VER<1932
+		#error "elc files needs at last msvc 19.32 or higher, keep moving!"
+	#endif
+#endif
+
+//file_end
+
+#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
+#line 19 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
+
+//file_end
+
+	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_stream"
+	#include <istream>//std::istream for wrap
+	#include <ostream>//std::ostream for wrap
+	//do not include <iostream> as it will import some gobal objects like std::cin and std::cout that we may not want to use
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+//_body.hpp
+//at namespace ::
+/*
+未完成的elc解释器base_stream文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#if defined(ELC_TEST)
+	#error "this part cannot be tested."
+#endif
+namespace elc::defs{
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
+//_defs.hpp
+/*
+未完成的elc解释器basic文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+//_defs.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+
+//undefs at "_undefs.hpp"
+
+//set ELC_WARNING_LEVEL default to 4(max)
+#line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(push,ELC_WARNING_LEVEL)
+	#pragma warning(disable:4099)//class与struct混用警告diss
+	#pragma warning(disable:4584)//重复子类警告diss
+	#pragma warning(disable:4250)//域控制继承警告diss
+	#pragma warning(disable:26432)//不完全默认方法警告diss
+	#pragma warning(disable:26435)//virtual override方法警告diss
+	#pragma warning(disable:26481)//容器安利diss
+	#pragma warning(disable:26446)//gsl::at安利diss
+	#pragma warning(disable:26434)//方法覆盖警告diss
+	#pragma warning(disable:26429)//gsl::not_null安利diss
+	#pragma warning(disable:26471)//对void*进行static_cast安利diss
+	#pragma warning(disable:26474)//隐式指针转换显式cast警告diss
+	#pragma warning(disable:26473)//相同指针显式cast警告diss
+	#pragma warning(disable:26456)//隐藏非虚运算符警告diss
+	#pragma warning(disable:26485)//数组作指针警告diss
+	#pragma warning(disable:26490)//reinterpret_cast警告diss
+	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
+	#pragma warning(disable:26482)//非常数数组索引警告diss
+	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(_MSC_VER)
+	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
+	#define push_msvc_warning() __pragma(warning(push))
+	#define pop_msvc_warning() __pragma(warning(pop))
+	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
+#else
+	#define suppress_msvc_warning(...)
+	#define disable_msvc_warning(...)
+	#define push_msvc_warning()
+	#define pop_msvc_warning()
+	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
+	#pragma push_macro("elc")
+	#undef elc
+#endif
+//
+#if defined(ELC_VOID_NAME)
+	#undef void
+#endif
+//
+#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
+	#undef rand
+#endif
+
+// #define often_noexcept
+#define noexcept_as(...) noexcept(noexcept((__VA_ARGS__)))//dnmd C艹标准就是没有noexcept_as_auto
+#define noexcept_as_auto MAGIC//哦现在有了
+#define constexpr_as(...) MAGIC constexpr//( •̀ ω •́ )✌
+#define constexpr_as_auto MAGIC MAGIC constexpr//✌( •̀ ω •́ )✌
+
+#define using_method_from_base_t(name,...) \
+template<class...Args> requires was_not_an_ill_form(declvalue(base_t).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(base_t::name(declvalue(Args)...))\
+{\
+	return base_t::name(forward<Args>(rest)...);\
+}\
+
+#define using_method_from_value(name,value_name,...) \
+template<class...Args> requires was_not_an_ill_form(re_declvalue(value_name).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(declvalue(Args)...))\
+{\
+	return value_name.name(forward<Args>(rest)...);\
+}\
+
+#define floop while(__builtin_is_my_dick_still_there())
+#if defined(_MSC_VER) && _MSC_VER==1935
+	//https://developercommunity.visualstudio.com/t/10193638
+	#define enable_adl(name) template<typename=void>void name()noexcept=delete
+#else
+	#define enable_adl(name) void name()noexcept=delete
+#endif
+
+#define re_declvalue(...) (declvalue(decltype(__VA_ARGS__)))
+#define re_decltype(...) (decltype(declvalue(__VA_ARGS__)))
+
+#define declvalue(...) (::std::declval<__VA_ARGS__>())
+
+/*! 实例化到此将引发错误 */
+#define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发警告 */
+#define template_warning(reason) template_warning_helper<T>(reason)
+
+//for type_info
+#define type_info_of(...) base_type_info_t(typeid(__VA_ARGS__))
+#define type_name_of(...) (type_info_of(__VA_ARGS__).name())
+
+#define is_common_attribute(name) public attribute<T,name<T>>
+#define is_special_attribute(name) public attribute<T,name>
+
+#define has_attribute(...) template_name has_attribute_helper<__VA_ARGS__>()
+#define not_has_attribute(...) template_name not_has_has_attribute_helper<__VA_ARGS__>()
+
+//for float_size_t
+#define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
+//bitnum_of
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
+
+//for attribute
+#define def_common_attribute_with_nothing(name) \
+template<typename T>\
+class name{}\
+
+#define def_special_attribute_with_nothing(name) \
+class name{}\
+
+#define common_attribute_t template<class>class
+#define special_attribute_t class
+
+/*!
+若参数的布尔值为零，那么此模板不会实例化
+
+为什么不用cpp20的constraints？
+1.不能类内定义
+2.不能作为模板参数
+一句话总结：c艹标准会sb
+*/
+#define enable_if(...) class enable_state= ::std::enable_if_t<__VA_ARGS__>
+/*! 默认参与模板候选 */
+#define enabled_by_default class enable_state=void
+/*! 默认不参与模板候选 */
+#define disabled_by_default class enable_state= ::std::enable_if_t<false>
+/*! 若参数为病式，那么此模板不会实例化 */
+#define enable_if_not_ill_form(...) class enable_state= ::std::void_t<decltype(__VA_ARGS__)>
+/*!用于模板声明 */
+#define enable_flag class enable_state
+
+#define was_an_ill_form(...) (!was_not_an_ill_form(__VA_ARGS__))
+#define was_an_ill_form_with_parameter(...) (!was_not_an_ill_form_with_parameter(__VA_ARGS__))
+#define was_not_an_ill_form(...) (bool(requires{__VA_ARGS__;}))
+#define was_not_an_ill_form_and_noexcept(...) (bool(requires{__VA_ARGS__;{__VA_ARGS__}noexcept;}))
+#define was_not_an_ill_form_with_parameter(...) (bool(requires __VA_ARGS__ ))
+
+/*! 让lambda递归更加美观 */
+#define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
+/*! 让lambda递归更加美观 */
+#define get_recursive_lambda_caller(name) \
+lambda_with_catch(&)(auto&&...Args){\
+	return name(name,Args...);\
+}
+/*! 让lambda定义更加美观 */
+#define lambda []
+/*! 让lambda定义更加美观 */
+#define lambda_with_catch(...) [__VA_ARGS__]
+/*! 让lambda定义更加美观 */
+#define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
+//recursive_lambda_self_referential_reserved_symbolname
+#define lambda_RLSRRS _my_jb_super_sb_name_
+
+#define MAGIC//ahh,ko no tenno da!
+
+/*! 装饰性语法糖 */
+#define nothing
+
+/*! aya风格语法糖 */
+#define elseif else if
+/*! aya风格语法糖 */
+#define _big_than_ >
+/*! aya风格语法糖 */
+#define _small_than_ <
+
+#if defined(_MSC_VER)
+	#define not !
+	#define and &&
+	#define or ||
+#endif
+
+/*! 进入名称空间，并不是很美观 */
+#define INTER_NAMESPACE(NAMESPACENAME) namespace NAMESPACENAME{
+/*! 退出名称空间，并不是很美观 */
+#define BREAK_NAMESPACE }
+
+/*! template说明符 */
+#define template_name template
+/*! template说明符 */
+#define type_name class
+
+#if defined(DEBUG) || defined(_DEBUG)
+	#define not_in_debug 0
+#else
+	#define not_in_debug 1
+#endif
+
+#define es U""
+#define ec(ch) U ## ch
+
+#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
+	#define ELC_TEST_EVENTNAME(name) stest_eventer _the_stest_eventer__(L""name)
+#else
+	#define ELC_TEST_EVENTNAME(name)
+#endif
+
+#define override_instance_struct \
+protected:\
+	virtual void abstract_method_unget_this()noexcept_as(instance_struct<this_t>::abstract_method_unget_this())override{instance_struct<this_t>::abstract_method_unget_this();}\
+	virtual void* _abstract_method_copy_get_this()noexcept_as(instance_struct<this_t>::_abstract_method_copy_get_this())override{return instance_struct<this_t>::_abstract_method_copy_get_this();}\
+	virtual void* _abstract_method_get_resize_this(size_t size)noexcept_as(instance_struct<this_t>::instance_struct<this_t>::_abstract_method_get_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_resize_this(size);}\
+	virtual void* _abstract_method_get_forward_resize_this(size_t size)noexcept_as(instance_struct<this_t>::_abstract_method_get_forward_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_forward_resize_this(size);}\
+	virtual size_t abstract_method_get_size_of_get_for_this()noexcept override{return instance_struct<this_t>::abstract_method_get_size_of_get_for_this();}
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define distinctive __declspec(dllexport)
+#else
+	#define distinctive
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define force_inline __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+	#define force_inline __attribute__((always_inline)) inline
+#else
+	#define force_inline inline
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define with_no_vtable __declspec(novtable)
+#else
+	#define with_no_vtable
+#endif
+
+#define in_consteval (::std::is_constant_evaluated())
+
+#define no_vtable_struct struct with_no_vtable
+#define no_vtable_class class with_no_vtable
+
+//#define get_elc_defs using namespace ::elc::defs
+
+//file_end
+
+#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
+
+//file_end
+
+	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+
+	namespace stream_n{
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/base_streams/_body.hpp"
+//_body.hpp
+//at namespace elc::defs::stream_n
+/*
+未完成的elc解释器base_stream文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+push_and_disable_msvc_warning(4250);
+enum class seek_type{beg,end,cur};
+using enum seek_type;
+no_vtable_struct base_stream:abstract_base<base_stream>{
+	virtual ~base_stream()=default;
+	virtual int_t seek(seek_type,int_t)=0;
+	virtual int_t tell(){return this->seek(cur,0);}
+	virtual void seek_to(int_t)=0;
+	virtual void sync()=0;
+	virtual void flush()=0;
+	virtual void close()=0;
+};
+no_vtable_struct base_istream:abstract_base<base_istream>,virtual base_stream{};
+no_vtable_struct base_ostream:abstract_base<base_ostream>,virtual base_stream{};
+no_vtable_struct base_iostream:abstract_base<base_iostream>,virtual base_ostream,virtual base_istream{};
+
+
+no_vtable_struct noexcept_stream:abstract_base<noexcept_stream>,virtual base_stream{
+	virtual int_t seek(seek_type,int_t)noexcept override=0;
+	virtual int_t tell()noexcept override{return this->seek(cur,0);}
+	virtual void seek_to(int_t)noexcept override=0;
+	virtual void sync()noexcept override=0;
+	virtual void flush()noexcept override=0;
+	virtual void close()noexcept override=0;
+};
+no_vtable_struct noexcept_istream:abstract_base<noexcept_istream>,virtual base_istream,virtual noexcept_stream{};
+no_vtable_struct noexcept_ostream:abstract_base<noexcept_ostream>,virtual base_ostream,virtual noexcept_stream{};
+no_vtable_struct noexcept_iostream:abstract_base<noexcept_iostream>,virtual base_iostream,virtual noexcept_ostream,virtual noexcept_istream{};
+static_assert(noexcept(((noexcept_iostream*)(nullptr))->~noexcept_iostream()));
+static_assert(noexcept(((noexcept_iostream*)(nullptr))->sync()));
+
+//text streams
+template<class char_T>
+no_vtable_struct text_istream:abstract_base<text_istream<char_T>>,virtual base_istream{
+	virtual size_t read(char_T*buf,size_t size)=0;
+};
+template<class char_T>
+no_vtable_struct text_ostream:abstract_base<text_ostream<char_T>>,virtual base_ostream{
+	virtual void write(const char_T*buf,size_t size)=0;
+};
+template<class char_T>
+no_vtable_struct text_iostream:abstract_base<text_iostream<char_T>>,virtual base_iostream,virtual text_istream<char_T>,virtual text_ostream<char_T>{};
+//noexcept_
+template<class char_T>
+no_vtable_struct noexcept_text_istream:abstract_base<noexcept_text_istream<char_T>>,virtual noexcept_istream,virtual text_istream<char_T>{
+	virtual size_t read(char_T*buf,size_t size)noexcept override=0;
+};
+template<class char_T>
+no_vtable_struct noexcept_text_ostream:abstract_base<noexcept_text_ostream<char_T>>,virtual noexcept_ostream,virtual text_ostream<char_T>{
+	virtual void write(const char_T*buf,size_t size)noexcept override=0;
+};
+template<class char_T>
+no_vtable_struct noexcept_text_iostream:abstract_base<noexcept_text_iostream<char_T>>,
+	virtual noexcept_iostream,virtual text_iostream<char_T>,
+	virtual noexcept_text_istream<char_T>,virtual noexcept_text_ostream<char_T>{};
+
+
+//data streams
+no_vtable_struct data_istream:abstract_base<data_istream>,virtual base_istream{
+	virtual size_t read(byte*buf,size_t size)=0;
+	template<class T> requires ::std::is_trivially_copyable_v<T>
+	size_t read(T*v,size_t size=1){
+		return this->read(cast_to_data(v),size*sizeof(T))/sizeof(T);
+	}
+};
+no_vtable_struct data_ostream:abstract_base<data_ostream>,virtual base_ostream{
+	virtual void write(const byte*buf,size_t size)=0;
+	template<class T> requires ::std::is_trivially_copyable_v<T>
+	void write(const T*v,size_t size=1){
+		this->write(cast_to_data(v),size*sizeof(T));
+	}
+};
+no_vtable_struct data_iostream:abstract_base<data_iostream>,virtual base_iostream,virtual data_istream,virtual data_ostream{};
+//noexcept_
+no_vtable_struct noexcept_data_istream:abstract_base<noexcept_data_istream>,virtual noexcept_istream,virtual data_istream{
+	virtual size_t read(byte*buf,size_t size)noexcept override=0;
+	template<class T> requires ::std::is_trivially_copyable_v<T>
+	size_t read(T*v,size_t size=1)noexcept{
+		return this->read(cast_to_data(v),size*sizeof(T))/sizeof(T);
+	}
+};
+no_vtable_struct noexcept_data_ostream:abstract_base<noexcept_data_ostream>,virtual noexcept_ostream,virtual data_ostream{
+	virtual void write(const byte*buf,size_t size)noexcept override=0;
+	template<class T> requires ::std::is_trivially_copyable_v<T>
+	void write(const T*v,size_t size=1)noexcept{
+		this->write(cast_to_data(v),size*sizeof(T));
+	}
+};
+no_vtable_struct noexcept_data_iostream:abstract_base<noexcept_data_iostream>,
+	virtual noexcept_iostream,virtual data_iostream,
+	virtual noexcept_data_istream,virtual noexcept_data_ostream{};
+
+pop_msvc_warning();
+
+//file_end
+
+		#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/operators/_body.hpp"
+//_body.hpp
+//at namespace elc::defs::stream_n
+/*
+未完成的elc解释器base_stream文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//text_stream
+
+//operator<< of template<class char_T>struct text_ostream
+template<class char_T>
+text_ostream<char_T>&operator<<(text_ostream<char_T>&stream,const char_T ch){
+	stream.write(&ch,1);
+	return stream;
+}
+template<class char_T>
+noexcept_text_ostream<char_T>&operator<<(noexcept_text_ostream<char_T>&stream,const char_T ch)noexcept{
+	stream.write(&ch,1);
+	return stream;
+}
+template<class char_T>
+text_ostream<char_T>&operator<<(text_ostream<char_T>&stream,array_like_view_t<const char_T>str){
+	stream.write(str.data(),str.size());
+	return stream;
+}
+template<class char_T>
+noexcept_text_ostream<char_T>&operator<<(noexcept_text_ostream<char_T>&stream,array_like_view_t<const char_T>str)noexcept{
+	stream.write(str.data(),str.size());
+	return stream;
+}
+template<class char_T>
+text_ostream<char_T>&operator<<(text_ostream<char_T>&stream,const char_T*str){
+	return stream << array_end_by_zero_t<const char_T>{str};
+}
+template<class char_T>
+noexcept_text_ostream<char_T>&operator<<(noexcept_text_ostream<char_T>&stream,const char_T*str)noexcept{
+	return stream << array_end_by_zero_t<const char_T>{str};
+}
+//operator>> of template<class char_T>struct text_istream
+template<class char_T>
+text_istream<char_T>&operator>>(text_istream<char_T>&stream,char_T&ch){
+	stream.read(&ch,1);
+	return stream;
+}
+template<class char_T>
+noexcept_text_istream<char_T>&operator>>(noexcept_text_istream<char_T>&stream,char_T&ch)noexcept{
+	stream.read(&ch,1);
+	return stream;
+}
+
+//data_stream of any is_trivially_copyable
+
+//operator<< of template<class T>struct data_ostream
+template<class T> requires ::std::is_trivially_copyable_v<T>
+data_ostream&operator<<(data_ostream&stream,const T&data){
+	stream.write(&data,1);
+	return stream;
+}
+template<class T> requires ::std::is_trivially_copyable_v<T>
+noexcept_data_ostream&operator<<(noexcept_data_ostream&stream,const T&data)noexcept{
+	stream.write(&data,1);
+	return stream;
+}
+template<class T,size_t N> requires ::std::is_trivially_copyable_v<T>
+data_ostream&operator<<(data_ostream&stream,const T(&data)[N]){
+	stream.write(data,N);
+	return stream;
+}
+template<class T,size_t N> requires ::std::is_trivially_copyable_v<T>
+noexcept_data_ostream&operator<<(noexcept_data_ostream&stream,const T(&data)[N])noexcept{
+	stream.write(data,N);
+	return stream;
+}
+//operator>> of template<class T>struct data_istream
+template<class T> requires ::std::is_trivially_copyable_v<T>
+data_istream&operator>>(data_istream&stream,T&data){
+	stream.read(&data,1);
+	return stream;
+}
+template<class T> requires ::std::is_trivially_copyable_v<T>
+noexcept_data_istream&operator>>(noexcept_data_istream&stream,T&data)noexcept{
+	stream.read(&data,1);
+	return stream;
+}
+template<class T,size_t N> requires ::std::is_trivially_copyable_v<T>
+data_istream&operator>>(data_istream&stream,T(&data)[N]){
+	stream.read(data,N);
+	return stream;
+}
+template<class T,size_t N> requires ::std::is_trivially_copyable_v<T>
+noexcept_data_istream&operator>>(noexcept_data_istream&stream,T(&data)[N])noexcept{
+	stream.read(data,N);
+	return stream;
+}
+
+//file_end
+
+		#line 17 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+		
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/std_wrap/_body.hpp"
+//_body.hpp
+//at namespace elc::defs::stream_n
+/*
+未完成的elc解释器base_stream文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+push_and_disable_msvc_warning(26447);//noexcept警告diss
+//wrap std::istream to elc::noexcept_text_istream
+template<class char_T,class traits=::std::char_traits<char_T>>
+struct std_istream_wrap:noexcept_text_istream<char_T>,instance_struct<std_istream_wrap<char_T,traits>>{
+	typedef ::std::basic_istream<char_T,traits> stream_t;
+	stream_t& _stream;
+	std_istream_wrap(stream_t&stream)noexcept:_stream(stream){}
+private:
+	void clear_badbit()noexcept{
+		_stream.clear(_stream.rdstate()&~::std::ios_base::badbit);
+	}
+public:
+	virtual ~std_istream_wrap()noexcept override=default;
+	virtual int_t seek(seek_type dir,int_t off)noexcept override{
+		typename stream_t::iostate state = stream_t::goodbit;
+		const typename stream_t::sentry isok(_stream);
+
+		if(!isok)
+			state |= stream_t::badbit;
+		else{
+			try{
+				switch(dir){
+					case beg:
+						_stream.seekg(off);
+						break;
+					case cur:
+						_stream.seekg(off,_stream.cur);
+						break;
+					case end:
+						_stream.seekg(off,_stream.end);
+						break;
+				}
+				return tell();
+			}catch(...){
+				state |= stream_t::badbit;
+			}
+		}
+		_stream.setstate(state);
+		return -1;
+	}
+	virtual int_t tell()noexcept override{
+		typename stream_t::iostate state = stream_t::goodbit;
+		const typename stream_t::sentry isok(_stream);
+
+		if(!isok)
+			state |= stream_t::badbit;
+		else{
+			try{
+				const typename stream_t::pos_type base_p;
+				return int_t(_stream.tellg()-base_p);
+			}catch(...){
+				state |= stream_t::badbit;
+			}
+		}
+		_stream.setstate(state);
+		return -1;
+	}
+	virtual void seek_to(int_t pos)noexcept override{
+		const typename stream_t::pos_type base_p;
+		_stream.seekg(base_p+pos);
+	}
+	virtual void sync()noexcept override{
+		_stream.sync();
+	}
+	virtual void flush()noexcept override{
+		_stream.sync();
+	}
+	virtual void close()noexcept override{
+		_stream.sync();
+	}
+	virtual size_t read(char_T*buf,size_t size)noexcept override{
+		typename stream_t::iostate state = stream_t::goodbit;
+		const typename stream_t::sentry isok(_stream);
+
+		if(!isok)
+			state |= stream_t::badbit;
+		else{
+			try{
+				_stream.read(buf,size);
+				return size_t(_stream.gcount());
+			}catch(...){
+				state |= stream_t::badbit;
+			}
+		}
+		_stream.setstate(state);
+		return 0;
+	}
+};
+//wrap std::ostream to elc::noexcept_text_ostream
+template<class char_T,class traits=::std::char_traits<char_T>>
+struct std_ostream_wrap:noexcept_text_ostream<char_T>,instance_struct<std_ostream_wrap<char_T,traits>>{
+	typedef ::std::basic_ostream<char_T,traits> stream_t;
+	stream_t& _stream;
+	std_ostream_wrap(stream_t&stream)noexcept:_stream(stream){}
+private:
+	void clear_badbit()noexcept{
+		_stream.clear(_stream.rdstate()&~::std::ios_base::badbit);
+	}
+public:
+	virtual ~std_ostream_wrap()noexcept override=default;
+	virtual int_t seek(seek_type dir,int_t off)noexcept override{
+		typename stream_t::iostate state = stream_t::goodbit;
+		const typename stream_t::sentry isok(_stream);
+
+		if(!isok)
+			state |= stream_t::badbit;
+		else{
+			try{
+				switch(dir){
+					case beg:
+						_stream.seekp(off);
+						break;
+					case cur:
+						_stream.seekp(off,_stream.cur);
+						break;
+					case end:
+						_stream.seekp(off,_stream.end);
+						break;
+				}
+				return tell();
+			}catch(...){
+				state |= stream_t::badbit;
+			}
+		}
+		_stream.setstate(state);
+		return -1;
+	}
+	virtual int_t tell()noexcept override{
+		const typename stream_t::pos_type base_p;
+		return int_t(_stream.tellp()-base_p);
+	}
+	virtual void seek_to(int_t pos)noexcept override{
+		const typename stream_t::pos_type base_p;
+		_stream.seekp(base_p+pos);
+	}
+	virtual void sync()noexcept override{
+		_stream.flush();
+	}
+	virtual void flush()noexcept override{
+		_stream.flush();
+	}
+	virtual void close()noexcept override{
+		_stream.flush();
+	}
+	virtual void write(const char_T*buf,size_t size)noexcept override{
+		typename stream_t::iostate state = stream_t::goodbit;
+		const typename stream_t::sentry isok(_stream);
+
+		if(!isok)
+			state |= stream_t::badbit;
+		else{
+			try{
+				_stream.write(buf,size);
+			}catch(...){
+				state |= stream_t::badbit;
+			}
+		}
+		_stream.setstate(state);
+	}
+};
+pop_msvc_warning();
+
+//inject operator<< of elc::array_like_view_t to std::ostream
+BREAK_NAMESPACE//elc::defs
+INTER_NAMESPACE(base::array_like_n)//elc::defs::base::array_like_n
+
+template<class char_T,class traits>
+auto&operator<<(
+	::std::basic_ostream<remove_cvref<char_T>,traits>&stream,
+	const array_like_view_t<char_T>&view
+)noexcept{
+	stream_n::std_ostream_wrap wrap(stream);
+	wrap << view;
+	return stream;
+}
+
+BREAK_NAMESPACE//elc::defs
+INTER_NAMESPACE(stream_n)//elc::defs::stream_n
+
+//file_end
+
+		#line 19 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+	}
+	using namespace stream_n;
+
+	#if defined(ELC_TEST_ON)
+	namespace base_stream_part_test{
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_test.hpp"
+//_test.hpp
+/*
+未完成的elc解释器base_stream文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+inline void test(){
+	ELC_TEST_EVENTNAME("base_stream部分测试");
+}
+inline void test_log_out(){
+}
+inline void test_end(){
+}
+
+//file_end
+
+		#line 25 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+	}
+	#endif
+
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
+//_undefs.hpp
+/*
+未完成的elc解释器basic文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
+//_undefs.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+
+//defs at "_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(pop)
+#endif
+#undef suppress_msvc_warning
+#undef disable_msvc_warning
+#undef push_msvc_warning
+#undef pop_msvc_warning
+#undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
+	#pragma pop_macro("elc")
+#endif
+
+//
+#if defined(ELC_VOID_NAME)
+	#define void the_void
+#endif
+//
+#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
+	#define rand the_rand
+#endif
+
+// #undef often_noexcept
+#undef noexcept_as
+#undef noexcept_as_auto
+#undef constexpr_as
+#undef constexpr_as_auto
+
+#undef using_method_from_base_t
+#undef using_method_from_value
+
+#undef floop
+#undef enable_adl
+
+#undef re_declvalue
+#undef re_decltype
+
+#undef declvalue
+
+#undef template_error
+#undef template_warning
+
+#undef type_info_of
+#undef type_name_of
+
+#undef is_common_attribute
+#undef is_special_attribute
+
+#undef has_attribute
+#undef not_has_attribute
+
+#undef float_size_of
+#undef bitnum_of
+
+#undef def_common_attribute_with_nothing
+#undef def_special_attribute_with_nothing
+
+#undef common_attribute_t
+#undef special_attribute_t
+
+#undef enable_if
+#undef enabled_by_default
+#undef disabled_by_default
+#undef enable_if_not_ill_form
+#undef enable_flag
+
+#undef was_an_ill_form
+#undef was_an_ill_form_with_parameter
+#undef was_not_an_ill_form
+#undef was_not_an_ill_form_and_noexcept
+#undef was_not_an_ill_form_with_parameter
+
+#undef recursive_lambda
+#undef get_recursive_lambda_caller
+#undef lambda
+#undef lambda_with_catch
+#undef self_recursion
+#undef lambda_RLSRRS
+
+#undef MAGIC
+
+#undef nothing
+
+#undef elseif
+#undef _big_than_
+#undef _small_than_
+
+#if defined(_MSC_VER)
+	#undef not
+	#undef and
+	#undef or
+#endif
+
+#undef INTER_NAMESPACE
+#undef BREAK_NAMESPACE
+
+#undef szie
+#undef form
+
+#undef template_name
+#undef type_name
+
+#undef not_in_debug
+
+#undef es
+#undef ec
+
+#undef ELC_TEST_EVENTNAME
+
+#undef override_instance_struct
+
+#undef distinctive
+
+#undef force_inline
+
+#undef with_no_vtable
+
+#undef in_consteval
+
+#undef no_vtable_struct
+#undef no_vtable_class
+
+//#undef get_elc_defs
+
+//file_end
+
+#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
+
+//file_end
+
+	#line 29 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+}
+namespace elc{
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_export.hpp"
+//_export.hpp
+//at namespace elc
+/*
+未完成的elc解释器base_stream文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#define export using defs::
+export base_stream;
+export base_ostream;
+export base_istream;
+export base_iostream;
+export noexcept_stream;
+export noexcept_ostream;
+export noexcept_istream;
+export noexcept_iostream;
+export text_istream;
+export text_ostream;
+export text_iostream;
+export noexcept_text_istream;
+export noexcept_text_ostream;
+export noexcept_text_iostream;
+export data_istream;
+export data_ostream;
+export data_iostream;
+export noexcept_data_istream;
+export noexcept_data_ostream;
+export noexcept_data_iostream;
+#undef export
+
+//file_end
+
+	#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+}
+
+//file_end
+
+	#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_stream"
+#endif
+
+//file_end
+
+	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -13736,6 +14780,17 @@ public:
 	[[nodiscard]]virtual ptr_t pre_alloc_before_begin(size_t size)noexcept;
 	//Pre-alloc after end memory
 	[[nodiscard]]virtual ptr_t pre_alloc_after_end(size_t size)noexcept;
+
+	//io
+	virtual void do_output(text_ostream<char_T>& os){
+		size_t index=0;
+		auto a=this->get_the_largest_complete_data_block_begin_form(index);
+		while(a.size()){
+			os.write(a.begin(),a.size());
+			index+=a.size();
+			a=this->get_the_largest_complete_data_block_begin_form(index);
+		}
+	}
 };
 template<typename char_T>
 void base_string_data_t<char_T>::be_replace_as(ptr_t a)noexcept(clear_nothrow){
@@ -13993,7 +15048,7 @@ struct comn_string_data_t final:base_string_data_t<char_T>,instance_struct<comn_
 		_m[str.size()]=zero;
 	}
 	comn_string_data_t(ptr_t str)noexcept(construct_nothrow&&copy_assign_nothrow):_m(note::size(str->get_size()+1)){
-		auto size=this->get_size();
+		const auto size=this->get_size();
 		str->copy_part_data_to((char_T*)_m,0,size);
 		_m[size]=zero;
 	}
@@ -15895,14 +16950,22 @@ struct same_value_compress_string_data_t final:base_string_data_t<char_T>,instan
 
 	size_t _size;
 	char_T _value;
+	ptr_t _static_data_p;//必要时创建一个较大的数组，用于向外提供数据
+	static constexpr size_t max_static_data_size=size_t(pow(BIT_POSSIBILITY, 9));
 
 	same_value_compress_string_data_t(size_t size,char_T value)noexcept:_size(size),_value(value){}
+	same_value_compress_string_data_t(size_t size,char_T value,ptr_t static_data_p)noexcept:_size(size),_value(value),_static_data_p(static_data_p){}
+	ptr_t get_clone_with_new_size(size_t new_size)noexcept{
+		if(new_size==_size)return this;
+		if(new_size==0)return nullptr;
+		return get<same_value_compress_string_data_t<char_T>>(new_size,_value,_static_data_p);
+	}
 
 	virtual void be_replace_as(ptr_t a)noexcept(clear_nothrow)override final{
 		base_t::be_replace_as(a);
 	}
 	[[nodiscard]]virtual ptr_t get_substr_data([[maybe_unused]]size_t begin,size_t size)noexcept override final{
-		return get<same_value_compress_string_data_t<char_T>>(size,_value);
+		return get_clone_with_new_size(size);
 	}
 	[[nodiscard]]virtual size_t get_size()noexcept override final{ return _size; }
 protected:
@@ -15923,7 +16986,7 @@ public:
 			return this;
 		}
 		else
-			return get<same_value_compress_string_data_t<char_T>>(_size-size,_value);
+			return get_clone_with_new_size(_size-size);
 	}
 	[[nodiscard]]virtual ptr_t do_remove_back(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
 		if(this->is_unique()){
@@ -15932,28 +16995,30 @@ public:
 			return this;
 		}
 		else
-			return get<same_value_compress_string_data_t<char_T>>(_size-size,_value);
+			return get_clone_with_new_size(_size-size);
 	}
 	[[nodiscard]]virtual ptr_t do_pop_front(size_t size,ptr_t&self)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
 		if(this->is_unique()){
 			_size-=size;
 			self_changed();
-			return get<same_value_compress_string_data_t<char_T>>(size,_value);
+			return get_clone_with_new_size(size);
 		}
 		else{
-			self=get<same_value_compress_string_data_t<char_T>>(_size-size,_value);
-			return get<same_value_compress_string_data_t<char_T>>(size,_value);
+			auto aret=get_clone_with_new_size(size);
+			self=get_clone_with_new_size(_size-size);
+			return aret;
 		}
 	}
 	[[nodiscard]]virtual ptr_t do_pop_back(size_t size,ptr_t&self)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
 		if(this->is_unique()){
 			_size-=size;
 			self_changed();
-			return get<same_value_compress_string_data_t<char_T>>(size,_value);
+			return get_clone_with_new_size(size);
 		}
 		else{
-			self=get<same_value_compress_string_data_t<char_T>>(_size-size,_value);
-			return get<same_value_compress_string_data_t<char_T>>(size,_value);
+			auto aret=get_clone_with_new_size(size);
+			self=get_clone_with_new_size(_size-size);
+			return aret;
 		}
 	}
 protected:
@@ -15969,25 +17034,37 @@ protected:
 	}
 	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form([[maybe_unused]]size_t begin)noexcept override final{
 		if constexpr(construct<char_T>.trivial<const char_T&> && destruct.trivial<char_T>){
-			constexpr size_t data_size=512;
-			static char_T data[data_size];
-			if(data[0]!=_value)
-				copy_assign[data_size](_value,note::to(data));
-			return {data,note::size(min(_size-begin,data_size))};
+			if(!_static_data_p)
+				_static_data_p=get<comn_string_data_t<char_T>>(max_static_data_size,_value);
+			return {_static_data_p->get_data(_static_data_p),note::size(min(_size-begin,max_static_data_size))};
 		}
 		else
 			return {&_value,note::size<size_t>(1)};
 	}
 	[[nodiscard]]virtual bool same_struct_equal(ptr_t with)noexcept(equal.nothrow<char_T>)override final{
 		auto wp=down_cast<this_t*>(with.get());
-		return equal(_value,wp->_value);
+		auto aret=equal(_value,wp->_value);
+		if(aret){
+			if(_static_data_p)
+				wp->_static_data_p=_static_data_p;
+			elseif(wp->_static_data_p)
+				_static_data_p=wp->_static_data_p;
+		}
+		return aret;
 	}
 	[[nodiscard]]virtual base_t::compare_type same_struct_compare(ptr_t with)noexcept(compare.nothrow<char_T>)override final{
 		auto wp=down_cast<this_t*>(with.get());
-		return compare(_value,wp->_value);
+		auto aret=compare(_value,wp->_value);
+		if(aret==0){
+			if(_static_data_p)
+				wp->_static_data_p=_static_data_p;
+			elseif(wp->_static_data_p)
+				_static_data_p=wp->_static_data_p;
+		}
+		return aret;
 	}
 	[[nodiscard]]virtual float_size_t get_base_memory_cost()noexcept override final{
-		return float_size_of(*this);
+		return float_size_of(*this)+_static_data_p->get_memory_cost();
 	}
 };
 
@@ -16865,6 +17942,23 @@ protected:
 		compare
 		replace
 		*/
+
+		//iostream
+		friend auto& operator<<(text_ostream<char_T>& os,const string_t& str){
+			if(str._in_cso())
+				os<<str.to_string_view_t();
+			else
+				str._m->do_output(os);
+			return os;
+		}
+		friend auto& operator>>(text_istream<char_T>& is,string_t& str){
+			str.clear();
+			using namespace locale::char_n;
+			while(isspace(is.peek()))
+				is.get();
+			while(!is.eof()&&!isspace(is.peek()))
+				str+=is.get();
+		}
 		#undef _m
 	};
 
@@ -16878,56 +17972,76 @@ protected:
 	template<typename T>
 	inline void swap(string_t<T>& a,string_t<T>& b)noexcept{ a.swap_with(b); }
 
-	//std ostream支持
-	template<typename some_fucking_std_ostream, typename T>
-	decltype(auto) operator<<(some_fucking_std_ostream& stream, const string_t<T>& str){
-		typedef some_fucking_std_ostream stream_t;
+	//other iostream
+	push_and_disable_msvc_warning(26447);//noexcept警告diss
+	template<typename char_T>
+	inline auto& operator<<(noexcept_text_ostream<char_T>& os,const string_t<char_T>& str)noexcept{
+		((text_ostream<char_T>&)os)<<str;
+		return os;
+	}
+	template<typename char_T>
+	inline auto& operator>>(noexcept_text_istream<char_T>& is,string_t<char_T>& str)noexcept{
+		((text_istream<char_T>&)is)>>str;
+		return is;
+	}
+	pop_msvc_warning();
+	template<typename char_T,typename traits>
+	inline auto& operator<<(::std::basic_ostream<char_T,traits>& os,const string_t<char_T>& str)noexcept{
+		typedef ::std::basic_ostream<char_T,traits> stream_t;
 		typedef stream_t::traits_type	 traits_t;
 		typename stream_t::iostate		 state = stream_t::goodbit;
 
+		size_t size = str.size();
 		suppress_msvc_warning(26494);//未初始化警告diss
 		size_t pad;
-		size_t size = str.size();
-		if(stream.width() <= 0 || static_cast<size_t>(stream.width()) <= size)
+		if(os.width() <= 0 || static_cast<size_t>(os.width()) <= size)
 			pad = 0;
 		else
-			pad = static_cast<size_t>(stream.width()) - size;
+			pad = static_cast<size_t>(os.width()) - size;
 
-		const typename stream_t::sentry isok(stream);
+		const typename stream_t::sentry isok(os);
 
 		if(!isok)
 			state |= stream_t::badbit;
 		else {
 			try {
-				if((stream.flags() & stream_t::adjustfield) != stream_t::left){
-					for(; 0 < pad; --pad){		  // pad on left
-						if(traits_t::eq_int_type(traits_t::eof(), stream.rdbuf()->sputc(stream.fill()))){
-							state |= stream_t::badbit;		 // insertion failed, quit
+				if((os.flags() & stream_t::adjustfield) != stream_t::left){
+					for(; 0 < pad; --pad){// pad on left
+						if(traits_t::eq_int_type(traits_t::eof(), os.rdbuf()->sputc(os.fill()))){
+							state |= stream_t::badbit;// insertion failed, quit
 							break;
 						}
 					}
 				}
-
-				if(state == stream_t::goodbit && stream.rdbuf()->sputn(str.c_str(), static_cast<::std::streamsize>(size)) != static_cast<::std::streamsize>(size))
+				if(state == stream_t::goodbit){
+					stream_n::std_istream_wrap wrap(os);
+					wrap<<str;
+				}
+				if(os.fail())
 					state |= stream_t::badbit;
-				else {
-					for(; 0 < pad; --pad){		  // pad on right
-						if(traits_t::eq_int_type(traits_t::eof(), stream.rdbuf()->sputc(stream.fill()))){
-							state |= stream_t::badbit;		 // insertion failed, quit
+				else{
+					for(; 0 < pad; --pad){// pad on right
+						if(traits_t::eq_int_type(traits_t::eof(), os.rdbuf()->sputc(os.fill()))){
+							state |= stream_t::badbit;// insertion failed, quit
 							break;
 						}
 					}
 				}
-
-				stream.width(0);
+				os.width(0);
 			}
 			catch(...){
-				stream.setstate(stream_t::badbit, true);
-				return stream;
+				os.setstate(stream_t::badbit, true);
+				return os;
 			}
 		}
-		stream.setstate(state);
-		return stream;
+		os.setstate(state);
+		return os;
+	}
+	template<typename char_T,typename traits>
+	inline auto& operator>>(::std::basic_istream<char_T,traits>& is,string_t<char_T>& str)noexcept{
+		stream_n::std_istream_wrap wrap{is};
+		wrap>>str;
+		return is;
 	}
 
 	//array like支持
@@ -17197,7 +18311,7 @@ namespace elc{
 //file_end
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
-#line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
+#line 15 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
 
 //file_end
 
@@ -18743,7 +19857,7 @@ protected:\
 
 //file_end
 
-	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
+	#line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
 #endif
 
 //file_end
