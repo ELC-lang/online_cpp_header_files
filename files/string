@@ -1618,7 +1618,10 @@ template<typename T>
 force_inline constexpr const T*add_const(T*a)noexcept{return a;}
 /// 对指针移除const
 template<typename T>
-force_inline constexpr T*remove_const(const T*a)noexcept{return ::std::launder(const_cast<T*>(a));}
+force_inline constexpr T*remove_const(const T*a)noexcept{return const_cast<T*>(a);}
+/// 对指针移除const
+template<typename T>
+force_inline constexpr T*launder_remove_const(const T*a)noexcept{return ::std::launder(remove_const(a));}
 /// 向下转型至
 template<typename T,typename U>
 force_inline constexpr T down_cast(U a)noexcept{return static_cast<T>(a);}
@@ -2601,41 +2604,41 @@ constexpr size_t number_of_possible_values_per=uintmax_t(max(type_info<::std::ma
 	用法: data_cast<T>(byte*) -> T&
 */
 template<class T>
-[[nodiscard]]force_inline constexpr T&data_cast(byte*p){return*::std::launder(reinterpret_cast<T*>(p));}
+[[nodiscard]]force_inline constexpr T&data_cast(byte*p){return*reinterpret_cast<T*>(p);}
 template<class T>
-[[nodiscard]]force_inline constexpr T&fast_data_cast(byte*p){return*reinterpret_cast<T*>(p);}
+[[nodiscard]]force_inline constexpr T&launder_data_cast(byte*p){return*::std::launder(data_cast<T>(p));}
 /*!
 	功能: byte* 类型数据转换为 T*，不进行任何检查
 	用法: data_ptr_cast<T>(byte*) -> T*
 */
 template<class T>
-[[nodiscard]]force_inline constexpr T*data_ptr_cast(byte*p){return::std::launder(reinterpret_cast<T*>(p));}
+[[nodiscard]]force_inline constexpr T*data_ptr_cast(byte*p){return reinterpret_cast<T*>(p);}
 template<class T>
-[[nodiscard]]force_inline constexpr T*fast_data_ptr_cast(byte*p){return reinterpret_cast<T*>(p);}
+[[nodiscard]]force_inline constexpr T*launder_data_ptr_cast(byte*p){return ::std::launder(data_ptr_cast<T>(p));}
 /*!
 	功能: T* 指针转换为 byte*，不进行任何检查
 	用法: cast_to_data(T*) -> byte*
 */
 template<class T>
-[[nodiscard]]force_inline constexpr byte*cast_to_data(T*p){return ::std::launder(reinterpret_cast<byte*>(p));}
+[[nodiscard]]force_inline constexpr byte*cast_to_data(T*p){return reinterpret_cast<byte*>(p);}
 template<class T>
-[[nodiscard]]force_inline constexpr byte*fast_cast_to_data(T*p){return reinterpret_cast<byte*>(p);}
-/*!
-	功能: T& 转换为 U&，不进行任何检查
-	用法: union_cast<U>(T&) -> U&
-*/
-template<class U,class T>
-[[nodiscard]]force_inline constexpr U&union_cast(T&t){return*::std::launder(reinterpret_cast<U*>(&t));}
-template<class U,class T>
-[[nodiscard]]force_inline constexpr U&fast_union_cast(T&t){return*reinterpret_cast<U*>(&t);}
+[[nodiscard]]force_inline constexpr byte*launder_cast_to_data(T*p){return ::std::launder(cast_to_data(p));}
 /*!
 	功能: const T* 指针转换为 const byte*，不进行任何检查
 	用法: cast_to_data(const T*) -> const byte*
 */
 template<class T>
-[[nodiscard]]force_inline constexpr const byte*cast_to_data(const T*p){return ::std::launder(reinterpret_cast<const byte*>(p));}
+[[nodiscard]]force_inline constexpr const byte*cast_to_data(const T*p){return reinterpret_cast<const byte*>(p);}
 template<class T>
-[[nodiscard]]force_inline constexpr const byte*fast_cast_to_data(const T*p){return reinterpret_cast<const byte*>(p);}
+[[nodiscard]]force_inline constexpr const byte*launder_cast_to_data(const T*p){return ::std::launder(cast_to_data(p));}
+/*!
+	功能: T& 转换为 U&，不进行任何检查
+	用法: union_cast<U>(T&) -> U&
+*/
+template<class U,class T>
+[[nodiscard]]force_inline constexpr U&union_cast(T&t){return*reinterpret_cast<U*>(&t);}
+template<class U,class T>
+[[nodiscard]]force_inline constexpr U&launder_union_cast(T&t){return*::std::launder(union_cast<U>(t));}
 
 /*!
 	功能: data_block类模板,接受多个类型参数,实例化为内含最大体积最大对齐要求的byte数组的结构体
@@ -3099,7 +3102,7 @@ namespace range_n{
 		return cast_to_data(pattern)>=range.begin() && cast_to_data(pattern)<range.end();
 	}
 	//  match_pattern
-	/// BMH2改算法表头，用以实施头起始的快速子串匹配算法
+	/// sunday算法表头，用以实施头起始的快速子串匹配算法
 	/// 大部分情况下应当编译时预构建或对运行时生成的实例进行缓存
 	template<typename T>
 	struct match_pattern{
@@ -3107,8 +3110,6 @@ namespace range_n{
 		typedef unsigned char index_type;
 
 		size_t skip_table[number_of_possible_values_per<index_type>]{};
-		size_t radical_skip_table[number_of_possible_values_per<index_type>]{};
-		index_type pre_index_table[number_of_possible_values_per<index_type>]{};
 
 		static constexpr index_type get_index_of(T&ch)noexcept{
 			return index_type(hash(ch) % number_of_possible_values_per<index_type>);
@@ -3118,43 +3119,32 @@ namespace range_n{
 			if(!m)
 				return;
 			for(size_t i=0;i<number_of_possible_values_per<index_type>;i++)
-				skip_table[i]=radical_skip_table[i]=m;
-			skip_table[get_index_of(pattern[0])]=radical_skip_table[get_index_of(pattern[0])]=m-1;//单独处理pattern[0]的情况
-			for(size_t i=1;i<m-1;i++){
-				index_type index=get_index_of(pattern[i]);//radical_skip_table[index]表示pattern中倒数第二次出现的index到pattern末尾的距离
-				radical_skip_table[index]=skip_table[index];//当index在pattern中出现0次或1次时，radical_skip_table[index]等于模式串长度m
-				skip_table[index]=m-i-1;//skip数组的定义与BMH算法相同
-				pre_index_table[index]=get_index_of(pattern[i-1]);
-			}
+				skip_table[i]=m+1;
+			for(size_t i=0;i<m;i++)
+				skip_table[get_index_of(pattern[i])]=m-i;
 		}
 		constexpr match_pattern(const array_like_view_t<T>&pattern)noexcept:_pattern(pattern){
 			build_table(_pattern);
 		}
 		[[nodiscard]]constexpr T* match(const array_like_view_t<T>&range)const noexcept{
-			size_t m = _pattern.size();
-			if(!m)
-				return range.begin();
-			size_t n= range.size();
-			size_t i= m-1;
-			while(i<n){
-				size_t k=i;
-				ptrdiff_t j=m-1;//k记录text中每次从右至左开始比较的起始位置
-				while((j>=0)&&(_pattern[j]==range[i])){
-					i--;j--;
-				}
-				if(j==-1)
-					return addressof(range[i+1]);//在range[i+1]处匹配成功
-				index_type index_k=get_index_of(range[k]);
-				if(get_index_of(range[k-1])!=pre_index_table[index_k])
-					i=k+radical_skip_table[index_k];//采用激进策略移动文本指针
-				else
-					i=k+skip_table[index_k];
+			size_t off_set=0;
+			size_t matching_off_set=1;
+
+			floop{
+				matching_off_set=1;
+				while(_pattern.end()[0-matching_off_set]==range.begin()[off_set+_pattern.size()-matching_off_set])
+					if(matching_off_set==_pattern.size())
+						return addressof(range.begin()[off_set]);
+					else
+						matching_off_set++;
+				if(off_set+_pattern.size() >= range.size())
+					return nullptr;
+				off_set+=skip_table[get_index_of(range.begin()[off_set+_pattern.size()])];
 			}
-			return nullptr;//匹配失败
 		}
 	};
 	//  reverse_match_pattern
-	/// 反向BMH2改算法表头，用以实施尾起始的快速子串匹配算法
+	/// 反向Sunday算法表头，用以实施尾起始的快速子串匹配算法
 	/// 大部分情况下应当编译时预构建或对运行时生成的实例进行缓存
 	template<typename T>
 	struct reverse_match_pattern{
@@ -3162,8 +3152,6 @@ namespace range_n{
 		typedef unsigned char index_type;
 
 		size_t skip_table[number_of_possible_values_per<index_type>]{};
-		size_t radical_skip_table[number_of_possible_values_per<index_type>]{};
-		index_type pre_index_table[number_of_possible_values_per<index_type>]{};
 
 		static constexpr index_type get_index_of(T&ch)noexcept{
 			return index_type(hash(ch) % number_of_possible_values_per<index_type>);
@@ -3173,39 +3161,29 @@ namespace range_n{
 			if(!m)
 				return;
 			for(size_t i=0;i<number_of_possible_values_per<index_type>;i++)
-				skip_table[i]=radical_skip_table[i]=m;
-			skip_table[get_index_of(pattern[m-1])]=radical_skip_table[get_index_of(pattern[m-1])]=m-1;//单独处理pattern[m-1]的情况
-			for(ptrdiff_t i=m-2;i>=0;i--){
-				index_type index=get_index_of(pattern[i]);//radical_skip_table[index]表示pattern中倒数第二次出现的index到pattern末尾的距离
-				radical_skip_table[index]=skip_table[index];//当index在pattern中出现0次或1次时，radical_skip_table[index]等于模式串长度m
-				skip_table[index]=i;//skip数组的定义与BMH算法相同
-				pre_index_table[index]=get_index_of(pattern[i+1]);
-			}
+				skip_table[i]=m+1;
+			for(size_t i=0;i<m-1;i++)
+				skip_table[get_index_of(pattern[i])]=i;
 		}
 		constexpr reverse_match_pattern(const array_like_view_t<T>&pattern)noexcept:_pattern(pattern){
 			build_table(_pattern);
 		}
 		[[nodiscard]]constexpr T* match(const array_like_view_t<T>&range)const noexcept{
-			size_t m=_pattern.size();
-			if(!m)
-				return range.begin();
-			size_t n= range.size();
-			ptrdiff_t i= n-m;
-			while(i>=0){
-				size_t k=i;
-				size_t j=0;//k记录text中每次从右至左开始比较的起始位置
-				while((j<=m-1)&&(_pattern[j]==range[i])){
-					i++;j++;
-				}
-				if(j==m)
-					return addressof(range[k]);//在range[k]处匹配成功
-				index_type index_k=get_index_of(range[k]);
-				if(get_index_of(range[k+1])!=pre_index_table[index_k])
-					i=k-radical_skip_table[index_k];//采用激进策略移动文本指针
-				else
-					i=k-skip_table[index_k];
+			size_t off_set=0;
+			size_t matching_off_set=0;
+
+			floop{
+				matching_off_set=0;
+				while(_pattern.begin()[matching_off_set]==range.end()[0-(off_set+_pattern.size()-matching_off_set)])
+					if(matching_off_set==_pattern.size()-1)
+						return addressof(range.end()[0-(off_set+_pattern.size())]);
+					else
+						matching_off_set++;
+				if(off_set+_pattern.size() >= range.size())
+					return nullptr;
+				off_set+=skip_table[get_index_of(range.end()[0-(off_set+_pattern.size()+1)])];
+				off_set++;
 			}
-			return nullptr;//匹配失败
 		}
 	};
 	suppress_msvc_warning(26475)//强制转换警告diss
@@ -3248,32 +3226,12 @@ namespace range_n{
 		else
 			return npos;
 	}
-	//  数据串匹配by steve02081504.
 	/// 若成功找到匹配的数据串，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* in_range(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
-		if(range.size() >= 512 && pattern.size() >= 11){
-			match_pattern tmp=pattern;
-			return tmp.match(range);
-		}
-
-		size_t off_set=0;
-		size_t matching_off_set=1;
-
-		floop{
-			matching_off_set=1;
-			while(pattern.end()[0-matching_off_set]==range.begin()[off_set+pattern.size()-matching_off_set])
-				if(matching_off_set==pattern.size())
-					return addressof(range.begin()[off_set]);
-				else
-					matching_off_set++;
-			if(off_set+pattern.size() >= range.size())
-				return nullptr;
-			auto tmp = in_range(range.begin()[off_set+pattern.size()], pattern);
-			if(!tmp)
-				tmp=pattern.begin();
-			off_set+=pattern.end()-tmp;
-		}
+	[[nodiscard,deprecated("cache match_pattern and don't waste it")]]
+	constexpr T* in_range(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+		match_pattern tmp=pattern;
+		return tmp.match(range);
 	}
 	/// 若成功找到匹配的数据串，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
@@ -3287,30 +3245,10 @@ namespace range_n{
 	//  反向数据串匹配by steve02081504.
 	/// 若成功找到匹配的数据串，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* in_range_but_reverse(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
-		if(range.size() >= 512 && pattern.size() >= 11){
-			reverse_match_pattern tmp = pattern;
-			return tmp.match(range);
-		}
-
-		size_t off_set=0;
-		size_t matching_off_set=0;
-
-		floop{
-			matching_off_set=0;
-			while(pattern.begin()[matching_off_set]==range.end()[0-(off_set+pattern.size()-matching_off_set)])
-				if(matching_off_set==pattern.size()-1)
-					return addressof(range.end()[0-(off_set+pattern.size())]);
-				else
-					matching_off_set++;
-			if(off_set+pattern.size() >= range.size())
-				return nullptr;
-			auto tmp = in_range_but_reverse(range.end()[0-(off_set+pattern.size()+1)], pattern);
-			if(!tmp)
-				tmp=pattern.end()-1;
-			off_set+=tmp-pattern.begin();
-			off_set+=1;
-		}
+	[[nodiscard,deprecated("cache match_pattern and don't waste it")]]
+	constexpr T* in_range_but_reverse(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+		reverse_match_pattern tmp = pattern;
+		return tmp.match(range);
 	}
 	/// 若成功找到匹配的数据串，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
@@ -4351,7 +4289,7 @@ namespace rand_n{
 			constexpr auto half_bitnum = bitnum_of(seed_type)/2;
 			static_assert(εντροπία_num>=bitnum_of(seed_type));
 			for(size_t i=εντροπία_num;i--;){
-				auto& cache = fast_data_ptr_cast<seed_type>(_εντροπία_data)[i];
+				auto& cache = data_ptr_cast<seed_type>(_εντροπία_data)[i];
 				cache		= _seed^(_seed >> half_bitnum);
 				sowing_seed_one_step(_seed);
 			}
@@ -4391,7 +4329,7 @@ namespace rand_n{
 			const auto		  result_base	= result_type(new_result >> half_bitnum);
 			const auto		  rot_offset	= result_type(old_result_base >> half_bitnum);
 			constexpr auto	  εντροπία_max	= εντροπία_size/sizeof(result_type);
-			auto&			  xor_value		= fast_data_ptr_cast<result_type>(_εντροπία_data)[rot_offset % εντροπία_max];
+			auto&			  xor_value		= data_ptr_cast<result_type>(_εντροπία_data)[rot_offset % εντροπία_max];
 			const result_type result		= rotl(result_base, rot_offset) ^ xor_value;
 			//
 			xor_value = result;
@@ -4401,7 +4339,7 @@ namespace rand_n{
 		[[nodiscard]]force_inline constexpr T gen_randbit()noexcept{
 			typedef unsigned_specific_size_t<sizeof(T)> result_type;
 			alignas(max(alignof(T),alignof(result_type)))auto aret=base_gen_randbit<result_type>();
-			return fast_union_cast<T>(aret);
+			return union_cast<T>(aret);
 		}
 		//为了加速而进行特化，这不影响通用性并且大多数时候能节省2ns左右（将内存访问转为位操作）
 		template<typename T> requires(sizeof(seed_type) == sizeof(T))
@@ -4409,8 +4347,8 @@ namespace rand_n{
 			typedef unsigned_specific_size_t<sizeof(T)> result_type;
 			typedef unsigned_specific_size_t<sizeof(T)/2> sand_type;
 			alignas(max(alignof(T),alignof(result_type)))result_type aret=result_type(gen_randbit<sand_type>())<<bitnum_of(sand_type);
-			aret&=result_type(gen_randbit<sand_type>());
-			return fast_union_cast<T>(aret);
+			aret|=result_type(gen_randbit<sand_type>());
+			return union_cast<T>(aret);
 		}
 		
 		template<size_t sand_size,size_t size>
@@ -4419,7 +4357,7 @@ namespace rand_n{
 			constexpr size_t sand_num = size/sand_size;
 			if constexpr(sand_num)
 				for(size_t i=sand_num;i--;to+=sand_size)
-					fast_data_cast<sand_type>(to)=gen_randbit<sand_type>();
+					data_cast<sand_type>(to)=gen_randbit<sand_type>();
 			if constexpr(size%sand_size)
 				gen_randbit_with_sand_size_to_pointer<sand_size/BIT_POSSIBILITY,size%sand_size>(to);
 		}
@@ -4427,7 +4365,7 @@ namespace rand_n{
 		[[nodiscard]]force_inline constexpr T gen_randbit()noexcept{
 			alignas(max(alignof(T),alignof(seed_type)))byte aret[sizeof(T)];
 			gen_randbit_with_sand_size_to_pointer<sizeof(seed_type),sizeof(T)>(aret);
-			return fast_data_cast<T>(aret);
+			return data_cast<T>(aret);
 		}
 	}rand_seed{};
 
@@ -13340,11 +13278,15 @@ static_assert(noexcept(((noexcept_iostream*)(nullptr))->sync()));
 
 //text streams
 template<class char_T>
-no_vtable_struct text_istream:abstract_base<text_istream<char_T>>,virtual base_istream{
+no_vtable_struct text_stream:abstract_base<text_stream<char_T>>,virtual base_stream{
+	typedef char_T char_type;
+};
+template<class char_T>
+no_vtable_struct text_istream:abstract_base<text_istream<char_T>>,virtual base_istream,virtual text_stream<char_T>{
 	virtual size_t read(char_T*buf,size_t size)=0;
 };
 template<class char_T>
-no_vtable_struct text_ostream:abstract_base<text_ostream<char_T>>,virtual base_ostream{
+no_vtable_struct text_ostream:abstract_base<text_ostream<char_T>>,virtual base_ostream,virtual text_stream<char_T>{
 	virtual void write(const char_T*buf,size_t size)=0;
 };
 template<class char_T>
@@ -13416,42 +13358,23 @@ pop_msvc_warning();
 //text_stream
 
 //operator<< of template<class char_T>struct text_ostream
-template<class char_T>
-text_ostream<char_T>&operator<<(text_ostream<char_T>&stream,const char_T ch){
+template<class text_ostream_T,class char_T=typename text_ostream_T::char_type> requires(type_info<text_ostream_T>.base_on<text_ostream<char_T>>)
+auto&operator<<(text_ostream_T&stream,const char_T ch)noexcept(type_info<text_ostream_T>.base_on<noexcept_text_ostream<char_T>>){
 	stream.write(&ch,1);
 	return stream;
 }
-template<class char_T>
-noexcept_text_ostream<char_T>&operator<<(noexcept_text_ostream<char_T>&stream,const char_T ch)noexcept{
-	stream.write(&ch,1);
-	return stream;
-}
-template<class char_T>
-text_ostream<char_T>&operator<<(text_ostream<char_T>&stream,array_like_view_t<const char_T>str){
+template<class text_ostream_T,class char_T=typename text_ostream_T::char_type> requires(type_info<text_ostream_T>.base_on<text_ostream<char_T>>)
+auto&operator<<(text_ostream_T&stream,array_like_view_t<const char_T>str)noexcept(type_info<text_ostream_T>.base_on<noexcept_text_ostream<char_T>>){
 	stream.write(str.data(),str.size());
 	return stream;
 }
-template<class char_T>
-noexcept_text_ostream<char_T>&operator<<(noexcept_text_ostream<char_T>&stream,array_like_view_t<const char_T>str)noexcept{
-	stream.write(str.data(),str.size());
-	return stream;
-}
-template<class char_T>
-text_ostream<char_T>&operator<<(text_ostream<char_T>&stream,const char_T*str){
-	return stream << array_end_by_zero_t<const char_T>{str};
-}
-template<class char_T>
-noexcept_text_ostream<char_T>&operator<<(noexcept_text_ostream<char_T>&stream,const char_T*str)noexcept{
+template<class text_ostream_T,class char_T=typename text_ostream_T::char_type> requires(type_info<text_ostream_T>.base_on<text_ostream<char_T>>)
+auto&operator<<(text_ostream_T&stream,const char_T*str)noexcept(type_info<text_ostream_T>.base_on<noexcept_text_ostream<char_T>>){
 	return stream << array_end_by_zero_t<const char_T>{str};
 }
 //operator>> of template<class char_T>struct text_istream
-template<class char_T>
-text_istream<char_T>&operator>>(text_istream<char_T>&stream,char_T&ch){
-	stream.read(&ch,1);
-	return stream;
-}
-template<class char_T>
-noexcept_text_istream<char_T>&operator>>(noexcept_text_istream<char_T>&stream,char_T&ch)noexcept{
+template<class text_istream_T,class char_T=typename text_istream_T::char_type> requires(type_info<text_istream_T>.base_on<text_istream<char_T>>)
+text_istream<char_T>&operator>>(text_istream<char_T>&stream,char_T&ch)noexcept(type_info<text_istream_T>.base_on<noexcept_text_istream<char_T>>){
 	stream.read(&ch,1);
 	return stream;
 }
@@ -13459,46 +13382,51 @@ noexcept_text_istream<char_T>&operator>>(noexcept_text_istream<char_T>&stream,ch
 //data_stream of any is_trivially_copyable
 
 //operator<< of template<class T>struct data_ostream
-template<class T> requires ::std::is_trivially_copyable_v<T>
-data_ostream&operator<<(data_ostream&stream,const T&data){
+template<class data_ostream_T,class T> requires(type_info<data_ostream_T>.base_on<data_ostream> && ::std::is_trivially_copyable_v<T>)
+auto&operator<<(data_ostream_T&stream,const T&data)noexcept(type_info<data_ostream_T>.base_on<noexcept_data_ostream>){
 	stream.write(&data,1);
 	return stream;
 }
-template<class T> requires ::std::is_trivially_copyable_v<T>
-noexcept_data_ostream&operator<<(noexcept_data_ostream&stream,const T&data)noexcept{
-	stream.write(&data,1);
-	return stream;
-}
-template<class T,size_t N> requires ::std::is_trivially_copyable_v<T>
-data_ostream&operator<<(data_ostream&stream,const T(&data)[N]){
-	stream.write(data,N);
-	return stream;
-}
-template<class T,size_t N> requires ::std::is_trivially_copyable_v<T>
-noexcept_data_ostream&operator<<(noexcept_data_ostream&stream,const T(&data)[N])noexcept{
+template<class data_ostream_T,class T,size_t N> requires(type_info<data_ostream_T>.base_on<data_ostream> && ::std::is_trivially_copyable_v<T>)
+auto&operator<<(data_ostream_T&stream,const T(&data)[N])noexcept(type_info<data_ostream_T>.base_on<noexcept_data_ostream>){
 	stream.write(data,N);
 	return stream;
 }
 //operator>> of template<class T>struct data_istream
-template<class T> requires ::std::is_trivially_copyable_v<T>
-data_istream&operator>>(data_istream&stream,T&data){
+template<class data_istream_T,class T> requires(type_info<data_istream_T>.base_on<data_istream> && ::std::is_trivially_copyable_v<T>)
+auto&operator>>(data_istream_T&stream,T&data)noexcept(type_info<data_istream_T>.base_on<noexcept_data_istream>){
 	stream.read(&data,1);
 	return stream;
 }
-template<class T> requires ::std::is_trivially_copyable_v<T>
-noexcept_data_istream&operator>>(noexcept_data_istream&stream,T&data)noexcept{
-	stream.read(&data,1);
-	return stream;
-}
-template<class T,size_t N> requires ::std::is_trivially_copyable_v<T>
-data_istream&operator>>(data_istream&stream,T(&data)[N]){
+template<class data_istream_T,class T,size_t N> requires(type_info<data_istream_T>.base_on<data_istream> && ::std::is_trivially_copyable_v<T>)
+data_istream&operator>>(data_istream&stream,T(&data)[N])noexcept(type_info<data_istream_T>.base_on<noexcept_data_istream>){
 	stream.read(data,N);
 	return stream;
 }
-template<class T,size_t N> requires ::std::is_trivially_copyable_v<T>
-noexcept_data_istream&operator>>(noexcept_data_istream&stream,T(&data)[N])noexcept{
-	stream.read(data,N);
-	return stream;
+
+//flush
+inline constexpr struct flush_t{
+	template<class ostream_T>requires(type_info<ostream_T>.base_on<base_ostream>)
+	constexpr decltype(auto)operator()(ostream_T&stream)const noexcept(type_info<ostream_T>.base_on<noexcept_ostream>){
+		stream.flush();
+		return stream;
+	}
+}flush{};
+
+//endline
+inline constexpr struct endline_t{
+	template<class text_ostream_T,class char_T=typename text_ostream_T::char_type> requires(type_info<text_ostream_T>.base_on<text_ostream<char_T>>)
+	constexpr decltype(auto)operator()(text_ostream_T& stream) const noexcept(type_info<text_ostream_T>.base_on<noexcept_text_ostream<char_T>>) {
+		stream << char_T{'\n'};
+		stream.flush();
+		return stream;
+	}
+}endline{};
+
+//operator<< of functions
+template<class callable_T,class stream_T> requires(type_info<stream_T>.base_on<base_ostream> && invoke<callable_T>.able<stream_T&>)
+decltype(auto)operator<<(stream_T&stream,callable_T&&callable)noexcept(invoke<callable_T>.nothrow<stream_T&>){
+	return callable(stream);
 }
 
 //file_end
@@ -13915,6 +13843,8 @@ export data_iostream;
 export noexcept_data_istream;
 export noexcept_data_ostream;
 export noexcept_data_iostream;
+export endline;
+export flush;
 #undef export
 
 //file_end
@@ -16932,8 +16862,34 @@ public:
 	[[nodiscard]]virtual char_T arec([[maybe_unused]]size_t index)noexcept(copy_construct_nothrow&&move_construct_nothrow)override final{
 		return _value;
 	}
-	virtual void arec_set(size_t index,char_T a,ptr_t& p)noexcept(copy_assign_nothrow&&move_construct_nothrow)override final{
-		base_t::arec_set(index,a,p);
+	void arec_set(size_t index,char_T a,ptr_t& p)noexcept(copy_assign_nothrow&&move_construct_nothrow)override final{
+		//小优化
+		if(a==_value)return;
+		if(_size==1){_value=a;_static_data_p.reset();return;}
+		//若_size>max_static_data_size，将当前类型转换为sum_string_data_t
+		if(_size>max_static_data_size){
+			//中间一段为comn_string_data_t，大小为max_static_data_size
+			ptr_t tmp=get<comn_string_data_t<char_T>>(max_static_data_size,_value);
+			//尽量确保index在中间一段的中间
+			size_t index_in_tmp=min(index,max_static_data_size/2);
+			//将中间一段的index处的值改为a
+			tmp->arec_set(index_in_tmp,a,tmp);
+			//判断是否需要附加其他段
+			if(index>max_static_data_size/2){
+				size_t first_size=index-max_static_data_size/2;
+				ptr_t first_p=get_clone_with_new_size(first_size);
+				tmp=get<sum_string_data_t<char_T>>(first_p,tmp);
+			}
+			size_t last_size=_size-tmp->get_size();
+			if(last_size){
+				ptr_t last_p=get_clone_with_new_size(last_size);
+				tmp=get<sum_string_data_t<char_T>>(tmp,last_p);
+			}
+			p=tmp;
+			return;
+		}
+		else
+			base_t::arec_set(index,a,p);
 	}
 	[[nodiscard]]virtual ptr_t do_remove_front(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
 		if(this->is_unique()){
@@ -16986,6 +16942,13 @@ protected:
 	}
 protected:
 	[[nodiscard]]virtual bool same_struct(ptr_t with)noexcept override final{
+		auto wp=down_cast<this_t*>(with.get());
+		if(wp->_value==_value && wp->_static_data_p!=_static_data_p){
+			if(_static_data_p)
+				wp->_static_data_p.do_replace(_static_data_p);
+			elseif(wp->_static_data_p)
+				_static_data_p.do_replace(wp->_static_data_p);
+		}
 		return true;//总size被保证一样
 	}
 	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form([[maybe_unused]]size_t begin)noexcept override final{
@@ -16999,25 +16962,11 @@ protected:
 	}
 	[[nodiscard]]virtual bool same_struct_equal(ptr_t with)noexcept(equal.nothrow<char_T>)override final{
 		auto wp=down_cast<this_t*>(with.get());
-		auto aret=equal(_value,wp->_value);
-		if(aret){
-			if(_static_data_p)
-				wp->_static_data_p=_static_data_p;
-			elseif(wp->_static_data_p)
-				_static_data_p=wp->_static_data_p;
-		}
-		return aret;
+		return equal(_value,wp->_value);
 	}
 	[[nodiscard]]virtual base_t::compare_type same_struct_compare(ptr_t with)noexcept(compare.nothrow<char_T>)override final{
 		auto wp=down_cast<this_t*>(with.get());
-		auto aret=compare(_value,wp->_value);
-		if(aret==0){
-			if(_static_data_p)
-				wp->_static_data_p=_static_data_p;
-			elseif(wp->_static_data_p)
-				_static_data_p=wp->_static_data_p;
-		}
-		return aret;
+		return compare(_value,wp->_value);
 	}
 	[[nodiscard]]virtual float_size_t get_base_memory_cost()noexcept override final{
 		return float_size_of(*this)+_static_data_p->get_memory_cost();
@@ -17185,10 +17134,10 @@ protected:
 		~string_t()noexcept{if(!_in_cso())_ncso_destruct_mptr();}
 
 		//BLOCK: 赋值操作符
-		string_t& operator=(const string_t& str)noexcept{re_construct[this](str);return*this;}
-		string_t& operator=(string_t&& str)noexcept{swap_with(str);return*this;}
-		constexpr string_t& operator=(constexpr_str_t&str)noexcept{_cso_reinit(str);return*this;}
-		constexpr string_t& operator=(char_T ch)noexcept{_cso_reinit(ch);return*this;}
+		string_t& operator=(const string_t& str)&noexcept{re_construct[this](str);return*this;}
+		string_t& operator=(string_t&& str)&noexcept{swap_with(str);return*this;}
+		constexpr string_t& operator=(constexpr_str_t&str)&noexcept{_cso_reinit(str);return*this;}
+		constexpr string_t& operator=(char_T ch)&noexcept{_cso_reinit(ch);return*this;}
 		//END_BLOCK
 
 		//BLOCK: 字符串相加操作符
@@ -17345,6 +17294,16 @@ protected:
 			[[nodiscard]]explicit operator char_T&()&&noexcept{ return *get_address(); }
 			[[nodiscard]]explicit operator const char_T&()const&&noexcept{ return *get_address(); }
 			*/
+			template<class text_ostream_T> requires(type_info<text_ostream_T>.base_on<text_ostream<char_T>>)
+			friend auto& operator<<(text_ostream_T& os,arec_t&& ch)noexcept(type_info<text_ostream_T>.base_on<noexcept_text_ostream<char_T>>){
+				return os << move(ch).operator char_T();
+			}
+			template<class text_istream_T> requires(type_info<text_istream_T>.base_on<text_istream<char_T>>)
+			friend auto& operator>>(text_istream_T& is,arec_t&& ch)noexcept(type_info<text_istream_T>.base_on<noexcept_text_istream<char_T>>){
+				char_T ach;is >> ach;
+				move(ch)=ach;
+				return is;
+			}
 		};
 
 		[[nodiscard]]arec_t		  operator[](size_t index)noexcept{ return{this,index}; }
@@ -17900,14 +17859,16 @@ protected:
 		*/
 
 		//iostream
-		friend auto& operator<<(text_ostream<char_T>& os,const string_t& str){
+		template<class text_ostream_T> requires(type_info<text_ostream_T>.base_on<text_ostream<char_T>>)
+		friend auto& operator<<(text_ostream_T& os,const string_t& str)noexcept(type_info<text_ostream_T>.base_on<noexcept_text_ostream<char_T>>){
 			if(str._in_cso())
 				os<<str.to_string_view_t();
 			else
 				str._m->do_output(os);
 			return os;
 		}
-		friend auto& operator>>(text_istream<char_T>& is,string_t& str){
+		template<class text_istream_T> requires(type_info<text_istream_T>.base_on<text_istream<char_T>>)
+		friend auto& operator>>(text_istream_T& is,string_t& str)noexcept(type_info<text_istream_T>.base_on<noexcept_text_istream<char_T>>){
 			str.clear();
 			using namespace locale::char_n;
 			while(isspace(is.peek()))
@@ -17929,18 +17890,6 @@ protected:
 	inline void swap(string_t<T>& a,string_t<T>& b)noexcept{ a.swap_with(b); }
 
 	//other iostream
-	push_and_disable_msvc_warning(26447);//noexcept警告diss
-	template<typename char_T>
-	inline auto& operator<<(noexcept_text_ostream<char_T>& os,const string_t<char_T>& str)noexcept{
-		((text_ostream<char_T>&)os)<<str;
-		return os;
-	}
-	template<typename char_T>
-	inline auto& operator>>(noexcept_text_istream<char_T>& is,string_t<char_T>& str)noexcept{
-		((text_istream<char_T>&)is)>>str;
-		return is;
-	}
-	pop_msvc_warning();
 	template<typename char_T,typename traits>
 	inline auto& operator<<(::std::basic_ostream<char_T,traits>& os,const string_t<char_T>& str)noexcept{
 		typedef ::std::basic_ostream<char_T,traits> stream_t;
@@ -17970,7 +17919,7 @@ protected:
 					}
 				}
 				if(state == stream_t::goodbit){
-					stream_n::std_istream_wrap wrap(os);
+					stream_n::std_ostream_wrap wrap(os);
 					wrap<<str;
 				}
 				if(os.fail())
