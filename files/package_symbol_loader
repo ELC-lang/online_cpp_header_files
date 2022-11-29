@@ -224,8 +224,8 @@ namespace elc{
 //file_end
 
 #line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
-//basic_environment.hpp
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+//_body.hpp
 /*
 未完成的elc解释器_share文件
 由steve02081504与Alex0125设计、编写
@@ -502,25 +502,208 @@ protected:\
 
 //file_end
 
-	#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
+	#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 
-	inline namespace basic_environment{
+	namespace basic_environment{
 		/// 每个bit（不是字节）的可能性
 		/// 为什么c艹委员会不定义这个？
 		constexpr size_t BIT_POSSIBILITY=2;
 		/*! 给定大小的无符号整数类型 */
 		template<size_t size>
 		using unsigned_specific_size_t=decltype(lambda(){
-			if constexpr(size==1)
-				return uint8_t{};
-			elseif constexpr(size==2)
-				return uint16_t{};
-			elseif constexpr(size==4)
-				return uint32_t{};
-			elseif constexpr(size==8)
-				return uint64_t{};
+			#define TYPE_MAPPER(type) if constexpr(size == sizeof(type))return (type)0;else
+			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+//unsigned_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(uint8_t)
+TYPE_MAPPER(uint16_t)
+TYPE_MAPPER(uint32_t)
+TYPE_MAPPER(uint64_t)
+TYPE_MAPPER(uintmax_t)
+TYPE_MAPPER(size_t)
+TYPE_MAPPER(unsigned char)
+TYPE_MAPPER(unsigned short)
+TYPE_MAPPER(unsigned int)
+TYPE_MAPPER(unsigned long)
+TYPE_MAPPER(unsigned long long)
+
+//file_end
+
+			#line 19 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#undef TYPE_MAPPER
+			{}
 		}());
+		//任意类型转算数类型
+		template<class T>
+		force_inline constexpr bool is_arithmetic_convertible_helper()noexcept{
+			#define TYPE_MAPPER(type) if constexpr(::std::is_convertible_v<T,type>)return true;else
+			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+//float_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
+//float_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(float)
+TYPE_MAPPER(double)
+TYPE_MAPPER(long double)
+
+//file_end
+
+#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
+//signed_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(int8_t)
+TYPE_MAPPER(int16_t)
+TYPE_MAPPER(int32_t)
+TYPE_MAPPER(int64_t)
+TYPE_MAPPER(intmax_t)
+TYPE_MAPPER(ptrdiff_t)
+TYPE_MAPPER(char)
+TYPE_MAPPER(short)
+TYPE_MAPPER(int)
+TYPE_MAPPER(long)
+TYPE_MAPPER(long long)
+
+//file_end
+
+#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+//unsigned_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(uint8_t)
+TYPE_MAPPER(uint16_t)
+TYPE_MAPPER(uint32_t)
+TYPE_MAPPER(uint64_t)
+TYPE_MAPPER(uintmax_t)
+TYPE_MAPPER(size_t)
+TYPE_MAPPER(unsigned char)
+TYPE_MAPPER(unsigned short)
+TYPE_MAPPER(unsigned int)
+TYPE_MAPPER(unsigned long)
+TYPE_MAPPER(unsigned long long)
+
+//file_end
+
+#line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+
+//file_end
+
+			#line 27 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#undef TYPE_MAPPER
+			return false;
+		}
+		template<class T>
+		constexpr bool is_arithmetic_convertible= is_arithmetic_convertible_helper<T>();
+		template<class T> requires(is_arithmetic_convertible<T>)
+		force_inline constexpr auto to_arithmetic(T&&v)noexcept{
+			#define TYPE_MAPPER(type) if constexpr(::std::is_convertible_v<T,type>)return(type)v;else
+			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+//float_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
+//float_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(float)
+TYPE_MAPPER(double)
+TYPE_MAPPER(long double)
+
+//file_end
+
+#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
+//signed_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(int8_t)
+TYPE_MAPPER(int16_t)
+TYPE_MAPPER(int32_t)
+TYPE_MAPPER(int64_t)
+TYPE_MAPPER(intmax_t)
+TYPE_MAPPER(ptrdiff_t)
+TYPE_MAPPER(char)
+TYPE_MAPPER(short)
+TYPE_MAPPER(int)
+TYPE_MAPPER(long)
+TYPE_MAPPER(long long)
+
+//file_end
+
+#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+//unsigned_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(uint8_t)
+TYPE_MAPPER(uint16_t)
+TYPE_MAPPER(uint32_t)
+TYPE_MAPPER(uint64_t)
+TYPE_MAPPER(uintmax_t)
+TYPE_MAPPER(size_t)
+TYPE_MAPPER(unsigned char)
+TYPE_MAPPER(unsigned short)
+TYPE_MAPPER(unsigned int)
+TYPE_MAPPER(unsigned long)
+TYPE_MAPPER(unsigned long long)
+
+//file_end
+
+#line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+
+//file_end
+
+			#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#undef TYPE_MAPPER
+			{}
+		}
 	}
+	using basic_environment::BIT_POSSIBILITY;
+	using basic_environment::unsigned_specific_size_t;
+	using basic_environment::is_arithmetic_convertible;
+	using basic_environment::to_arithmetic;
 
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
 //_undefs.hpp
@@ -669,7 +852,7 @@ protected:\
 
 //file_end
 
-	#line 29 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment.hpp"
+	#line 46 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -1391,7 +1574,7 @@ namespace magic_number{
 	[[nodiscard]]force_inline constexpr auto pow(const T a,const U b)noexcept{
 		if in_consteval{
 			typedef decltype(::std::pow(a,b)) RT;
-			return exp(RT(b)*log(RT(a)));
+			return RT(exp(b*log(a)));
 		}
 		else
 			return ::std::pow(a,b);
@@ -15338,13 +15521,21 @@ protected:\
 		//arithmetic output only for text_ostream<char_t>
 		template<typename T,class stream_T> requires(::std::is_arithmetic_v<remove_cvref<T>> &&
 													 type_info<stream_T>.base_on<text_ostream<char_t>> &&
-													 type_info<remove_cvref<T>>!=type_info<char_t>)
+													 type_info<remove_cvref<T>> != type_info<char_t>)
 		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
 			return stream << to_string(::std::forward<T>(data));
 		}
 
-		template<class stream_T> requires(type_info<stream_T>.base_on<text_ostream<char_t>>)
-		decltype(auto)operator<<(stream_T&&stream,bool data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
+		template<typename T,class stream_T> requires(!::std::is_arithmetic_v<remove_cvref<T>> &&
+													 is_arithmetic_convertible<remove_cvref<T>> &&
+													 type_info<stream_T>.base_on<text_ostream<char_t>>)
+		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
+			return stream << to_arithmetic(::std::forward<T>(data));
+		}
+
+		template<typename T,class stream_T> requires(type_info<stream_T>.base_on<text_ostream<char_t>> &&
+													 type_info<remove_cvref<T>> == type_info<bool>)
+		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
 			if(data==true)
 				stream << es"true"_constexpr_str;
 			elseif(data==false)
@@ -15529,7 +15720,7 @@ protected:\
 
 //file_end
 
-	#line 49 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
+	#line 57 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 }
 
 //file_end
@@ -24876,7 +25067,7 @@ private:
 				aret=_radix_table[0];
 				aret+=_fractional_sign;
 			}
-			num/=pow(_radix,order_of_magnitude);
+			num/=(T)pow(_radix,order_of_magnitude);
 			if(num>=1){
 				aret=_radix_table[to_size_t(num)];
 				num=0;
@@ -25018,7 +25209,7 @@ private:
 				aret+=(T)index;
 				aret/=_radix;
 			}
-			aret*=pow(_radix, order_of_magnitude);
+			aret*=(T)pow(_radix, order_of_magnitude);
 			return aret;
 		}
 		else {
@@ -25749,13 +25940,21 @@ protected:\
 		//arithmetic output only for text_ostream<char_t>
 		template<typename T,class stream_T> requires(::std::is_arithmetic_v<remove_cvref<T>> &&
 													 type_info<stream_T>.base_on<text_ostream<char_t>> &&
-													 type_info<remove_cvref<T>>!=type_info<char_t>)
+													 type_info<remove_cvref<T>> != type_info<char_t>)
 		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
 			return stream << to_string(::std::forward<T>(data));
 		}
 
-		template<class stream_T> requires(type_info<stream_T>.base_on<text_ostream<char_t>>)
-		decltype(auto)operator<<(stream_T&&stream,bool data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
+		template<typename T,class stream_T> requires(!::std::is_arithmetic_v<remove_cvref<T>> &&
+													 is_arithmetic_convertible<remove_cvref<T>> &&
+													 type_info<stream_T>.base_on<text_ostream<char_t>>)
+		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
+			return stream << to_arithmetic(::std::forward<T>(data));
+		}
+
+		template<typename T,class stream_T> requires(type_info<stream_T>.base_on<text_ostream<char_t>> &&
+													 type_info<remove_cvref<T>> == type_info<bool>)
+		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
 			if(data==true)
 				stream << es"true"_constexpr_str;
 			elseif(data==false)
@@ -25940,7 +26139,7 @@ protected:\
 
 //file_end
 
-	#line 49 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
+	#line 57 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 }
 
 //file_end
