@@ -41,7 +41,6 @@
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
 #if !defined(ELC_BASE)
-	#define ELC_BASE
 	//原base的一小部分，但由于过于底层，底层到API定义都需要使用。。
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 //base_defs
@@ -86,7 +85,6 @@
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 #if !defined(ELC_BASE_DEFS)
-	#define ELC_BASE_DEFS
 	#define __builtin_is_my_dick_still_there() true
 	#include <cstddef>//nullptr_t
 	#include <cstdlib>//exit、size_t
@@ -98,6 +96,7 @@
 	#include <cfenv>//rounding
 	#include <ctime>//time
 	#include <ranges>
+	#define ELC_BASE_DEFS
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -4825,12 +4824,13 @@ using rand_n::rand_seed;
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
+	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
 	#include <cstring>//memcpy、memmove
 	#include <atomic>//atomic
 	#if defined(ELC_TEST_ON)
 		#include <ctime>//time
 	#endif
+	#define ELC_BASE
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 //_body.hpp
 //at namespace ::

@@ -41,7 +41,6 @@
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
 #if !defined(ELC_CORE)
-	#define ELC_CORE
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
 //base
 //at namespace ::
@@ -85,7 +84,6 @@
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
 #if !defined(ELC_BASE)
-	#define ELC_BASE
 	//原base的一小部分，但由于过于底层，底层到API定义都需要使用。。
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 //base_defs
@@ -130,7 +128,6 @@
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 #if !defined(ELC_BASE_DEFS)
-	#define ELC_BASE_DEFS
 	#define __builtin_is_my_dick_still_there() true
 	#include <cstddef>//nullptr_t
 	#include <cstdlib>//exit、size_t
@@ -142,6 +139,7 @@
 	#include <cfenv>//rounding
 	#include <ctime>//time
 	#include <ranges>
+	#define ELC_BASE_DEFS
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -4869,12 +4867,13 @@ using rand_n::rand_seed;
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
+	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
 	#include <cstring>//memcpy、memmove
 	#include <atomic>//atomic
 	#if defined(ELC_TEST_ON)
 		#include <ctime>//time
 	#endif
+	#define ELC_BASE
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -13042,7 +13041,7 @@ namespace elc{
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
+	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_exception"
 //base_exception
 //at namespace ::
@@ -13086,7 +13085,6 @@ namespace elc{
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_exception"
 #if !defined(ELC_BASE_EXCEPTION)
-	#define ELC_BASE_EXCEPTION
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
 //using.hpp
 /*
@@ -13104,7 +13102,8 @@ elc使用的字符串.
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_exception"
+	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_exception"
+	#define ELC_BASE_EXCEPTION
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_exception/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -13683,7 +13682,7 @@ export runtime_exception;
 
 //file_end
 
-	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
+	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_stream"
 //base_stream
 //at namespace ::
@@ -13727,7 +13726,6 @@ export runtime_exception;
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_stream"
 #if !defined(ELC_BASE_STREAM)
-	#define ELC_BASE_STREAM
 	//abstract_base
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
 //base
@@ -13775,10 +13773,11 @@ export runtime_exception;
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_stream"
+	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_stream"
 	#include <istream>//std::istream for wrap
 	#include <ostream>//std::ostream for wrap
 	//do not include <iostream> as it will import some gobal objects like std::cin and std::cout that we may not want to use
+	#define ELC_BASE_STREAM
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -14724,6 +14723,8 @@ export flush;
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
+#if !defined(ELC_multi_type_name_test_output)
+#define ELC_multi_type_name_test_output
 namespace elc::defs{
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
 //_defs.hpp
@@ -15004,7 +15005,7 @@ protected:\
 
 //file_end
 
-	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
+	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
 
 	namespace stream_n{
 		//typename output only for text_ostream<char_t>
@@ -15173,8 +15174,9 @@ protected:\
 
 //file_end
 
-	#line 21 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
+	#line 23 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
 }
+#endif
 
 //file_end
 
@@ -15191,6 +15193,8 @@ protected:\
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
+#if !defined(ELC_multi_arithmetic_text_io)
+#define ELC_multi_arithmetic_text_io
 namespace elc::defs{
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
 //_defs.hpp
@@ -15471,7 +15475,7 @@ protected:\
 
 //file_end
 
-	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
+	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 
 	namespace stream_n{
 		//arithmetic output only for text_ostream<char_t>
@@ -15676,8 +15680,9 @@ protected:\
 
 //file_end
 
-	#line 57 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
+	#line 59 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 }
+#endif
 
 //file_end
 
@@ -15691,7 +15696,8 @@ protected:\
 
 //file_end
 
-	#line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
+	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
+	#define ELC_CORE
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/core/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -17276,6 +17282,8 @@ export common_node;
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
+#if !defined(ELC_multi_string_arec_as_value)
+#define ELC_multi_string_arec_as_value
 namespace elc::defs{
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
 //_defs.hpp
@@ -17556,7 +17564,7 @@ protected:\
 
 //file_end
 
-	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/string_arec_as_value.hpp"
+	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/string_arec_as_value.hpp"
 
 	namespace string_n{
 		template<class char_T>
@@ -17739,8 +17747,9 @@ protected:\
 
 //file_end
 
-	#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/string_arec_as_value.hpp"
+	#line 37 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/string_arec_as_value.hpp"
 }
+#endif
 
 //file_end
 

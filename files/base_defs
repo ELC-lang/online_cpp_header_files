@@ -41,7 +41,6 @@
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 #if !defined(ELC_BASE_DEFS)
-	#define ELC_BASE_DEFS
 	#define __builtin_is_my_dick_still_there() true
 	#include <cstddef>//nullptr_t
 	#include <cstdlib>//exit、size_t
@@ -53,6 +52,7 @@
 	#include <cfenv>//rounding
 	#include <ctime>//time
 	#include <ranges>
+	#define ELC_BASE_DEFS
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
 //_body.hpp
 //at namespace ::

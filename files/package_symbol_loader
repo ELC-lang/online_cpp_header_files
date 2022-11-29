@@ -41,7 +41,6 @@
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/package_symbol_loader"
 #if !defined(ELC_PACKAGE_SYMBOL_LOADER)
-	#define ELC_PACKAGE_SYMBOL_LOADER
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
 //core
 //at namespace ::
@@ -85,7 +84,6 @@
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
 #if !defined(ELC_CORE)
-	#define ELC_CORE
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
 //base
 //at namespace ::
@@ -129,7 +127,6 @@
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
 #if !defined(ELC_BASE)
-	#define ELC_BASE
 	//原base的一小部分，但由于过于底层，底层到API定义都需要使用。。
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 //base_defs
@@ -174,7 +171,6 @@
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 #if !defined(ELC_BASE_DEFS)
-	#define ELC_BASE_DEFS
 	#define __builtin_is_my_dick_still_there() true
 	#include <cstddef>//nullptr_t
 	#include <cstdlib>//exit、size_t
@@ -186,6 +182,7 @@
 	#include <cfenv>//rounding
 	#include <ctime>//time
 	#include <ranges>
+	#define ELC_BASE_DEFS
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -4913,12 +4910,13 @@ using rand_n::rand_seed;
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
+	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
 	#include <cstring>//memcpy、memmove
 	#include <atomic>//atomic
 	#if defined(ELC_TEST_ON)
 		#include <ctime>//time
 	#endif
+	#define ELC_BASE
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -13086,7 +13084,7 @@ namespace elc{
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
+	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_exception"
 //base_exception
 //at namespace ::
@@ -13130,7 +13128,6 @@ namespace elc{
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_exception"
 #if !defined(ELC_BASE_EXCEPTION)
-	#define ELC_BASE_EXCEPTION
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
 //using.hpp
 /*
@@ -13148,7 +13145,8 @@ elc使用的字符串.
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_exception"
+	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_exception"
+	#define ELC_BASE_EXCEPTION
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_exception/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -13727,7 +13725,7 @@ export runtime_exception;
 
 //file_end
 
-	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
+	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_stream"
 //base_stream
 //at namespace ::
@@ -13771,7 +13769,6 @@ export runtime_exception;
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_stream"
 #if !defined(ELC_BASE_STREAM)
-	#define ELC_BASE_STREAM
 	//abstract_base
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
 //base
@@ -13819,10 +13816,11 @@ export runtime_exception;
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_stream"
+	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_stream"
 	#include <istream>//std::istream for wrap
 	#include <ostream>//std::ostream for wrap
 	//do not include <iostream> as it will import some gobal objects like std::cin and std::cout that we may not want to use
+	#define ELC_BASE_STREAM
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -14768,6 +14766,8 @@ export flush;
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
+#if !defined(ELC_multi_type_name_test_output)
+#define ELC_multi_type_name_test_output
 namespace elc::defs{
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
 //_defs.hpp
@@ -15048,7 +15048,7 @@ protected:\
 
 //file_end
 
-	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
+	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
 
 	namespace stream_n{
 		//typename output only for text_ostream<char_t>
@@ -15217,8 +15217,9 @@ protected:\
 
 //file_end
 
-	#line 21 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
+	#line 23 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
 }
+#endif
 
 //file_end
 
@@ -15235,6 +15236,8 @@ protected:\
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
+#if !defined(ELC_multi_arithmetic_text_io)
+#define ELC_multi_arithmetic_text_io
 namespace elc::defs{
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
 //_defs.hpp
@@ -15515,7 +15518,7 @@ protected:\
 
 //file_end
 
-	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
+	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 
 	namespace stream_n{
 		//arithmetic output only for text_ostream<char_t>
@@ -15720,8 +15723,9 @@ protected:\
 
 //file_end
 
-	#line 57 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
+	#line 59 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 }
+#endif
 
 //file_end
 
@@ -15735,7 +15739,8 @@ protected:\
 
 //file_end
 
-	#line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
+	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/core"
+	#define ELC_CORE
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/core/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -17320,6 +17325,8 @@ export common_node;
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
+#if !defined(ELC_multi_string_arec_as_value)
+#define ELC_multi_string_arec_as_value
 namespace elc::defs{
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
 //_defs.hpp
@@ -17600,7 +17607,7 @@ protected:\
 
 //file_end
 
-	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/string_arec_as_value.hpp"
+	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/string_arec_as_value.hpp"
 
 	namespace string_n{
 		template<class char_T>
@@ -17783,8 +17790,9 @@ protected:\
 
 //file_end
 
-	#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/string_arec_as_value.hpp"
+	#line 37 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/string_arec_as_value.hpp"
 }
+#endif
 
 //file_end
 
@@ -17798,7 +17806,7 @@ protected:\
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/package_symbol_loader"
+	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/package_symbol_loader"
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
 //string
 //at namespace ::
@@ -17842,7 +17850,6 @@ protected:\
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
 #if !defined(ELC_STRING)
-	#define ELC_STRING
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base"
 //base
 //at namespace ::
@@ -17889,7 +17896,7 @@ protected:\
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
+	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
 	//operator<< & operator>>
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_stream"
 //base_stream
@@ -17937,7 +17944,8 @@ protected:\
 
 //file_end
 
-	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
+	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
+	#define ELC_STRING
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -23367,457 +23375,7 @@ export operator""_constexpr_str;
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
-namespace elc::defs{
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
-//_defs.hpp
-/*
-未完成的elc解释器basic文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-//_defs.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-//undefs at "_undefs.hpp"
-
-//set ELC_WARNING_LEVEL default to 4(max)
-#line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-
-#if defined(_MSC_VER)
-	#pragma warning(push,ELC_WARNING_LEVEL)
-	#pragma warning(disable:4099)//class与struct混用警告diss
-	#pragma warning(disable:4584)//重复子类警告diss
-	#pragma warning(disable:4250)//域控制继承警告diss
-	#pragma warning(disable:26432)//不完全默认方法警告diss
-	#pragma warning(disable:26435)//virtual override方法警告diss
-	#pragma warning(disable:26481)//容器安利diss
-	#pragma warning(disable:26446)//gsl::at安利diss
-	#pragma warning(disable:26434)//方法覆盖警告diss
-	#pragma warning(disable:26429)//gsl::not_null安利diss
-	#pragma warning(disable:26471)//对void*进行static_cast安利diss
-	#pragma warning(disable:26474)//隐式指针转换显式cast警告diss
-	#pragma warning(disable:26473)//相同指针显式cast警告diss
-	#pragma warning(disable:26456)//隐藏非虚运算符警告diss
-	#pragma warning(disable:26485)//数组作指针警告diss
-	#pragma warning(disable:26490)//reinterpret_cast警告diss
-	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
-	#pragma warning(disable:26482)//非常数数组索引警告diss
-	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
-#endif
-#if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
-	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
-	#define push_msvc_warning() __pragma(warning(push))
-	#define pop_msvc_warning() __pragma(warning(pop))
-	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
-#else
-	#define suppress_msvc_warning(...)
-	#define disable_msvc_warning(...)
-	#define push_msvc_warning()
-	#define pop_msvc_warning()
-	#define push_and_disable_msvc_warning(...)
-#endif
-#if defined(_MSC_VER)
-	//push pack settings
-	#pragma pack(push)
-	#pragma pack()
-#endif
-#if defined(_MSC_VER)
-	//push and undef common macros
-	#pragma push_macro("new")
-	#undef new
-	#pragma push_macro("delete")
-	#undef delete
-	#pragma push_macro("min")
-	#undef min
-	#pragma push_macro("max")
-	#undef max
-	#pragma push_macro("abs")
-	#undef abs
-	#pragma push_macro("export")
-	#undef export
-	#pragma push_macro("rand")
-	#undef rand
-	#pragma push_macro("sqrt")
-	#undef sqrt
-	#pragma push_macro("elc")
-	#undef elc
-#endif
-//
-#if defined(ELC_VOID_NAME)
-	#undef void
-#endif
-//
-#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
-	#undef rand
-#endif
-
-// #define often_noexcept
-#define noexcept_as(...) noexcept(noexcept((__VA_ARGS__)))//dnmd C艹标准就是没有noexcept_as_auto
-#define noexcept_as_auto MAGIC//哦现在有了
-#define constexpr_as(...) MAGIC constexpr//( •̀ ω •́ )✌
-#define constexpr_as_auto MAGIC MAGIC constexpr//✌( •̀ ω •́ )✌
-
-#define using_method_from_base_t(name,...) \
-template<class...Args> requires was_not_an_ill_form(declvalue(base_t).name(declvalue(Args)...))\
-auto name(Args&&...rest)__VA_ARGS__ noexcept_as(base_t::name(declvalue(Args)...))\
-{\
-	return base_t::name(forward<Args>(rest)...);\
-}\
-
-#define using_method_from_value(name,value_name,...) \
-template<class...Args> requires was_not_an_ill_form(re_declvalue(value_name).name(declvalue(Args)...))\
-auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(declvalue(Args)...))\
-{\
-	return value_name.name(forward<Args>(rest)...);\
-}\
-
-#define floop while(__builtin_is_my_dick_still_there())
-#if defined(_MSC_VER) && _MSC_VER==1935
-	//https://developercommunity.visualstudio.com/t/10193638
-	#define enable_adl(name) template<typename=void>void name()noexcept=delete
-#else
-	#define enable_adl(name) void name()noexcept=delete
-#endif
-
-#define re_declvalue(...) (declvalue(decltype(__VA_ARGS__)))
-#define re_decltype(...) (decltype(declvalue(__VA_ARGS__)))
-
-#define declvalue(...) (::std::declval<__VA_ARGS__>())
-
-/*! 实例化到此将引发错误 */
-#define template_error(reason) static_assert(template_error_helper<T>,reason)
-/*! 实例化到此将引发警告 */
-#define template_warning(reason) template_warning_helper<T>(reason)
-
-//for type_info
-#define type_info_of(...) base_type_info_t(typeid(__VA_ARGS__))
-#define type_name_of(...) (type_info_of(__VA_ARGS__).get_name())
-
-#define is_common_attribute(name) public attribute<T,name<T>>
-#define is_special_attribute(name) public attribute<T,name>
-
-#define has_attribute(...) template_name has_attribute_helper<__VA_ARGS__>()
-#define not_has_attribute(...) template_name not_has_has_attribute_helper<__VA_ARGS__>()
-
-//for float_size_t
-#define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
-//bitnum_of
-#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
-
-//for attribute
-#define def_common_attribute_with_nothing(name) \
-template<typename T>\
-class name{}\
-
-#define def_special_attribute_with_nothing(name) \
-class name{}\
-
-#define common_attribute_t template<class>class
-#define special_attribute_t class
-
-/*!
-若参数的布尔值为零，那么此模板不会实例化
-
-为什么不用cpp20的constraints？
-1.不能类内定义
-2.不能作为模板参数
-一句话总结：c艹标准会sb
-*/
-#define enable_if(...) class enable_state= ::std::enable_if_t<__VA_ARGS__>
-/*! 默认参与模板候选 */
-#define enabled_by_default class enable_state=void
-/*! 默认不参与模板候选 */
-#define disabled_by_default class enable_state= ::std::enable_if_t<false>
-/*! 若参数为病式，那么此模板不会实例化 */
-#define enable_if_not_ill_form(...) class enable_state= ::std::void_t<decltype(__VA_ARGS__)>
-/*!用于模板声明 */
-#define enable_flag class enable_state
-
-#define was_an_ill_form(...) (!was_not_an_ill_form(__VA_ARGS__))
-#define was_an_ill_form_with_parameter(...) (!was_not_an_ill_form_with_parameter(__VA_ARGS__))
-#define was_not_an_ill_form(...) (bool(requires{__VA_ARGS__;}))
-#define was_not_an_ill_form_and_noexcept(...) (bool(requires{__VA_ARGS__;{__VA_ARGS__}noexcept;}))
-#define was_not_an_ill_form_with_parameter(...) (bool(requires __VA_ARGS__ ))
-
-/*! 让lambda递归更加美观 */
-#define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
-/*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
-	return name(name,Args...);\
-}
-/*! 让lambda定义更加美观 */
-#define lambda []
-/*! 让lambda定义更加美观 */
-#define lambda_with_catch(...) [__VA_ARGS__]
-/*! 让lambda定义更加美观 */
-#define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
-//recursive_lambda_self_referential_reserved_symbolname
-#define lambda_RLSRRS _my_jb_super_sb_name_
-
-#define MAGIC//ahh,ko no tenno da!
-
-/*! 装饰性语法糖 */
-#define nothing
-
-/*! aya风格语法糖 */
-#define elseif else if
-/*! aya风格语法糖 */
-#define _big_than_ >
-/*! aya风格语法糖 */
-#define _small_than_ <
-
-#if defined(_MSC_VER)
-	#define not !
-	#define and &&
-	#define or ||
-#endif
-
-/*! 进入名称空间，并不是很美观 */
-#define INTER_NAMESPACE(NAMESPACENAME) namespace NAMESPACENAME{
-/*! 退出名称空间，并不是很美观 */
-#define BREAK_NAMESPACE }
-
-/*! template说明符 */
-#define template_name template
-/*! template说明符 */
-#define type_name class
-
-#if defined(DEBUG) || defined(_DEBUG)
-	#define not_in_debug 0
-#else
-	#define not_in_debug 1
-#endif
-
-#define es U""
-#define ec(ch) U ## ch
-
-#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
-	#define ELC_TEST_EVENTNAME(name) stest_eventer _the_stest_eventer__(L""name)
-#else
-	#define ELC_TEST_EVENTNAME(name)
-#endif
-
-#define override_instance_struct \
-protected:\
-	virtual void abstract_method_unget_this()noexcept_as(instance_struct<this_t>::abstract_method_unget_this())override{instance_struct<this_t>::abstract_method_unget_this();}\
-	virtual void* _abstract_method_copy_get_this()noexcept_as(instance_struct<this_t>::_abstract_method_copy_get_this())override{return instance_struct<this_t>::_abstract_method_copy_get_this();}\
-	virtual void* _abstract_method_get_resize_this(size_t size)noexcept_as(instance_struct<this_t>::instance_struct<this_t>::_abstract_method_get_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_resize_this(size);}\
-	virtual void* _abstract_method_get_forward_resize_this(size_t size)noexcept_as(instance_struct<this_t>::_abstract_method_get_forward_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_forward_resize_this(size);}\
-	virtual size_t abstract_method_get_size_of_get_for_this()noexcept override{return instance_struct<this_t>::abstract_method_get_size_of_get_for_this();}
-
-#if defined(_MSC_VER) && !defined(__clang__)
-	#define distinctive __declspec(dllexport)
-#else
-	#define distinctive
-#endif
-
-#if defined(_MSC_VER) && !defined(__clang__)
-	#define force_inline __forceinline
-#elif defined(__GNUC__) || defined(__clang__)
-	#define force_inline __attribute__((always_inline)) inline
-#else
-	#define force_inline inline
-#endif
-
-#if defined(_MSC_VER) && !defined(__clang__)
-	#define with_no_vtable __declspec(novtable)
-#else
-	#define with_no_vtable
-#endif
-
-#define in_consteval (::std::is_constant_evaluated())
-
-#define no_vtable_struct struct with_no_vtable
-#define no_vtable_class class with_no_vtable
-
-//#define get_elc_defs using namespace ::elc::defs
-
-//file_end
-
-#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
-
-//file_end
-
-	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
-
-	namespace stream_n{
-		//typename output only for text_ostream<char_t>
-		template<class stream_T> requires(type_info<stream_T>.base_on<text_ostream<char_t>>)
-		decltype(auto)operator<<(stream_T&&stream,const type_name_t&name)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
-			return stream << to_char_t_str(name);
-		}
-	}
-
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
-//_undefs.hpp
-/*
-未完成的elc解释器basic文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
-//_undefs.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-//defs at "_defs.hpp"
-
-#if defined(_MSC_VER)
-	#pragma warning(pop)
-#endif
-#undef suppress_msvc_warning
-#undef disable_msvc_warning
-#undef push_msvc_warning
-#undef pop_msvc_warning
-#undef push_and_disable_msvc_warning
-#if defined(_MSC_VER)
-	#pragma pack(pop)
-#endif
-#if defined(_MSC_VER)
-	#pragma pop_macro("new")
-	#pragma pop_macro("delete")
-	#pragma pop_macro("min")
-	#pragma pop_macro("max")
-	#pragma pop_macro("abs")
-	#pragma pop_macro("export")
-	#pragma pop_macro("rand")
-	#pragma pop_macro("sqrt")
-	#pragma pop_macro("elc")
-#endif
-
-//
-#if defined(ELC_VOID_NAME)
-	#define void the_void
-#endif
-//
-#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
-	#define rand the_rand
-#endif
-
-// #undef often_noexcept
-#undef noexcept_as
-#undef noexcept_as_auto
-#undef constexpr_as
-#undef constexpr_as_auto
-
-#undef using_method_from_base_t
-#undef using_method_from_value
-
-#undef floop
-#undef enable_adl
-
-#undef re_declvalue
-#undef re_decltype
-
-#undef declvalue
-
-#undef template_error
-#undef template_warning
-
-#undef type_info_of
-#undef type_name_of
-
-#undef is_common_attribute
-#undef is_special_attribute
-
-#undef has_attribute
-#undef not_has_attribute
-
-#undef float_size_of
-#undef bitnum_of
-
-#undef def_common_attribute_with_nothing
-#undef def_special_attribute_with_nothing
-
-#undef common_attribute_t
-#undef special_attribute_t
-
-#undef enable_if
-#undef enabled_by_default
-#undef disabled_by_default
-#undef enable_if_not_ill_form
-#undef enable_flag
-
-#undef was_an_ill_form
-#undef was_an_ill_form_with_parameter
-#undef was_not_an_ill_form
-#undef was_not_an_ill_form_and_noexcept
-#undef was_not_an_ill_form_with_parameter
-
-#undef recursive_lambda
-#undef get_recursive_lambda_caller
-#undef lambda
-#undef lambda_with_catch
-#undef self_recursion
-#undef lambda_RLSRRS
-
-#undef MAGIC
-
-#undef nothing
-
-#undef elseif
-#undef _big_than_
-#undef _small_than_
-
-#if defined(_MSC_VER)
-	#undef not
-	#undef and
-	#undef or
-#endif
-
-#undef INTER_NAMESPACE
-#undef BREAK_NAMESPACE
-
-#undef szie
-#undef form
-
-#undef template_name
-#undef type_name
-
-#undef not_in_debug
-
-#undef es
-#undef ec
-
-#undef ELC_TEST_EVENTNAME
-
-#undef override_instance_struct
-
-#undef distinctive
-
-#undef force_inline
-
-#undef with_no_vtable
-
-#undef in_consteval
-
-#undef no_vtable_struct
-#undef no_vtable_class
-
-//#undef get_elc_defs
-
-//file_end
-
-#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
-
-//file_end
-
-	#line 21 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
-}
+#line 25 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
 
 //file_end
 
@@ -23834,471 +23392,7 @@ protected:\
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
-namespace elc::defs{
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
-//_defs.hpp
-/*
-未完成的elc解释器basic文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-//_defs.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-//undefs at "_undefs.hpp"
-
-//set ELC_WARNING_LEVEL default to 4(max)
-#line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-
-#if defined(_MSC_VER)
-	#pragma warning(push,ELC_WARNING_LEVEL)
-	#pragma warning(disable:4099)//class与struct混用警告diss
-	#pragma warning(disable:4584)//重复子类警告diss
-	#pragma warning(disable:4250)//域控制继承警告diss
-	#pragma warning(disable:26432)//不完全默认方法警告diss
-	#pragma warning(disable:26435)//virtual override方法警告diss
-	#pragma warning(disable:26481)//容器安利diss
-	#pragma warning(disable:26446)//gsl::at安利diss
-	#pragma warning(disable:26434)//方法覆盖警告diss
-	#pragma warning(disable:26429)//gsl::not_null安利diss
-	#pragma warning(disable:26471)//对void*进行static_cast安利diss
-	#pragma warning(disable:26474)//隐式指针转换显式cast警告diss
-	#pragma warning(disable:26473)//相同指针显式cast警告diss
-	#pragma warning(disable:26456)//隐藏非虚运算符警告diss
-	#pragma warning(disable:26485)//数组作指针警告diss
-	#pragma warning(disable:26490)//reinterpret_cast警告diss
-	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
-	#pragma warning(disable:26482)//非常数数组索引警告diss
-	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
-#endif
-#if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
-	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
-	#define push_msvc_warning() __pragma(warning(push))
-	#define pop_msvc_warning() __pragma(warning(pop))
-	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
-#else
-	#define suppress_msvc_warning(...)
-	#define disable_msvc_warning(...)
-	#define push_msvc_warning()
-	#define pop_msvc_warning()
-	#define push_and_disable_msvc_warning(...)
-#endif
-#if defined(_MSC_VER)
-	//push pack settings
-	#pragma pack(push)
-	#pragma pack()
-#endif
-#if defined(_MSC_VER)
-	//push and undef common macros
-	#pragma push_macro("new")
-	#undef new
-	#pragma push_macro("delete")
-	#undef delete
-	#pragma push_macro("min")
-	#undef min
-	#pragma push_macro("max")
-	#undef max
-	#pragma push_macro("abs")
-	#undef abs
-	#pragma push_macro("export")
-	#undef export
-	#pragma push_macro("rand")
-	#undef rand
-	#pragma push_macro("sqrt")
-	#undef sqrt
-	#pragma push_macro("elc")
-	#undef elc
-#endif
-//
-#if defined(ELC_VOID_NAME)
-	#undef void
-#endif
-//
-#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
-	#undef rand
-#endif
-
-// #define often_noexcept
-#define noexcept_as(...) noexcept(noexcept((__VA_ARGS__)))//dnmd C艹标准就是没有noexcept_as_auto
-#define noexcept_as_auto MAGIC//哦现在有了
-#define constexpr_as(...) MAGIC constexpr//( •̀ ω •́ )✌
-#define constexpr_as_auto MAGIC MAGIC constexpr//✌( •̀ ω •́ )✌
-
-#define using_method_from_base_t(name,...) \
-template<class...Args> requires was_not_an_ill_form(declvalue(base_t).name(declvalue(Args)...))\
-auto name(Args&&...rest)__VA_ARGS__ noexcept_as(base_t::name(declvalue(Args)...))\
-{\
-	return base_t::name(forward<Args>(rest)...);\
-}\
-
-#define using_method_from_value(name,value_name,...) \
-template<class...Args> requires was_not_an_ill_form(re_declvalue(value_name).name(declvalue(Args)...))\
-auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(declvalue(Args)...))\
-{\
-	return value_name.name(forward<Args>(rest)...);\
-}\
-
-#define floop while(__builtin_is_my_dick_still_there())
-#if defined(_MSC_VER) && _MSC_VER==1935
-	//https://developercommunity.visualstudio.com/t/10193638
-	#define enable_adl(name) template<typename=void>void name()noexcept=delete
-#else
-	#define enable_adl(name) void name()noexcept=delete
-#endif
-
-#define re_declvalue(...) (declvalue(decltype(__VA_ARGS__)))
-#define re_decltype(...) (decltype(declvalue(__VA_ARGS__)))
-
-#define declvalue(...) (::std::declval<__VA_ARGS__>())
-
-/*! 实例化到此将引发错误 */
-#define template_error(reason) static_assert(template_error_helper<T>,reason)
-/*! 实例化到此将引发警告 */
-#define template_warning(reason) template_warning_helper<T>(reason)
-
-//for type_info
-#define type_info_of(...) base_type_info_t(typeid(__VA_ARGS__))
-#define type_name_of(...) (type_info_of(__VA_ARGS__).get_name())
-
-#define is_common_attribute(name) public attribute<T,name<T>>
-#define is_special_attribute(name) public attribute<T,name>
-
-#define has_attribute(...) template_name has_attribute_helper<__VA_ARGS__>()
-#define not_has_attribute(...) template_name not_has_has_attribute_helper<__VA_ARGS__>()
-
-//for float_size_t
-#define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
-//bitnum_of
-#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
-
-//for attribute
-#define def_common_attribute_with_nothing(name) \
-template<typename T>\
-class name{}\
-
-#define def_special_attribute_with_nothing(name) \
-class name{}\
-
-#define common_attribute_t template<class>class
-#define special_attribute_t class
-
-/*!
-若参数的布尔值为零，那么此模板不会实例化
-
-为什么不用cpp20的constraints？
-1.不能类内定义
-2.不能作为模板参数
-一句话总结：c艹标准会sb
-*/
-#define enable_if(...) class enable_state= ::std::enable_if_t<__VA_ARGS__>
-/*! 默认参与模板候选 */
-#define enabled_by_default class enable_state=void
-/*! 默认不参与模板候选 */
-#define disabled_by_default class enable_state= ::std::enable_if_t<false>
-/*! 若参数为病式，那么此模板不会实例化 */
-#define enable_if_not_ill_form(...) class enable_state= ::std::void_t<decltype(__VA_ARGS__)>
-/*!用于模板声明 */
-#define enable_flag class enable_state
-
-#define was_an_ill_form(...) (!was_not_an_ill_form(__VA_ARGS__))
-#define was_an_ill_form_with_parameter(...) (!was_not_an_ill_form_with_parameter(__VA_ARGS__))
-#define was_not_an_ill_form(...) (bool(requires{__VA_ARGS__;}))
-#define was_not_an_ill_form_and_noexcept(...) (bool(requires{__VA_ARGS__;{__VA_ARGS__}noexcept;}))
-#define was_not_an_ill_form_with_parameter(...) (bool(requires __VA_ARGS__ ))
-
-/*! 让lambda递归更加美观 */
-#define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
-/*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
-	return name(name,Args...);\
-}
-/*! 让lambda定义更加美观 */
-#define lambda []
-/*! 让lambda定义更加美观 */
-#define lambda_with_catch(...) [__VA_ARGS__]
-/*! 让lambda定义更加美观 */
-#define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
-//recursive_lambda_self_referential_reserved_symbolname
-#define lambda_RLSRRS _my_jb_super_sb_name_
-
-#define MAGIC//ahh,ko no tenno da!
-
-/*! 装饰性语法糖 */
-#define nothing
-
-/*! aya风格语法糖 */
-#define elseif else if
-/*! aya风格语法糖 */
-#define _big_than_ >
-/*! aya风格语法糖 */
-#define _small_than_ <
-
-#if defined(_MSC_VER)
-	#define not !
-	#define and &&
-	#define or ||
-#endif
-
-/*! 进入名称空间，并不是很美观 */
-#define INTER_NAMESPACE(NAMESPACENAME) namespace NAMESPACENAME{
-/*! 退出名称空间，并不是很美观 */
-#define BREAK_NAMESPACE }
-
-/*! template说明符 */
-#define template_name template
-/*! template说明符 */
-#define type_name class
-
-#if defined(DEBUG) || defined(_DEBUG)
-	#define not_in_debug 0
-#else
-	#define not_in_debug 1
-#endif
-
-#define es U""
-#define ec(ch) U ## ch
-
-#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
-	#define ELC_TEST_EVENTNAME(name) stest_eventer _the_stest_eventer__(L""name)
-#else
-	#define ELC_TEST_EVENTNAME(name)
-#endif
-
-#define override_instance_struct \
-protected:\
-	virtual void abstract_method_unget_this()noexcept_as(instance_struct<this_t>::abstract_method_unget_this())override{instance_struct<this_t>::abstract_method_unget_this();}\
-	virtual void* _abstract_method_copy_get_this()noexcept_as(instance_struct<this_t>::_abstract_method_copy_get_this())override{return instance_struct<this_t>::_abstract_method_copy_get_this();}\
-	virtual void* _abstract_method_get_resize_this(size_t size)noexcept_as(instance_struct<this_t>::instance_struct<this_t>::_abstract_method_get_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_resize_this(size);}\
-	virtual void* _abstract_method_get_forward_resize_this(size_t size)noexcept_as(instance_struct<this_t>::_abstract_method_get_forward_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_forward_resize_this(size);}\
-	virtual size_t abstract_method_get_size_of_get_for_this()noexcept override{return instance_struct<this_t>::abstract_method_get_size_of_get_for_this();}
-
-#if defined(_MSC_VER) && !defined(__clang__)
-	#define distinctive __declspec(dllexport)
-#else
-	#define distinctive
-#endif
-
-#if defined(_MSC_VER) && !defined(__clang__)
-	#define force_inline __forceinline
-#elif defined(__GNUC__) || defined(__clang__)
-	#define force_inline __attribute__((always_inline)) inline
-#else
-	#define force_inline inline
-#endif
-
-#if defined(_MSC_VER) && !defined(__clang__)
-	#define with_no_vtable __declspec(novtable)
-#else
-	#define with_no_vtable
-#endif
-
-#define in_consteval (::std::is_constant_evaluated())
-
-#define no_vtable_struct struct with_no_vtable
-#define no_vtable_class class with_no_vtable
-
-//#define get_elc_defs using namespace ::elc::defs
-
-//file_end
-
-#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
-
-//file_end
-
-	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/string_arec_as_value.hpp"
-
-	namespace string_n{
-		template<class char_T>
-		value arec_as_value(string_t<char_T>&str,const value index){
-			size_t i=size_t(use_as<int_t>(index));
-			if(!i)
-				i=size_t(use_as<uint_t>(index));
-			struct arec_data_t final:instance_struct<arec_data_t>
-			,value::base_data_t{
-				typename string_t<char_T>::arec_t _m;
-				arec_data_t(string_t<char_T>&str,size_t index)noexcept:_m(&str,index){};
-				arec_data_t(const arec_data_t&ref)noexcept:_m(special_init,ref._m){}
-				virtual ~arec_data_t()noexcept override final=default;
-
-				virtual void be_set(ptr a)noexcept override final{move(_m)=use_as<char_T>(a);}
-				[[nodiscard]]virtual ptr get_value()noexcept override final{return core::make_binary_node_from<char_T>(move(_m));}
-				[[nodiscard]]virtual base_data_t*copy()const noexcept override final{return get<arec_data_t>(*this);}
-				[[nodiscard]]virtual base_type_info_t get_type_info()const noexcept override final{return type_info<arec_data_t>;}
-			};
-			return get<arec_data_t>(str,i);
-		}
-	}
-
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
-//_undefs.hpp
-/*
-未完成的elc解释器basic文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
-//_undefs.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-//defs at "_defs.hpp"
-
-#if defined(_MSC_VER)
-	#pragma warning(pop)
-#endif
-#undef suppress_msvc_warning
-#undef disable_msvc_warning
-#undef push_msvc_warning
-#undef pop_msvc_warning
-#undef push_and_disable_msvc_warning
-#if defined(_MSC_VER)
-	#pragma pack(pop)
-#endif
-#if defined(_MSC_VER)
-	#pragma pop_macro("new")
-	#pragma pop_macro("delete")
-	#pragma pop_macro("min")
-	#pragma pop_macro("max")
-	#pragma pop_macro("abs")
-	#pragma pop_macro("export")
-	#pragma pop_macro("rand")
-	#pragma pop_macro("sqrt")
-	#pragma pop_macro("elc")
-#endif
-
-//
-#if defined(ELC_VOID_NAME)
-	#define void the_void
-#endif
-//
-#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
-	#define rand the_rand
-#endif
-
-// #undef often_noexcept
-#undef noexcept_as
-#undef noexcept_as_auto
-#undef constexpr_as
-#undef constexpr_as_auto
-
-#undef using_method_from_base_t
-#undef using_method_from_value
-
-#undef floop
-#undef enable_adl
-
-#undef re_declvalue
-#undef re_decltype
-
-#undef declvalue
-
-#undef template_error
-#undef template_warning
-
-#undef type_info_of
-#undef type_name_of
-
-#undef is_common_attribute
-#undef is_special_attribute
-
-#undef has_attribute
-#undef not_has_attribute
-
-#undef float_size_of
-#undef bitnum_of
-
-#undef def_common_attribute_with_nothing
-#undef def_special_attribute_with_nothing
-
-#undef common_attribute_t
-#undef special_attribute_t
-
-#undef enable_if
-#undef enabled_by_default
-#undef disabled_by_default
-#undef enable_if_not_ill_form
-#undef enable_flag
-
-#undef was_an_ill_form
-#undef was_an_ill_form_with_parameter
-#undef was_not_an_ill_form
-#undef was_not_an_ill_form_and_noexcept
-#undef was_not_an_ill_form_with_parameter
-
-#undef recursive_lambda
-#undef get_recursive_lambda_caller
-#undef lambda
-#undef lambda_with_catch
-#undef self_recursion
-#undef lambda_RLSRRS
-
-#undef MAGIC
-
-#undef nothing
-
-#undef elseif
-#undef _big_than_
-#undef _small_than_
-
-#if defined(_MSC_VER)
-	#undef not
-	#undef and
-	#undef or
-#endif
-
-#undef INTER_NAMESPACE
-#undef BREAK_NAMESPACE
-
-#undef szie
-#undef form
-
-#undef template_name
-#undef type_name
-
-#undef not_in_debug
-
-#undef es
-#undef ec
-
-#undef ELC_TEST_EVENTNAME
-
-#undef override_instance_struct
-
-#undef distinctive
-
-#undef force_inline
-
-#undef with_no_vtable
-
-#undef in_consteval
-
-#undef no_vtable_struct
-#undef no_vtable_class
-
-//#undef get_elc_defs
-
-//file_end
-
-#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
-
-//file_end
-
-	#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/string_arec_as_value.hpp"
-}
+#line 39 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/string_arec_as_value.hpp"
 
 //file_end
 
@@ -24312,7 +23406,7 @@ protected:\
 
 //file_end
 
-	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/package_symbol_loader"
+	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/package_symbol_loader"
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/lib_loader"
 //lib_loader
 //at namespace ::
@@ -24356,7 +23450,6 @@ protected:\
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/lib_loader"
 #if !defined(ELC_LIB_LOADER)
-	#define ELC_LIB_LOADER
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
 //string
 //at namespace ::
@@ -24403,7 +23496,8 @@ protected:\
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/lib_loader"
+	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/lib_loader"
+	#define ELC_LIB_LOADER
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/lib_loader/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -24572,7 +23666,6 @@ elc依赖的基础函数.
 
 #line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/numerical_representation"
 #if !defined(ELC_NUMERICAL_REPRESENTATION)
-	#define ELC_NUMERICAL_REPRESENTATION
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/string"
 //string
 //at namespace ::
@@ -24619,7 +23712,8 @@ elc依赖的基础函数.
 
 //file_end
 
-	#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/numerical_representation"
+	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/numerical_representation"
+	#define ELC_NUMERICAL_REPRESENTATION
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
 //_body.hpp
 //at namespace ::
@@ -25654,493 +24748,7 @@ export from_string_get;
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
-namespace elc::defs{
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
-//_defs.hpp
-/*
-未完成的elc解释器basic文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-//_defs.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-//undefs at "_undefs.hpp"
-
-//set ELC_WARNING_LEVEL default to 4(max)
-#line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-
-#if defined(_MSC_VER)
-	#pragma warning(push,ELC_WARNING_LEVEL)
-	#pragma warning(disable:4099)//class与struct混用警告diss
-	#pragma warning(disable:4584)//重复子类警告diss
-	#pragma warning(disable:4250)//域控制继承警告diss
-	#pragma warning(disable:26432)//不完全默认方法警告diss
-	#pragma warning(disable:26435)//virtual override方法警告diss
-	#pragma warning(disable:26481)//容器安利diss
-	#pragma warning(disable:26446)//gsl::at安利diss
-	#pragma warning(disable:26434)//方法覆盖警告diss
-	#pragma warning(disable:26429)//gsl::not_null安利diss
-	#pragma warning(disable:26471)//对void*进行static_cast安利diss
-	#pragma warning(disable:26474)//隐式指针转换显式cast警告diss
-	#pragma warning(disable:26473)//相同指针显式cast警告diss
-	#pragma warning(disable:26456)//隐藏非虚运算符警告diss
-	#pragma warning(disable:26485)//数组作指针警告diss
-	#pragma warning(disable:26490)//reinterpret_cast警告diss
-	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
-	#pragma warning(disable:26482)//非常数数组索引警告diss
-	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
-#endif
-#if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
-	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
-	#define push_msvc_warning() __pragma(warning(push))
-	#define pop_msvc_warning() __pragma(warning(pop))
-	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
-#else
-	#define suppress_msvc_warning(...)
-	#define disable_msvc_warning(...)
-	#define push_msvc_warning()
-	#define pop_msvc_warning()
-	#define push_and_disable_msvc_warning(...)
-#endif
-#if defined(_MSC_VER)
-	//push pack settings
-	#pragma pack(push)
-	#pragma pack()
-#endif
-#if defined(_MSC_VER)
-	//push and undef common macros
-	#pragma push_macro("new")
-	#undef new
-	#pragma push_macro("delete")
-	#undef delete
-	#pragma push_macro("min")
-	#undef min
-	#pragma push_macro("max")
-	#undef max
-	#pragma push_macro("abs")
-	#undef abs
-	#pragma push_macro("export")
-	#undef export
-	#pragma push_macro("rand")
-	#undef rand
-	#pragma push_macro("sqrt")
-	#undef sqrt
-	#pragma push_macro("elc")
-	#undef elc
-#endif
-//
-#if defined(ELC_VOID_NAME)
-	#undef void
-#endif
-//
-#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
-	#undef rand
-#endif
-
-// #define often_noexcept
-#define noexcept_as(...) noexcept(noexcept((__VA_ARGS__)))//dnmd C艹标准就是没有noexcept_as_auto
-#define noexcept_as_auto MAGIC//哦现在有了
-#define constexpr_as(...) MAGIC constexpr//( •̀ ω •́ )✌
-#define constexpr_as_auto MAGIC MAGIC constexpr//✌( •̀ ω •́ )✌
-
-#define using_method_from_base_t(name,...) \
-template<class...Args> requires was_not_an_ill_form(declvalue(base_t).name(declvalue(Args)...))\
-auto name(Args&&...rest)__VA_ARGS__ noexcept_as(base_t::name(declvalue(Args)...))\
-{\
-	return base_t::name(forward<Args>(rest)...);\
-}\
-
-#define using_method_from_value(name,value_name,...) \
-template<class...Args> requires was_not_an_ill_form(re_declvalue(value_name).name(declvalue(Args)...))\
-auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(declvalue(Args)...))\
-{\
-	return value_name.name(forward<Args>(rest)...);\
-}\
-
-#define floop while(__builtin_is_my_dick_still_there())
-#if defined(_MSC_VER) && _MSC_VER==1935
-	//https://developercommunity.visualstudio.com/t/10193638
-	#define enable_adl(name) template<typename=void>void name()noexcept=delete
-#else
-	#define enable_adl(name) void name()noexcept=delete
-#endif
-
-#define re_declvalue(...) (declvalue(decltype(__VA_ARGS__)))
-#define re_decltype(...) (decltype(declvalue(__VA_ARGS__)))
-
-#define declvalue(...) (::std::declval<__VA_ARGS__>())
-
-/*! 实例化到此将引发错误 */
-#define template_error(reason) static_assert(template_error_helper<T>,reason)
-/*! 实例化到此将引发警告 */
-#define template_warning(reason) template_warning_helper<T>(reason)
-
-//for type_info
-#define type_info_of(...) base_type_info_t(typeid(__VA_ARGS__))
-#define type_name_of(...) (type_info_of(__VA_ARGS__).get_name())
-
-#define is_common_attribute(name) public attribute<T,name<T>>
-#define is_special_attribute(name) public attribute<T,name>
-
-#define has_attribute(...) template_name has_attribute_helper<__VA_ARGS__>()
-#define not_has_attribute(...) template_name not_has_has_attribute_helper<__VA_ARGS__>()
-
-//for float_size_t
-#define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
-//bitnum_of
-#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
-
-//for attribute
-#define def_common_attribute_with_nothing(name) \
-template<typename T>\
-class name{}\
-
-#define def_special_attribute_with_nothing(name) \
-class name{}\
-
-#define common_attribute_t template<class>class
-#define special_attribute_t class
-
-/*!
-若参数的布尔值为零，那么此模板不会实例化
-
-为什么不用cpp20的constraints？
-1.不能类内定义
-2.不能作为模板参数
-一句话总结：c艹标准会sb
-*/
-#define enable_if(...) class enable_state= ::std::enable_if_t<__VA_ARGS__>
-/*! 默认参与模板候选 */
-#define enabled_by_default class enable_state=void
-/*! 默认不参与模板候选 */
-#define disabled_by_default class enable_state= ::std::enable_if_t<false>
-/*! 若参数为病式，那么此模板不会实例化 */
-#define enable_if_not_ill_form(...) class enable_state= ::std::void_t<decltype(__VA_ARGS__)>
-/*!用于模板声明 */
-#define enable_flag class enable_state
-
-#define was_an_ill_form(...) (!was_not_an_ill_form(__VA_ARGS__))
-#define was_an_ill_form_with_parameter(...) (!was_not_an_ill_form_with_parameter(__VA_ARGS__))
-#define was_not_an_ill_form(...) (bool(requires{__VA_ARGS__;}))
-#define was_not_an_ill_form_and_noexcept(...) (bool(requires{__VA_ARGS__;{__VA_ARGS__}noexcept;}))
-#define was_not_an_ill_form_with_parameter(...) (bool(requires __VA_ARGS__ ))
-
-/*! 让lambda递归更加美观 */
-#define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
-/*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
-	return name(name,Args...);\
-}
-/*! 让lambda定义更加美观 */
-#define lambda []
-/*! 让lambda定义更加美观 */
-#define lambda_with_catch(...) [__VA_ARGS__]
-/*! 让lambda定义更加美观 */
-#define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
-//recursive_lambda_self_referential_reserved_symbolname
-#define lambda_RLSRRS _my_jb_super_sb_name_
-
-#define MAGIC//ahh,ko no tenno da!
-
-/*! 装饰性语法糖 */
-#define nothing
-
-/*! aya风格语法糖 */
-#define elseif else if
-/*! aya风格语法糖 */
-#define _big_than_ >
-/*! aya风格语法糖 */
-#define _small_than_ <
-
-#if defined(_MSC_VER)
-	#define not !
-	#define and &&
-	#define or ||
-#endif
-
-/*! 进入名称空间，并不是很美观 */
-#define INTER_NAMESPACE(NAMESPACENAME) namespace NAMESPACENAME{
-/*! 退出名称空间，并不是很美观 */
-#define BREAK_NAMESPACE }
-
-/*! template说明符 */
-#define template_name template
-/*! template说明符 */
-#define type_name class
-
-#if defined(DEBUG) || defined(_DEBUG)
-	#define not_in_debug 0
-#else
-	#define not_in_debug 1
-#endif
-
-#define es U""
-#define ec(ch) U ## ch
-
-#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
-	#define ELC_TEST_EVENTNAME(name) stest_eventer _the_stest_eventer__(L""name)
-#else
-	#define ELC_TEST_EVENTNAME(name)
-#endif
-
-#define override_instance_struct \
-protected:\
-	virtual void abstract_method_unget_this()noexcept_as(instance_struct<this_t>::abstract_method_unget_this())override{instance_struct<this_t>::abstract_method_unget_this();}\
-	virtual void* _abstract_method_copy_get_this()noexcept_as(instance_struct<this_t>::_abstract_method_copy_get_this())override{return instance_struct<this_t>::_abstract_method_copy_get_this();}\
-	virtual void* _abstract_method_get_resize_this(size_t size)noexcept_as(instance_struct<this_t>::instance_struct<this_t>::_abstract_method_get_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_resize_this(size);}\
-	virtual void* _abstract_method_get_forward_resize_this(size_t size)noexcept_as(instance_struct<this_t>::_abstract_method_get_forward_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_forward_resize_this(size);}\
-	virtual size_t abstract_method_get_size_of_get_for_this()noexcept override{return instance_struct<this_t>::abstract_method_get_size_of_get_for_this();}
-
-#if defined(_MSC_VER) && !defined(__clang__)
-	#define distinctive __declspec(dllexport)
-#else
-	#define distinctive
-#endif
-
-#if defined(_MSC_VER) && !defined(__clang__)
-	#define force_inline __forceinline
-#elif defined(__GNUC__) || defined(__clang__)
-	#define force_inline __attribute__((always_inline)) inline
-#else
-	#define force_inline inline
-#endif
-
-#if defined(_MSC_VER) && !defined(__clang__)
-	#define with_no_vtable __declspec(novtable)
-#else
-	#define with_no_vtable
-#endif
-
-#define in_consteval (::std::is_constant_evaluated())
-
-#define no_vtable_struct struct with_no_vtable
-#define no_vtable_class class with_no_vtable
-
-//#define get_elc_defs using namespace ::elc::defs
-
-//file_end
-
-#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
-
-//file_end
-
-	#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
-
-	namespace stream_n{
-		//arithmetic output only for text_ostream<char_t>
-		template<typename T,class stream_T> requires(::std::is_arithmetic_v<remove_cvref<T>> &&
-													 type_info<stream_T>.base_on<text_ostream<char_t>> &&
-													 type_info<remove_cvref<T>> != type_info<char_t>)
-		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
-			return stream << to_string(::std::forward<T>(data));
-		}
-
-		template<typename T,class stream_T> requires(!::std::is_arithmetic_v<remove_cvref<T>> &&
-													 is_arithmetic_convertible<remove_cvref<T>> &&
-													 type_info<stream_T>.base_on<text_ostream<char_t>>)
-		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
-			return stream << to_arithmetic(::std::forward<T>(data));
-		}
-
-		template<typename T,class stream_T> requires(type_info<stream_T>.base_on<text_ostream<char_t>> &&
-													 type_info<remove_cvref<T>> == type_info<bool>)
-		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
-			if(data==true)
-				stream << es"true"_constexpr_str;
-			elseif(data==false)
-				stream << es"false"_constexpr_str;
-			else
-				stream << es"others("_constexpr_str << union_cast<unsigned_specific_size_t<sizeof(bool)>>(data) << ec(')');
-			return stream;
-		}
-
-		//T* output only for text_ostream<char_t>
-		template<typename T,class stream_T> requires(type_info<stream_T>.base_on<text_ostream<char_t>>)
-		decltype(auto)operator<<(stream_T&&stream,T*data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
-			//output name of type at first
-			stream << type_info<T>.get_name();
-			if constexpr(::std::is_polymorphic_v<T> && !::std::is_final_v<T>){//RTTI
-				auto typeinfo = type_info_of(*data);
-				if(typeinfo != type_info<T>)
-					stream << ec("(") << typeinfo.get_name() << ec(")");
-			}
-			//output address
-			stream << ec("@") << to_string((size_t)data,numerical_representation_n::hexadecimal);
-			return stream;
-		}
-	}
-
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
-//_undefs.hpp
-/*
-未完成的elc解释器basic文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
-//_undefs.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-
-//defs at "_defs.hpp"
-
-#if defined(_MSC_VER)
-	#pragma warning(pop)
-#endif
-#undef suppress_msvc_warning
-#undef disable_msvc_warning
-#undef push_msvc_warning
-#undef pop_msvc_warning
-#undef push_and_disable_msvc_warning
-#if defined(_MSC_VER)
-	#pragma pack(pop)
-#endif
-#if defined(_MSC_VER)
-	#pragma pop_macro("new")
-	#pragma pop_macro("delete")
-	#pragma pop_macro("min")
-	#pragma pop_macro("max")
-	#pragma pop_macro("abs")
-	#pragma pop_macro("export")
-	#pragma pop_macro("rand")
-	#pragma pop_macro("sqrt")
-	#pragma pop_macro("elc")
-#endif
-
-//
-#if defined(ELC_VOID_NAME)
-	#define void the_void
-#endif
-//
-#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
-	#define rand the_rand
-#endif
-
-// #undef often_noexcept
-#undef noexcept_as
-#undef noexcept_as_auto
-#undef constexpr_as
-#undef constexpr_as_auto
-
-#undef using_method_from_base_t
-#undef using_method_from_value
-
-#undef floop
-#undef enable_adl
-
-#undef re_declvalue
-#undef re_decltype
-
-#undef declvalue
-
-#undef template_error
-#undef template_warning
-
-#undef type_info_of
-#undef type_name_of
-
-#undef is_common_attribute
-#undef is_special_attribute
-
-#undef has_attribute
-#undef not_has_attribute
-
-#undef float_size_of
-#undef bitnum_of
-
-#undef def_common_attribute_with_nothing
-#undef def_special_attribute_with_nothing
-
-#undef common_attribute_t
-#undef special_attribute_t
-
-#undef enable_if
-#undef enabled_by_default
-#undef disabled_by_default
-#undef enable_if_not_ill_form
-#undef enable_flag
-
-#undef was_an_ill_form
-#undef was_an_ill_form_with_parameter
-#undef was_not_an_ill_form
-#undef was_not_an_ill_form_and_noexcept
-#undef was_not_an_ill_form_with_parameter
-
-#undef recursive_lambda
-#undef get_recursive_lambda_caller
-#undef lambda
-#undef lambda_with_catch
-#undef self_recursion
-#undef lambda_RLSRRS
-
-#undef MAGIC
-
-#undef nothing
-
-#undef elseif
-#undef _big_than_
-#undef _small_than_
-
-#if defined(_MSC_VER)
-	#undef not
-	#undef and
-	#undef or
-#endif
-
-#undef INTER_NAMESPACE
-#undef BREAK_NAMESPACE
-
-#undef szie
-#undef form
-
-#undef template_name
-#undef type_name
-
-#undef not_in_debug
-
-#undef es
-#undef ec
-
-#undef ELC_TEST_EVENTNAME
-
-#undef override_instance_struct
-
-#undef distinctive
-
-#undef force_inline
-
-#undef with_no_vtable
-
-#undef in_consteval
-
-#undef no_vtable_struct
-#undef no_vtable_class
-
-//#undef get_elc_defs
-
-//file_end
-
-#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
-
-//file_end
-
-	#line 57 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
-}
+#line 61 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 
 //file_end
 
@@ -27309,7 +25917,8 @@ export get_symbol_name_form_symbol;
 
 //file_end
 
-	#line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/package_symbol_loader"
+	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/package_symbol_loader"
+	#define ELC_PACKAGE_SYMBOL_LOADER
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/package_symbol_loader/_body.hpp"
 //_body.hpp
 //at namespace ::
