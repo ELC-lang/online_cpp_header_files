@@ -494,7 +494,7 @@ TYPE_MAPPER(unsigned long long)
 		}());
 		//任意类型转算数类型
 		template<class T>
-		force_inline constexpr bool is_arithmetic_convertible_helper()noexcept{
+		inline constexpr bool is_arithmetic_convertible_able_helper()noexcept{
 			#define TYPE_MAPPER(type) if constexpr(::std::is_convertible_v<T,type>)return true;else
 			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
 //float_mapper.hpp
@@ -573,9 +573,7 @@ TYPE_MAPPER(unsigned long long)
 			return false;
 		}
 		template<class T>
-		constexpr bool is_arithmetic_convertible= is_arithmetic_convertible_helper<T>();
-		template<class T> requires(is_arithmetic_convertible<T>)
-		force_inline constexpr auto to_arithmetic(T&&v)noexcept{
+		force_inline constexpr auto to_arithmetic_base(T&&v)noexcept{
 			#define TYPE_MAPPER(type) if constexpr(::std::is_convertible_v<T,type>)return(type)v;else
 			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
 //float_mapper.hpp
@@ -649,9 +647,112 @@ TYPE_MAPPER(unsigned long long)
 
 //file_end
 
-			#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 			#undef TYPE_MAPPER
 			{}
+		}
+		//这里的定义不能使用basedefs中的type_info，所以得重新造一个小轮子
+		struct type_uniquer_t{
+			constexpr bool operator==(const type_uniquer_t&other)const noexcept{return this==&other;}
+		};
+		template<class T>
+		inline constexpr type_uniquer_t type_uniquer{};
+		template<class T>
+		inline constexpr bool is_arithmetic_convertible_unique_helper()noexcept{
+			typedef decltype(to_arithmetic_base(declvalue(T))) my_type;
+			size_t muti_convertible_count=0;
+			#define TYPE_MAPPER(type) \
+			if constexpr(type_uniquer<my_type>!=type_uniquer<type> && ::std::is_convertible_v<T,type>)\
+				muti_convertible_count++;
+			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+//float_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
+//float_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(float)
+TYPE_MAPPER(double)
+TYPE_MAPPER(long double)
+
+//file_end
+
+#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
+//signed_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(int8_t)
+TYPE_MAPPER(int16_t)
+TYPE_MAPPER(int32_t)
+TYPE_MAPPER(int64_t)
+TYPE_MAPPER(intmax_t)
+TYPE_MAPPER(ptrdiff_t)
+TYPE_MAPPER(char)
+TYPE_MAPPER(short)
+TYPE_MAPPER(int)
+TYPE_MAPPER(long)
+TYPE_MAPPER(long long)
+
+//file_end
+
+#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+//unsigned_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(uint8_t)
+TYPE_MAPPER(uint16_t)
+TYPE_MAPPER(uint32_t)
+TYPE_MAPPER(uint64_t)
+TYPE_MAPPER(uintmax_t)
+TYPE_MAPPER(size_t)
+TYPE_MAPPER(unsigned char)
+TYPE_MAPPER(unsigned short)
+TYPE_MAPPER(unsigned int)
+TYPE_MAPPER(unsigned long)
+TYPE_MAPPER(unsigned long long)
+
+//file_end
+
+#line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+
+//file_end
+
+			#line 51 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#undef TYPE_MAPPER
+			return muti_convertible_count==0;
+		}
+		template<class T>
+		inline constexpr bool is_arithmetic_convertible_helper_final()noexcept{
+			if constexpr(is_arithmetic_convertible_able_helper<T>())
+				return is_arithmetic_convertible_unique_helper<T>();
+			else
+				return false;
+		}
+		template<class T>
+		inline constexpr bool is_arithmetic_convertible= is_arithmetic_convertible_helper_final<T>();
+		//算数类型转任意类型
+		template<class T> requires(is_arithmetic_convertible<T>)
+		force_inline constexpr auto to_arithmetic(T&&v)noexcept{
+			return to_arithmetic_base(::std::forward<T>(v));
 		}
 	}
 	using basic_environment::BIT_POSSIBILITY;
@@ -806,7 +907,7 @@ TYPE_MAPPER(unsigned long long)
 
 //file_end
 
-	#line 46 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 75 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -2852,7 +2953,7 @@ struct data_block:non_copy_construct_able,non_move_construct_able{
 	};
 	template<class T> requires(sizeof(T)<=size&&alignof(T)<=align)
 	force_inline constexpr data_block(T&&t)noexcept{
-		data_cast<T>(_data)=::std::forward<T>(t);
+		data_cast<T>(_data)=forward<T>(t);
 		if constexpr(sizeof(T)<size)
 			if in_consteval
 				for(size_t i=sizeof(T);i<size;++i)
@@ -2863,7 +2964,7 @@ struct data_block:non_copy_construct_able,non_move_construct_able{
 	force_inline constexpr operator const byte*()const{return _data;}
 	template<class T> requires(sizeof(T)<=size&&alignof(T)<=align)
 	force_inline constexpr auto&operator=(T&&t){
-		return data_cast<remove_cvref<T>>(_data)=::std::forward<T>(t);
+		return data_cast<remove_cvref<T>>(_data)=forward<T>(t);
 	}
 	//begin & end
 	force_inline constexpr byte*begin(){return _data;}
@@ -14842,14 +14943,14 @@ protected:\
 													 type_info<stream_T>.base_on<text_ostream<char_t>> &&
 													 type_info<remove_cvref<T>> != type_info<char_t>)
 		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
-			return stream << to_string(::std::forward<T>(data));
+			return stream << to_string(forward<T>(data));
 		}
 
 		template<typename T,class stream_T> requires(!::std::is_arithmetic_v<remove_cvref<T>> &&
 													 is_arithmetic_convertible<remove_cvref<T>> &&
 													 type_info<stream_T>.base_on<text_ostream<char_t>>)
 		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
-			return stream << to_arithmetic(::std::forward<T>(data));
+			return stream << to_arithmetic(forward<T>(data));
 		}
 
 		template<typename T,class stream_T> requires(type_info<stream_T>.base_on<text_ostream<char_t>> &&
@@ -22991,14 +23092,14 @@ protected:\
 													 type_info<stream_T>.base_on<text_ostream<char_t>> &&
 													 type_info<remove_cvref<T>> != type_info<char_t>)
 		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
-			return stream << to_string(::std::forward<T>(data));
+			return stream << to_string(forward<T>(data));
 		}
 
 		template<typename T,class stream_T> requires(!::std::is_arithmetic_v<remove_cvref<T>> &&
 													 is_arithmetic_convertible<remove_cvref<T>> &&
 													 type_info<stream_T>.base_on<text_ostream<char_t>>)
 		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
-			return stream << to_arithmetic(::std::forward<T>(data));
+			return stream << to_arithmetic(forward<T>(data));
 		}
 
 		template<typename T,class stream_T> requires(type_info<stream_T>.base_on<text_ostream<char_t>> &&
@@ -23612,7 +23713,7 @@ protected:\
 
 		using namespace ::elc::defs;//get def
 
-		void init_output_stream()noexcept{
+		force_inline void init_output_stream()noexcept{
 			#if SYSTEM_TYPE == windows
 				// Set console code page to UTF-8 so console known how to interpret string data
 				SetConsoleOutputCP(CP_UTF8);
@@ -23620,7 +23721,7 @@ protected:\
 				setvbuf(stdout, nullptr, _IOFBF, 1000);
 			#endif
 		}
-		void init_input_stream()noexcept{
+		force_inline void init_input_stream()noexcept{
 			#if SYSTEM_TYPE == windows
 				// Set console code page to UTF-8 so console known how to interpret string data
 				SetConsoleCP(CP_UTF8);
@@ -23628,7 +23729,7 @@ protected:\
 				setvbuf(stdin, nullptr, _IOFBF, 1000);
 			#endif
 		}
-		void init_error_stream()noexcept{
+		force_inline void init_error_stream()noexcept{
 			#if SYSTEM_TYPE == windows
 				// Set console code page to UTF-8 so console known how to interpret string data
 				SetConsoleOutputCP(CP_UTF8);
@@ -23637,7 +23738,7 @@ protected:\
 			#endif
 		}
 
-		size_t read_text_from_stream(FILE*stream,char_t*buffer,size_t size)noexcept{
+		inline size_t read_text_from_stream(FILE*stream,char_t*buffer,size_t size)noexcept{
 			//read utf-8 text from stream and convert it to utf-32
 			::std::mbstate_t stat{};
 			string_t old_lc=::std::setlocale(LC_CTYPE,nullptr);
@@ -23662,7 +23763,7 @@ protected:\
 			::std::setlocale(LC_CTYPE,old_lc.c_str());
 			return size;
 		}
-		void write_text_to_stream(FILE*stream,const char_t*buffer,size_t size)noexcept{
+		inline void write_text_to_stream(FILE*stream,const char_t*buffer,size_t size)noexcept{
 			//convert utf-32 text to utf-8 and write it to stream
 			::std::mbstate_t stat{};
 			string_t old_lc=::std::setlocale(LC_CTYPE,nullptr);
