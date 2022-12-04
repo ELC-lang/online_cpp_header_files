@@ -535,179 +535,22 @@ TYPE_MAPPER(unsigned long long)
 			#undef TYPE_MAPPER
 			{}
 		}());
-		//任意类型转算数类型
-		template<class T>
-		inline constexpr bool is_arithmetic_convertible_able_helper()noexcept{
-			#define TYPE_MAPPER(type) if constexpr(::std::is_convertible_v<T,type>)return true;else
-			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-//float_mapper.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
-//float_mapper.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-TYPE_MAPPER(float)
-TYPE_MAPPER(double)
-TYPE_MAPPER(long double)
-
-//file_end
-
-#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
-//signed_mapper.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-TYPE_MAPPER(int8_t)
-TYPE_MAPPER(int16_t)
-TYPE_MAPPER(int32_t)
-TYPE_MAPPER(int64_t)
-TYPE_MAPPER(intmax_t)
-TYPE_MAPPER(ptrdiff_t)
-TYPE_MAPPER(char)
-TYPE_MAPPER(short)
-TYPE_MAPPER(int)
-TYPE_MAPPER(long)
-TYPE_MAPPER(long long)
-
-//file_end
-
-#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
-//unsigned_mapper.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-TYPE_MAPPER(uint8_t)
-TYPE_MAPPER(uint16_t)
-TYPE_MAPPER(uint32_t)
-TYPE_MAPPER(uint64_t)
-TYPE_MAPPER(uintmax_t)
-TYPE_MAPPER(size_t)
-TYPE_MAPPER(unsigned char)
-TYPE_MAPPER(unsigned short)
-TYPE_MAPPER(unsigned int)
-TYPE_MAPPER(unsigned long)
-TYPE_MAPPER(unsigned long long)
-
-//file_end
-
-#line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-
-//file_end
-
-			#line 27 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
-			#undef TYPE_MAPPER
-			return false;
-		}
-		template<class T>
-		force_inline constexpr auto to_arithmetic_base(T&&v)noexcept{
-			#define TYPE_MAPPER(type) if constexpr(::std::is_convertible_v<T,type>)return(type)v;else
-			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-//float_mapper.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
-//float_mapper.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-TYPE_MAPPER(float)
-TYPE_MAPPER(double)
-TYPE_MAPPER(long double)
-
-//file_end
-
-#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
-//signed_mapper.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-TYPE_MAPPER(int8_t)
-TYPE_MAPPER(int16_t)
-TYPE_MAPPER(int32_t)
-TYPE_MAPPER(int64_t)
-TYPE_MAPPER(intmax_t)
-TYPE_MAPPER(ptrdiff_t)
-TYPE_MAPPER(char)
-TYPE_MAPPER(short)
-TYPE_MAPPER(int)
-TYPE_MAPPER(long)
-TYPE_MAPPER(long long)
-
-//file_end
-
-#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
-//unsigned_mapper.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-TYPE_MAPPER(uint8_t)
-TYPE_MAPPER(uint16_t)
-TYPE_MAPPER(uint32_t)
-TYPE_MAPPER(uint64_t)
-TYPE_MAPPER(uintmax_t)
-TYPE_MAPPER(size_t)
-TYPE_MAPPER(unsigned char)
-TYPE_MAPPER(unsigned short)
-TYPE_MAPPER(unsigned int)
-TYPE_MAPPER(unsigned long)
-TYPE_MAPPER(unsigned long long)
-
-//file_end
-
-#line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-
-//file_end
-
-			#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
-			#undef TYPE_MAPPER
-			{}
-		}
 		//这里的定义不能使用basedefs中的type_info，所以得重新造一个小轮子
 		struct type_uniquer_t{
 			constexpr bool operator==(const type_uniquer_t&other)const noexcept{return this==&other;}
 		};
 		template<class T>
 		inline constexpr type_uniquer_t type_uniquer{};
-		template<class T>
-		inline constexpr bool is_arithmetic_convertible_unique_helper()noexcept{
-			typedef decltype(to_arithmetic_base(declvalue(T))) my_type;
-			size_t muti_convertible_count=0;
-			#define TYPE_MAPPER(type) \
-			if constexpr(type_uniquer<my_type>!=type_uniquer<type> && ::std::is_convertible_v<T,type>)\
-				muti_convertible_count++;
-			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+		//任意类型转算数类型
+		constexpr inline struct to_arithmetic_t{
+			template<class T,class type>
+			//由于::std::is_convertible_v的歧义性质，使用requires表达式辅助推断type是否为实际支持的类型
+			//由于requires表达式的强制性质，使用::std::is_convertible_v辅助推断隐式转换是否可行
+			static inline constexpr bool is_convertible=std::is_convertible_v<T,type> && requires{declvalue(T).operator type();};
+			template<class T>
+			static inline constexpr bool r_able_helper()noexcept{
+				#define TYPE_MAPPER(type) if constexpr(is_convertible<T,type>)return true;else
+				#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
 //float_mapper.hpp
 /*
 未完成的elc解释器_share文件
@@ -779,28 +622,208 @@ TYPE_MAPPER(unsigned long long)
 
 //file_end
 
-			#line 51 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
-			#undef TYPE_MAPPER
-			return muti_convertible_count==0;
-		}
-		template<class T>
-		inline constexpr bool is_arithmetic_convertible_helper_final()noexcept{
-			if constexpr(is_arithmetic_convertible_able_helper<T>())
-				return is_arithmetic_convertible_unique_helper<T>();
-			else
+				#line 38 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#undef TYPE_MAPPER
 				return false;
-		}
-		template<class T>
-		inline constexpr bool is_arithmetic_convertible= is_arithmetic_convertible_helper_final<T>();
-		//算数类型转任意类型
-		template<class T> requires(is_arithmetic_convertible<T>)
-		force_inline constexpr auto to_arithmetic(T&&v)noexcept{
-			return to_arithmetic_base(::std::forward<T>(v));
-		}
+			}
+			template<class T>
+			static force_inline constexpr auto to_arithmetic_base(T&&v)noexcept{
+				#define TYPE_MAPPER(type) if constexpr(r_able_helper<T>()&&is_convertible<T,type>)return (type)v;else
+				#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+//float_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
+//float_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(float)
+TYPE_MAPPER(double)
+TYPE_MAPPER(long double)
+
+//file_end
+
+#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
+//signed_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(int8_t)
+TYPE_MAPPER(int16_t)
+TYPE_MAPPER(int32_t)
+TYPE_MAPPER(int64_t)
+TYPE_MAPPER(intmax_t)
+TYPE_MAPPER(ptrdiff_t)
+TYPE_MAPPER(char)
+TYPE_MAPPER(short)
+TYPE_MAPPER(int)
+TYPE_MAPPER(long)
+TYPE_MAPPER(long long)
+
+//file_end
+
+#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+//unsigned_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(uint8_t)
+TYPE_MAPPER(uint16_t)
+TYPE_MAPPER(uint32_t)
+TYPE_MAPPER(uint64_t)
+TYPE_MAPPER(uintmax_t)
+TYPE_MAPPER(size_t)
+TYPE_MAPPER(unsigned char)
+TYPE_MAPPER(unsigned short)
+TYPE_MAPPER(unsigned int)
+TYPE_MAPPER(unsigned long)
+TYPE_MAPPER(unsigned long long)
+
+//file_end
+
+#line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+
+//file_end
+
+				#line 45 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#undef TYPE_MAPPER
+				{}
+			}
+			template<class T>
+			static inline constexpr size_t get_arithmetic_muti_convertible_count()noexcept{
+				typedef decltype(to_arithmetic_base(declvalue(T))) my_type;
+				push_and_disable_msvc_warning(26496);//未初始化警告diss
+				size_t muti_convertible_count=0;
+				pop_msvc_warning();
+				#define TYPE_MAPPER(type) \
+				if constexpr(type_uniquer<my_type>!=type_uniquer<type> && is_convertible<T,type>)\
+					muti_convertible_count++;
+				#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+//float_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
+//float_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(float)
+TYPE_MAPPER(double)
+TYPE_MAPPER(long double)
+
+//file_end
+
+#line 8 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
+//signed_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(int8_t)
+TYPE_MAPPER(int16_t)
+TYPE_MAPPER(int32_t)
+TYPE_MAPPER(int64_t)
+TYPE_MAPPER(intmax_t)
+TYPE_MAPPER(ptrdiff_t)
+TYPE_MAPPER(char)
+TYPE_MAPPER(short)
+TYPE_MAPPER(int)
+TYPE_MAPPER(long)
+TYPE_MAPPER(long long)
+
+//file_end
+
+#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+//unsigned_mapper.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+TYPE_MAPPER(uint8_t)
+TYPE_MAPPER(uint16_t)
+TYPE_MAPPER(uint32_t)
+TYPE_MAPPER(uint64_t)
+TYPE_MAPPER(uintmax_t)
+TYPE_MAPPER(size_t)
+TYPE_MAPPER(unsigned char)
+TYPE_MAPPER(unsigned short)
+TYPE_MAPPER(unsigned int)
+TYPE_MAPPER(unsigned long)
+TYPE_MAPPER(unsigned long long)
+
+//file_end
+
+#line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+
+//file_end
+
+				#line 58 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#undef TYPE_MAPPER
+				return muti_convertible_count;
+			}
+			template<class T>
+			static inline constexpr bool convertible_unique_helper()noexcept{
+				return get_arithmetic_muti_convertible_count<T>()==0;
+			}
+			template<class T>
+			static inline constexpr bool able_helper()noexcept{
+				if constexpr(r_able_helper<T>())
+					return convertible_unique_helper<T>();
+				else
+					return false;
+			}
+			template<class T>
+			static inline constexpr bool able = able_helper<T>();
+			//nothrow
+			template<class T>
+			static inline constexpr bool nothrow_helper()noexcept{
+				if constexpr(able<T>){
+					typedef decltype(to_arithmetic_base(declvalue(T))) my_type;
+					return ::std::is_nothrow_convertible_v<T,my_type>;
+				}
+				else
+					return false;
+			}
+			template<class T>
+			static inline constexpr bool nothrow = nothrow_helper<T>();
+			//算数类型转任意类型
+			template<class T> requires(able<T>)
+			force_inline constexpr auto operator()(T&&v)const noexcept(nothrow<T>){
+				return to_arithmetic_base(::std::forward<T>(v));
+			}
+		}to_arithmetic{};
 	}
 	using basic_environment::BIT_POSSIBILITY;
 	using basic_environment::unsigned_specific_size_t;
-	using basic_environment::is_arithmetic_convertible;
 	using basic_environment::to_arithmetic;
 
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
@@ -950,7 +973,7 @@ TYPE_MAPPER(unsigned long long)
 
 //file_end
 
-	#line 75 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 98 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -5900,6 +5923,979 @@ namespace elc{
 //file_end
 
 	#line 17 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
+//char_set.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+/*
+APIs说明
+elc依赖的基础函数.
+调整这些,实现快速移植,快速优化与行为自定义.
+*/
+#if !defined(ELC_APIS_char_set)
+	#define ELC_APIS_char_set
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/decl_system_type.hpp"
+//decl_system_type.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//copy&rewrite from steve02081504/steve.h
+#define linux 2
+#define windows 3
+#define other 4
+#if defined(__linux)||defined(__linux__)||defined(__gnu_linux__)
+	#define SYSTEM_TYPE linux
+#elif defined(_WIN32)||defined(__MINGW32__)||defined(__CYGWIN__)
+	#define SYSTEM_TYPE windows
+#else
+	#define SYSTEM_TYPE other
+#endif
+#define ERROR_MSG_UNABLE_OS "Unable OS,edit this file on your own or contact ELC's producers."
+
+//file_end
+
+	#line 15 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+//base_defs
+//at namespace ::
+/*
+未完成的elc解释器include文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/pre_checks.hpp"
+//pre_checks.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//__cplusplus needs 20+
+#if !defined(__cplusplus)||__cplusplus<202002L
+	//if msvc, check _MSVC_LANG
+	#if defined(_MSVC_LANG) && _MSVC_LANG>=202002L
+		//ok
+	#else
+		#error "elc files needs c++20 or higher"
+	#endif
+#endif
+
+//check if the compiler is msvc
+#if defined(_MSC_VER)
+	//check if _CPPRTTI
+	#if !defined(_CPPRTTI)
+		#error "elc files needs rtti"
+	#endif
+	//check _MSC_VER at last 1932
+	#if _MSC_VER<1932
+		#error "elc files needs at last msvc 19.32 or higher, keep moving!"
+	#endif
+#endif
+
+//file_end
+
+#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+#line 24 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+
+//file_end
+
+	#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
+	/// @brief 文字编码相关函数
+	namespace elc::APIs::char_set{
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+//_defs.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+
+//undefs at "_undefs.hpp"
+
+//set ELC_WARNING_LEVEL default to 4(max)
+#line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(push,ELC_WARNING_LEVEL)
+	#pragma warning(disable:4099)//class与struct混用警告diss
+	#pragma warning(disable:4584)//重复子类警告diss
+	#pragma warning(disable:4250)//域控制继承警告diss
+	#pragma warning(disable:26432)//不完全默认方法警告diss
+	#pragma warning(disable:26435)//virtual override方法警告diss
+	#pragma warning(disable:26481)//容器安利diss
+	#pragma warning(disable:26446)//gsl::at安利diss
+	#pragma warning(disable:26434)//方法覆盖警告diss
+	#pragma warning(disable:26429)//gsl::not_null安利diss
+	#pragma warning(disable:26471)//对void*进行static_cast安利diss
+	#pragma warning(disable:26474)//隐式指针转换显式cast警告diss
+	#pragma warning(disable:26473)//相同指针显式cast警告diss
+	#pragma warning(disable:26456)//隐藏非虚运算符警告diss
+	#pragma warning(disable:26485)//数组作指针警告diss
+	#pragma warning(disable:26490)//reinterpret_cast警告diss
+	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
+	#pragma warning(disable:26482)//非常数数组索引警告diss
+	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(_MSC_VER)
+	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
+	#define push_msvc_warning() __pragma(warning(push))
+	#define pop_msvc_warning() __pragma(warning(pop))
+	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
+#else
+	#define suppress_msvc_warning(...)
+	#define disable_msvc_warning(...)
+	#define push_msvc_warning()
+	#define pop_msvc_warning()
+	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
+	#pragma push_macro("elc")
+	#undef elc
+#endif
+//
+#if defined(ELC_VOID_NAME)
+	#undef void
+#endif
+//
+#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
+	#undef rand
+#endif
+
+// #define often_noexcept
+#define noexcept_as(...) noexcept(noexcept((__VA_ARGS__)))//dnmd C艹标准就是没有noexcept_as_auto
+#define noexcept_as_auto MAGIC//哦现在有了
+#define constexpr_as(...) MAGIC constexpr//( •̀ ω •́ )✌
+#define constexpr_as_auto MAGIC MAGIC constexpr//✌( •̀ ω •́ )✌
+
+#define using_method_from_base_t(name,...) \
+template<class...Args> requires was_not_an_ill_form(declvalue(base_t).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(base_t::name(declvalue(Args)...))\
+{\
+	return base_t::name(forward<Args>(rest)...);\
+}\
+
+#define using_method_from_value(name,value_name,...) \
+template<class...Args> requires was_not_an_ill_form(re_declvalue(value_name).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(declvalue(Args)...))\
+{\
+	return value_name.name(forward<Args>(rest)...);\
+}\
+
+#define floop while(__builtin_is_my_dick_still_there())
+#if defined(_MSC_VER) && _MSC_VER==1935
+	//https://developercommunity.visualstudio.com/t/10193638
+	#define enable_adl(name) template<typename=void>void name()noexcept=delete
+#else
+	#define enable_adl(name) void name()noexcept=delete
+#endif
+
+#define re_declvalue(...) (declvalue(decltype(__VA_ARGS__)))
+#define re_decltype(...) (decltype(declvalue(__VA_ARGS__)))
+
+#define declvalue(...) (::std::declval<__VA_ARGS__>())
+
+/*! 实例化到此将引发错误 */
+#define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发警告 */
+#define template_warning(reason) template_warning_helper<T>(reason)
+
+//for type_info
+#define type_info_of(...) base_type_info_t(typeid(__VA_ARGS__))
+#define type_name_of(...) (type_info_of(__VA_ARGS__).get_name())
+
+#define is_common_attribute(name) public attribute<T,name<T>>
+#define is_special_attribute(name) public attribute<T,name>
+
+#define has_attribute(...) template_name has_attribute_helper<__VA_ARGS__>()
+#define not_has_attribute(...) template_name not_has_has_attribute_helper<__VA_ARGS__>()
+
+//for float_size_t
+#define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
+//bitnum_of
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
+
+//for attribute
+#define def_common_attribute_with_nothing(name) \
+template<typename T>\
+class name{}\
+
+#define def_special_attribute_with_nothing(name) \
+class name{}\
+
+#define common_attribute_t template<class>class
+#define special_attribute_t class
+
+/*!
+若参数的布尔值为零，那么此模板不会实例化
+
+为什么不用cpp20的constraints？
+1.不能类内定义
+2.不能作为模板参数
+一句话总结：c艹标准会sb
+*/
+#define enable_if(...) class enable_state= ::std::enable_if_t<__VA_ARGS__>
+/*! 默认参与模板候选 */
+#define enabled_by_default class enable_state=void
+/*! 默认不参与模板候选 */
+#define disabled_by_default class enable_state= ::std::enable_if_t<false>
+/*! 若参数为病式，那么此模板不会实例化 */
+#define enable_if_not_ill_form(...) class enable_state= ::std::void_t<decltype(__VA_ARGS__)>
+/*!用于模板声明 */
+#define enable_flag class enable_state
+
+#define was_an_ill_form(...) (!was_not_an_ill_form(__VA_ARGS__))
+#define was_an_ill_form_with_parameter(...) (!was_not_an_ill_form_with_parameter(__VA_ARGS__))
+#define was_not_an_ill_form(...) (bool(requires{__VA_ARGS__;}))
+#define was_not_an_ill_form_and_noexcept(...) (bool(requires{__VA_ARGS__;{__VA_ARGS__}noexcept;}))
+#define was_not_an_ill_form_with_parameter(...) (bool(requires __VA_ARGS__ ))
+
+/*! 让lambda递归更加美观 */
+#define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
+/*! 让lambda递归更加美观 */
+#define get_recursive_lambda_caller(name) \
+lambda_with_catch(&)(auto&&...Args){\
+	return name(name,Args...);\
+}
+/*! 让lambda定义更加美观 */
+#define lambda []
+/*! 让lambda定义更加美观 */
+#define lambda_with_catch(...) [__VA_ARGS__]
+/*! 让lambda定义更加美观 */
+#define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
+//recursive_lambda_self_referential_reserved_symbolname
+#define lambda_RLSRRS _my_jb_super_sb_name_
+
+#define MAGIC//ahh,ko no tenno da!
+
+/*! 装饰性语法糖 */
+#define nothing
+
+/*! aya风格语法糖 */
+#define elseif else if
+/*! aya风格语法糖 */
+#define _big_than_ >
+/*! aya风格语法糖 */
+#define _small_than_ <
+
+#if defined(_MSC_VER)
+	#define not !
+	#define and &&
+	#define or ||
+#endif
+
+/*! 进入名称空间，并不是很美观 */
+#define INTER_NAMESPACE(NAMESPACENAME) namespace NAMESPACENAME{
+/*! 退出名称空间，并不是很美观 */
+#define BREAK_NAMESPACE }
+
+/*! template说明符 */
+#define template_name template
+/*! template说明符 */
+#define type_name class
+
+#if defined(DEBUG) || defined(_DEBUG)
+	#define not_in_debug 0
+#else
+	#define not_in_debug 1
+#endif
+
+#define es U""
+#define ec(ch) U ## ch
+
+#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
+	#define ELC_TEST_EVENTNAME(name) stest_eventer _the_stest_eventer__(L""name)
+#else
+	#define ELC_TEST_EVENTNAME(name)
+#endif
+
+#define override_instance_struct \
+protected:\
+	virtual void abstract_method_unget_this()noexcept_as(instance_struct<this_t>::abstract_method_unget_this())override{instance_struct<this_t>::abstract_method_unget_this();}\
+	virtual void* _abstract_method_copy_get_this()noexcept_as(instance_struct<this_t>::_abstract_method_copy_get_this())override{return instance_struct<this_t>::_abstract_method_copy_get_this();}\
+	virtual void* _abstract_method_get_resize_this(size_t size)noexcept_as(instance_struct<this_t>::instance_struct<this_t>::_abstract_method_get_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_resize_this(size);}\
+	virtual void* _abstract_method_get_forward_resize_this(size_t size)noexcept_as(instance_struct<this_t>::_abstract_method_get_forward_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_forward_resize_this(size);}\
+	virtual size_t abstract_method_get_size_of_get_for_this()noexcept override{return instance_struct<this_t>::abstract_method_get_size_of_get_for_this();}
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define distinctive __declspec(dllexport)
+#else
+	#define distinctive
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define force_inline __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+	#define force_inline __attribute__((always_inline)) inline
+#else
+	#define force_inline inline
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define with_no_vtable __declspec(novtable)
+#else
+	#define with_no_vtable
+#endif
+
+#define in_consteval (::std::is_constant_evaluated())
+
+#define no_vtable_struct struct with_no_vtable
+#define no_vtable_class class with_no_vtable
+
+//#define get_elc_defs using namespace ::elc::defs
+
+//file_end
+
+		#line 19 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
+
+		using namespace ::elc::defs;//string_view_t
+		typedef string_view_t<char8_t>string_view_u8_t;
+		typedef string_view_t<char16_t>string_view_u16_t;
+		typedef string_view_t<char32_t>string_view_u32_t;
+
+		constexpr size_t utf16_to_utf8_code_size=2;
+		constexpr size_t utf32_to_utf8_code_size = 4;
+		constexpr size_t utf32_to_utf16_code_size = 2;
+
+		using range_n::npos;
+		inline namespace convert_impl {
+			constexpr size_t decode_utf8(char32_t *out, const char8_t *in, size_t in_size_max)noexcept {
+				push_and_disable_msvc_warning(26494);//未初始化警告diss
+				char8_t code1, code2, code3, code4;
+				pop_msvc_warning();
+				code1 = *in++;
+				if(code1 < 0x80) { /* 1-byte sequence */
+					*out = code1;
+					return 1;
+				}
+				elseif(code1 < 0xC2)
+					return npos;
+				elseif(code1 < 0xE0){ /* 2-byte sequence */
+					if(in_size_max < 2)
+						return npos;
+					code2 = *in++;
+					if((code2 & 0xC0) != 0x80)
+						return npos;
+					*out = (code1 << 6) + code2 - 0x3080;
+					return 2;
+				}
+				elseif(code1 < 0xF0){ /* 3-byte sequence */
+					if(in_size_max < 3)
+						return npos;
+					code2 = *in++;
+					if((code2 & 0xC0) != 0x80)
+						return npos;
+					if(code1 == 0xE0 && code2 < 0xA0)
+						return npos;
+					code3 = *in++;
+					if((code3 & 0xC0) != 0x80)
+						return npos;
+					*out = (code1 << 12) + (code2 << 6) + code3 - 0xE2080;
+					return 3;
+				}
+				elseif(code1 < 0xF5){ /* 4-byte sequence */
+					if(in_size_max < 4)
+						return npos;
+					code2 = *in++;
+					if((code2 & 0xC0) != 0x80)
+						return npos;
+					if(code1 == 0xF0 && code2 < 0x90)
+						return npos;
+					if(code1 == 0xF4 && code2 >= 0x90)
+						return npos;
+					code3 = *in++;
+					if((code3 & 0xC0) != 0x80)
+						return npos;
+					code4 = *in++;
+					if((code4 & 0xC0) != 0x80)
+						return npos;
+					*out = (code1 << 18) + (code2 << 12) + (code3 << 6) + code4 - 0x3C82080;
+					return 4;
+				}
+			}
+			constexpr size_t get_decode_utf8_size(const char8_t* in)noexcept {
+				if(*in < 0x80) /* 1-byte sequence */
+					return 1;
+				elseif(*in < 0xC2)
+					return npos;
+				elseif(*in < 0xE0) /* 2-byte sequence */
+					return 2;
+				elseif(*in < 0xF0) /* 3-byte sequence */
+					return 3;
+				elseif(*in < 0xF5) /* 4-byte sequence */
+					return 4;
+				else
+					return npos;
+			}
+			constexpr size_t decode_utf16(char32_t *out, const char16_t *in, size_t in_size_max)noexcept {
+				const char16_t code1 = *in++;
+				if(code1 >= 0xD800 && code1 < 0xDC00) { /* surrogate pair */
+					if(in_size_max < 2)
+						return npos;
+					const char16_t code2 = *in++;
+					if(code2 >= 0xDC00 && code2 < 0xE000) {
+						*out = (code1 << 10) + code2 - 0x35FDC00;
+						return 2;
+					}
+					return npos;
+				}
+				*out = code1;
+				return 1;
+			}
+			constexpr size_t get_decode_utf16_size(const char16_t* in)noexcept {
+				if(*in >= 0xD800 && *in < 0xDC00) /* surrogate pair */
+					return 2;
+				else
+					return 1;
+			}
+			constexpr size_t encode_utf8(char8_t *out, char32_t in) {
+				if(in < 0x80) {
+					*out++ = (char8_t)in;
+					return 1;
+				}
+				elseif(in < 0x800) {
+					*out++ = char8_t((in >> 6) + 0xC0);
+					*out++ = char8_t((in & 0x3F) + 0x80);
+					return 2;
+				}
+				elseif(in < 0x10000) {
+					*out++ = char8_t((in >> 12) + 0xE0);
+					*out++ = ((in >> 6) & 0x3F) + 0x80;
+					*out++ = (in & 0x3F) + 0x80;
+					return 3;
+				}
+				elseif(in < 0x110000) {
+					*out++ = char8_t((in >> 18) + 0xF0);
+					*out++ = ((in >> 12) & 0x3F) + 0x80;
+					*out++ = ((in >> 6) & 0x3F) + 0x80;
+					*out++ = (in & 0x3F) + 0x80;
+					return 4;
+				}
+				return npos;
+			}
+			constexpr size_t get_encode_utf8_size(char32_t in) {
+				if(in < 0x80)
+					return 1;
+				elseif(in < 0x800)
+					return 2;
+				elseif(in < 0x10000)
+					return 3;
+				elseif(in < 0x110000)
+					return 4;
+				else
+					return npos;
+			}
+			constexpr size_t encode_utf16(char16_t *out, char32_t in) {
+				if(in < 0x10000) {
+					*out++ = char16_t(in);
+					return 1;
+				}
+				elseif(in < 0x110000) {
+					*out++ = char16_t((in >> 10) + 0xD7C0);
+					*out++ = (in & 0x3FF) + 0xDC00;
+					return 2;
+				}
+				return npos;
+			}
+			constexpr size_t get_encode_utf16_size(char32_t in) {
+				if(in < 0x10000)
+					return 1;
+				elseif(in < 0x110000)
+					return 2;
+				else
+					return npos;
+			}
+		}
+		template<typename in_char_t, typename out_char_t>
+		struct code_convert_result {
+			bool _success;
+			string_view_t<in_char_t> _processed_input;
+			string_view_t<out_char_t> _processed_output;
+		public:
+			constexpr code_convert_result(bool success, string_view_t<in_char_t> processed_input, string_view_t<out_char_t> processed_output) : _success(success), _processed_input(processed_input), _processed_output(processed_output) {}
+			constexpr bool success() const { return _success; }
+			constexpr string_view_t<in_char_t> processed_input() const { return _processed_input; }
+			constexpr string_view_t<out_char_t> processed_output() const { return _processed_output; }
+			constexpr explicit operator bool() const { return success(); }
+		};
+		constexpr auto get_utf8_to_utf16_size(const char8_t *in, size_t len){
+			size_t out_size = 0;
+			const auto end = in + len;
+			while(in < end) {
+				char32_t code;
+				const auto size = decode_utf8(&code, in, end - in);
+				if(size == npos)
+					return npos;
+				const auto tmp = get_encode_utf16_size(code);
+				if(tmp == npos)
+					return npos;
+				out_size += tmp;
+				in += size;
+			}
+		}
+		constexpr auto get_utf8_to_utf16_size(string_view_u8_t in){
+			return get_utf8_to_utf16_size(in.data(), in.size());
+		}
+		constexpr auto utf8_to_utf16(char16_t *out, const char8_t *in, size_t len) {
+			const auto end = in + len;
+			push_and_disable_msvc_warning(26494);//未初始化警告diss
+			char32_t code;
+			pop_msvc_warning();
+			//for return
+			const auto out_start = out;
+			const auto in_start = in;
+			auto result_builder = [&](bool success) {
+				return code_convert_result<char8_t, char16_t>(success, string_view_t<char8_t>(in_start, in - in_start), string_view_t<char16_t>(out_start, out - out_start));
+			};
+			while(in < end) {
+				const auto size = decode_utf8(&code, in, end - in);
+				if(size == npos)
+					return result_builder(false);
+				auto tmp = encode_utf16(out, code);
+				if(tmp == npos)
+					return result_builder(false);
+				out += tmp;
+				in += size;
+			}
+			return result_builder(true);
+		}
+		constexpr auto utf8_to_utf16(char16_t *out, string_view_u8_t in) {
+			return utf8_to_utf16(out, in.data(), in.size());
+		}
+		constexpr auto get_utf8_to_utf32_size(const char8_t *in, size_t len){
+			size_t out_size = 0;
+			const auto end = in + len;
+			while(in < end) {
+				const auto tmp = get_decode_utf8_size(in);
+				if(tmp == npos)
+					return npos;
+				in += tmp;
+				out_size++;
+			}
+			return out_size;
+		}
+		constexpr auto get_utf8_to_utf32_size(string_view_u8_t in){
+			return get_utf8_to_utf32_size(in.data(), in.size());
+		}
+		constexpr auto utf8_to_utf32(char32_t *out, const char8_t *in, size_t len) {
+			const auto end = in + len;
+			push_and_disable_msvc_warning(26494);//未初始化警告diss
+			char32_t code;
+			pop_msvc_warning();
+			//for return
+			const auto out_start = out;
+			const auto in_start = in;
+			auto result_builder = [&](bool success) {
+				return code_convert_result<char8_t, char32_t>(success, string_view_t<char8_t>(in_start, in - in_start), string_view_t<char32_t>(out_start, out - out_start));
+			};
+			while(in < end) {
+				const auto size = decode_utf8(&code, in, end - in);
+				if(size == npos)
+					return result_builder(false);
+				*out++ = code;
+				in += size;
+			}
+			return result_builder(true);
+		}
+		constexpr auto utf8_to_utf32(char32_t *out, string_view_u8_t in) {
+			return utf8_to_utf32(out, in.data(), in.size());
+		}
+		constexpr auto get_utf16_to_utf8_size(const char16_t *in, size_t len){
+			size_t out_size = 0;
+			const auto end = in + len;
+			while(in < end) {
+				char32_t code;
+				const auto size = decode_utf16(&code, in, end - in);
+				if(size == npos)
+					return npos;
+				const auto tmp = get_encode_utf8_size(code);
+				if(tmp == npos)
+					return npos;
+				out_size += tmp;
+				in += size;
+			}
+			return out_size;
+		}
+		constexpr auto get_utf16_to_utf8_size(string_view_u16_t in){
+			return get_utf16_to_utf8_size(in.data(), in.size());
+		}
+		constexpr auto utf16_to_utf8(char8_t *out, const char16_t *in, size_t len) {
+			const auto end = in + len;
+			push_and_disable_msvc_warning(26494);//未初始化警告diss
+			char32_t code;
+			pop_msvc_warning();
+			//for return
+			const auto out_start = out;
+			const auto in_start = in;
+			auto result_builder = [&](bool success) {
+				return code_convert_result<char16_t, char8_t>(success, string_view_t<char16_t>(in_start, in - in_start), string_view_t<char8_t>(out_start, out - out_start));
+			};
+			while(in < end) {
+				const auto size = decode_utf16(&code, in, end - in);
+				if(size == npos)
+					return result_builder(false);
+				auto tmp = encode_utf8(out, code);
+				if(tmp == npos)
+					return result_builder(false);
+				out += tmp;
+				in += size;
+			}
+			return result_builder(true);
+		}
+		constexpr auto utf16_to_utf8(char8_t *out, string_view_u16_t in) {
+			return utf16_to_utf8(out, in.data(), in.size());
+		}
+		constexpr auto get_utf16_to_utf32_size(const char16_t *in, size_t len){
+			size_t out_size = 0;
+			const auto end = in + len;
+			while(in < end) {
+				char32_t code;
+				const auto size = decode_utf16(&code, in, end - in);
+				if(size == npos)
+					return npos;
+				in += size;
+				out_size++;
+			}
+			return out_size;
+		}
+		constexpr auto get_utf16_to_utf32_size(string_view_u16_t in){
+			return get_utf16_to_utf32_size(in.data(), in.size());
+		}
+		constexpr auto utf16_to_utf32(char32_t *out, const char16_t *in, size_t len) {
+			const auto end = in + len;
+			//for return
+			const auto out_start = out;
+			const auto in_start = in;
+			auto result_builder = [&](bool success) {
+				return code_convert_result<char16_t, char32_t>(success, string_view_t<char16_t>(in_start, in - in_start), string_view_t<char32_t>(out_start, out - out_start));
+			};
+			while(in < end) {
+				char32_t code;
+				const auto size = decode_utf16(&code, in, end - in);
+				if(size == npos)
+					return result_builder(false);
+				*out++ = code;
+				in += size;
+			}
+			return result_builder(true);
+		}
+		constexpr auto utf16_to_utf32(char32_t *out, string_view_u16_t in) {
+			return utf16_to_utf32(out, in.data(), in.size());
+		}
+		constexpr auto get_utf32_to_utf8_size(const char32_t *in, size_t len){
+			size_t out_size = 0;
+			const auto end = in + len;
+			while(in < end) {
+				const auto tmp = get_encode_utf8_size(*in);
+				if(tmp == npos)
+					return npos;
+				out_size += tmp;
+				++in;
+			}
+			return out_size;
+		}
+		constexpr auto get_utf32_to_utf8_size(string_view_u32_t in){
+			return get_utf32_to_utf8_size(in.data(), in.size());
+		}
+		constexpr auto utf32_to_utf8(char8_t *out, const char32_t *in, size_t len) {
+			const auto end = in + len;
+			//for return
+			const auto out_start = out;
+			const auto in_start = in;
+			auto result_builder = [&](bool success) {
+				return code_convert_result<char32_t, char8_t>(success, string_view_t<char32_t>(in_start, in - in_start), string_view_t<char8_t>(out_start, out - out_start));
+			};
+			while(in < end) {
+				auto tmp = encode_utf8(out, *in);
+				if(tmp == npos)
+					return result_builder(false);
+				out += tmp;
+				++in;
+			}
+			return result_builder(true);
+		}
+		constexpr auto utf32_to_utf8(char8_t *out, string_view_u32_t in) {
+			return utf32_to_utf8(out, in.data(), in.size());
+		}
+		constexpr auto get_utf32_to_utf16_size(const char32_t *in, size_t len){
+			size_t out_size = 0;
+			const auto end = in + len;
+			while(in < end) {
+				const auto tmp = get_encode_utf16_size(*in);
+				if(tmp == npos)
+					return npos;
+				out_size += tmp;
+				++in;
+			}
+			return out_size;
+		}
+		constexpr auto get_utf32_to_utf16_size(string_view_u32_t in){
+			return get_utf32_to_utf16_size(in.data(), in.size());
+		}
+		constexpr auto utf32_to_utf16(char16_t *out, const char32_t *in, size_t len) {
+			const auto end = in + len;
+			//for return
+			const auto out_start = out;
+			const auto in_start = in;
+			auto result_builder = [&](bool success) {
+				return code_convert_result<char32_t, char16_t>(success, string_view_t<char32_t>(in_start, in - in_start), string_view_t<char16_t>(out_start, out - out_start));
+			};
+			while(in < end) {
+				auto tmp = encode_utf16(out, *in);
+				if(tmp == npos)
+					return result_builder(false);
+				out += tmp;
+				++in;
+			}
+			return result_builder(true);
+		}
+		constexpr auto utf32_to_utf16(char16_t *out, string_view_u32_t in) {
+			return utf32_to_utf16(out, in.data(), in.size());
+		}
+		constexpr auto utf32_to_utf8(char32_t ch, char8_t *out) {
+			return utf32_to_utf8(out, &ch, 1);
+		}
+		constexpr auto utf32_to_utf16(char32_t ch, char16_t *out) {
+			return utf32_to_utf16(out, &ch, 1);
+		}
+		constexpr auto utf16_to_utf8(char16_t ch, char8_t *out) {
+			return utf16_to_utf8(out, &ch, 1);
+		}
+
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
+//_undefs.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+
+//defs at "_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(pop)
+#endif
+#undef suppress_msvc_warning
+#undef disable_msvc_warning
+#undef push_msvc_warning
+#undef pop_msvc_warning
+#undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
+	#pragma pop_macro("elc")
+#endif
+
+//
+#if defined(ELC_VOID_NAME)
+	#define void the_void
+#endif
+//
+#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
+	#define rand the_rand
+#endif
+
+// #undef often_noexcept
+#undef noexcept_as
+#undef noexcept_as_auto
+#undef constexpr_as
+#undef constexpr_as_auto
+
+#undef using_method_from_base_t
+#undef using_method_from_value
+
+#undef floop
+#undef enable_adl
+
+#undef re_declvalue
+#undef re_decltype
+
+#undef declvalue
+
+#undef template_error
+#undef template_warning
+
+#undef type_info_of
+#undef type_name_of
+
+#undef is_common_attribute
+#undef is_special_attribute
+
+#undef has_attribute
+#undef not_has_attribute
+
+#undef float_size_of
+#undef bitnum_of
+
+#undef def_common_attribute_with_nothing
+#undef def_special_attribute_with_nothing
+
+#undef common_attribute_t
+#undef special_attribute_t
+
+#undef enable_if
+#undef enabled_by_default
+#undef disabled_by_default
+#undef enable_if_not_ill_form
+#undef enable_flag
+
+#undef was_an_ill_form
+#undef was_an_ill_form_with_parameter
+#undef was_not_an_ill_form
+#undef was_not_an_ill_form_and_noexcept
+#undef was_not_an_ill_form_with_parameter
+
+#undef recursive_lambda
+#undef get_recursive_lambda_caller
+#undef lambda
+#undef lambda_with_catch
+#undef self_recursion
+#undef lambda_RLSRRS
+
+#undef MAGIC
+
+#undef nothing
+
+#undef elseif
+#undef _big_than_
+#undef _small_than_
+
+#if defined(_MSC_VER)
+	#undef not
+	#undef and
+	#undef or
+#endif
+
+#undef INTER_NAMESPACE
+#undef BREAK_NAMESPACE
+
+#undef szie
+#undef form
+
+#undef template_name
+#undef type_name
+
+#undef not_in_debug
+
+#undef es
+#undef ec
+
+#undef ELC_TEST_EVENTNAME
+
+#undef override_instance_struct
+
+#undef distinctive
+
+#undef force_inline
+
+#undef with_no_vtable
+
+#undef in_consteval
+
+#undef no_vtable_struct
+#undef no_vtable_class
+
+//#undef get_elc_defs
+
+//file_end
+
+		#line 435 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
+	}
+	//
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
+//undef_decl_system_type.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//copy&rewrite from steve02081504/evest.h
+#undef linux
+#undef windows
+#undef other
+#undef SYSTEM_TYPE
+#undef ERROR_MSG_UNABLE_OS
+
+//file_end
+
+	#line 438 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
+#endif
+
+//file_end
+
+	#line 18 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/decl_system_type.hpp"
+//decl_system_type.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//copy&rewrite from steve02081504/steve.h
+#define linux 2
+#define windows 3
+#define other 4
+#if defined(__linux)||defined(__linux__)||defined(__gnu_linux__)
+	#define SYSTEM_TYPE linux
+#elif defined(_WIN32)||defined(__MINGW32__)||defined(__CYGWIN__)
+	#define SYSTEM_TYPE windows
+#else
+	#define SYSTEM_TYPE other
+#endif
+#define ERROR_MSG_UNABLE_OS "Unable OS,edit this file on your own or contact ELC's producers."
+
+//file_end
+
+	#line 19 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
+	#if SYSTEM_TYPE == windows
+		#define NOMINMAX
+		#include <Windows.h>
+		#include <debugapi.h>
+	#endif
 	/// @brief 终止报错相关基础函数
 	namespace elc::APIs::die{
 		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
@@ -6169,14 +7165,15 @@ protected:\
 
 //file_end
 
-		#line 20 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
+		#line 27 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
 
 		using namespace elc::defs;
 
 		/// @brief 终止整个程序并可能的触发断点或输出错误信息
 		[[noreturn]]inline void die()noexcept{
-			#if defined(_MSC_VER)
-				__debugbreak();
+			#if SYSTEM_TYPE == windows
+				if(IsDebuggerPresent())
+					__debugbreak();
 			#endif
 			#if defined(_WINMAIN_)
 				::MessageBoxW(NULL,L"elc died.",NULL,MB_ICONERROR);
@@ -6188,46 +7185,52 @@ protected:\
 		}
 		/// @brief 同 die() ，但是有详细的错误信息
 		/// @param err_msg 错误信息
-		[[noreturn]]inline void die_with(const_string_ptr_t err_msg)noexcept{
-			#if defined(_MSC_VER)
-				__debugbreak();
+		[[noreturn]]inline void die_with(string_view err_msg)noexcept{
+			#if SYSTEM_TYPE == windows
+				if(IsDebuggerPresent())
+					__debugbreak();
 			#endif
-			push_and_disable_msvc_warning(
-				26485//数组转型警告diss
-				26475//强转警告diss
-				26481//指针操作警告diss
-				26429//nullness警告diss
-			)
 			if(err_msg){
-				::std::mbstate_t stat{};
-				if(::std::setlocale(LC_CTYPE,"en_US.utf8")==nullptr)
-					die();
-				push_and_disable_msvc_warning(26494);//未初始化警告diss
-				char err_msg_in_char[2048];
-				char* err_msg_write = err_msg_in_char;
-				size_t s;
-				char_t c;
-				pop_msvc_warning();
-				while(assign(c,*err_msg++)){
-					s = ::std::c32rtomb(err_msg_write, c, &stat);
-					if(s == size_t(-1))
-						die();
-					err_msg_write += s;
-				}
-				*err_msg_write = '\0';
-				#if defined(_WINMAIN_)
+				#if SYSTEM_TYPE == windows
+					push_and_disable_msvc_warning(26494);//未初始化警告diss
 					wchar_t err_msg_in_wchar[2048];
-					MultiByteToWideChar(CP_UTF8, 0, err_msg_in_char, -1, err_msg_in_wchar, 2048);
-					::MessageBoxW(NULL,err_msg_in_wchar,NULL,MB_ICONERROR);
+					pop_msvc_warning();
+					const auto size=char_set::utf32_to_utf16((char16_t*)err_msg_in_wchar,err_msg).processed_output().size();
+					err_msg_in_wchar[size]=L'\0';
+					#if defined(_WINMAIN_)
+						::MessageBoxW(NULL,err_msg_in_wchar,NULL,MB_ICONERROR);
+					#else
+						auto std_err=GetStdHandle(STD_ERROR_HANDLE);
+						WriteConsoleW(std_err,L"elc died because:\n",17,NULL,NULL);
+						WriteConsoleW(std_err,err_msg_in_wchar,(DWORD)size,NULL,NULL);
+						WriteConsoleW(std_err,L"\n",1,NULL,NULL);
+						FlushFileBuffers(std_err);
+					#endif
 				#else
+					::std::mbstate_t stat{};
+					push_and_disable_msvc_warning(26494);//未初始化警告diss
+					char err_msg_in_char[2048];
+					char* err_msg_write = err_msg_in_char;
+					size_t s;
+					pop_msvc_warning();
+					for(auto c:err_msg){
+						s = ::std::c32rtomb(err_msg_write, c, &stat);
+						push_and_disable_msvc_warning(26475)//强转警告diss
+						if(s == size_t(-1))
+							die();
+						pop_msvc_warning();
+						err_msg_write += s;
+					}
+					*err_msg_write = '\0';
 					::std::fputs("elc died because:\n",stderr);
 					::std::fputs(err_msg_in_char,stderr);
 					::std::fputc('\n',stderr);
 					::std::fflush(stderr);
 				#endif
 			}
+			else
+				die();
 			::std::abort();
-			pop_msvc_warning();
 		}
 
 		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
@@ -6377,10 +7380,31 @@ protected:\
 
 //file_end
 
-		#line 81 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
+		#line 95 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
 	}
+	//
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
+//undef_decl_system_type.hpp
+/*
+未完成的elc解释器_share文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//copy&rewrite from steve02081504/evest.h
+#undef linux
+#undef windows
+#undef other
+#undef SYSTEM_TYPE
+#undef ERROR_MSG_UNABLE_OS
+
+//file_end
+
+	#line 98 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
+
 	namespace elc::defs{
-		using namespace elc::APIs::die;
+		using elc::APIs::die::die;
+		using elc::APIs::die::die_with;
 	}
 #endif
 
@@ -6822,6 +7846,10 @@ namespace elc::defs::locale::str{
 	inline namespace package_symbol_loader{
 		inline constexpr auto load_failed=es"无法加载的package_symbol_loader"_constexpr_str;
 		inline constexpr auto load_interface_failed=es"package_symbol_loader缺失load_interface"_constexpr_str;
+	}
+	inline namespace streams{
+		inline constexpr auto stream_read_error=es"流读取错误"_constexpr_str;
+		inline constexpr auto stream_write_error=es"流写入错误"_constexpr_str;
 	}
 }
 
@@ -9135,7 +10163,7 @@ namespace get_n{
 			realloc(arg,to_size);
 		else{
 			T*tmp=alloc<T>(to_size);
-			auto from_size=get_size_of_alloc(arg);
+			const auto from_size=get_size_of_alloc(arg);
 			if constexpr(!move.nothrow<T>){
 				template_warning("the move of T was not noexcept,this may cause memory lack.");
 				try{
@@ -15632,9 +16660,9 @@ protected:\
 		}
 
 		template<typename T,class stream_T> requires(!::std::is_arithmetic_v<remove_cvref<T>> &&
-													 is_arithmetic_convertible<remove_cvref<T>> &&
-													 type_info<stream_T>.base_on<text_ostream<char_t>>)
-		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
+													 to_arithmetic.able<remove_cvref<T>> &&
+													 type_info<stream_T>.base_on<text_ostream<char_t>>) decltype(auto)
+		operator<<(stream_T&& stream, T&& data) noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>> && to_arithmetic.nothrow<T>) {
 			return stream << to_arithmetic(forward<T>(data));
 		}
 
@@ -15656,7 +16684,7 @@ protected:\
 			//output name of type at first
 			stream << type_info<T>.get_name();
 			if constexpr(::std::is_polymorphic_v<T> && !::std::is_final_v<T>){//RTTI
-				auto typeinfo = type_info_of(*data);
+				const auto typeinfo = type_info_of(*data);
 				if(typeinfo != type_info<T>)
 					stream << ec("(") << typeinfo.get_name() << ec(")");
 			}
@@ -21059,16 +22087,16 @@ public:
 			//中间一段为comn_string_data_t，大小为max_static_data_size
 			ptr_t tmp=get<comn_string_data_t<char_T>>(max_static_data_size,_value);
 			//尽量确保index在中间一段的中间
-			size_t index_in_tmp=min(index,max_static_data_size/2);
+			const size_t index_in_tmp=min(index,max_static_data_size/2);
 			//将中间一段的index处的值改为a
 			tmp->arec_set(index_in_tmp,a,tmp);
 			//判断是否需要附加其他段
 			if(index>max_static_data_size/2){
-				size_t first_size=index-max_static_data_size/2;
+				const size_t first_size=index-max_static_data_size/2;
 				ptr_t first_p=get_clone_with_new_size(first_size);
 				tmp=get<sum_string_data_t<char_T>>(first_p,tmp);
 			}
-			size_t last_size=_size-tmp->get_size();
+			const size_t last_size=_size-tmp->get_size();
 			if(last_size){
 				ptr_t last_p=get_clone_with_new_size(last_size);
 				tmp=get<sum_string_data_t<char_T>>(tmp,last_p);
@@ -22051,8 +23079,11 @@ protected:
 		friend auto& operator<<(text_ostream_T& os,const string_t& str)noexcept(type_info<text_ostream_T>.base_on<noexcept_text_ostream<char_T>>){
 			if(str._in_cso())
 				os<<str.to_string_view_t();
-			else
+			else{
+				push_and_disable_msvc_warning(26447);//nothrow警告diss
 				str._m->do_output(os);
+				pop_msvc_warning();
+			}
 			return os;
 		}
 		template<class text_istream_T> requires(type_info<text_istream_T>.base_on<text_istream<char_T>>)
@@ -22684,9 +23715,6 @@ protected:\
 		[[nodiscard]]inline string_t<char> to_char_str(string_view_t<char_t> a)noexcept{
 			string_t<char>aret;
 			::std::mbstate_t stat{};
-			string_t old_lc=::std::setlocale(LC_CTYPE,nullptr);
-			if(::std::setlocale(LC_CTYPE,"en_US.utf8")==nullptr)
-				die_with(locale::str::setlocale_error);
 			push_and_disable_msvc_warning(26494)//未初始化警告diss
 			char r[MB_LEN_MAX];
 			ptrdiff_t s;
@@ -22697,15 +23725,11 @@ protected:\
 					die_with(locale::str::code_convert_error);
 				aret+=string_view_t<char>{(char*)r,note::size((size_t)s)};
 			}
-			::std::setlocale(LC_CTYPE,old_lc.c_str());
 			return aret;
 		}
 		[[nodiscard]]inline string_t<char_t> to_char_t_str(string_view_t<char> a)noexcept{
 			string_t<char_t>aret;
 			::std::mbstate_t stat{};
-			string_t old_lc=::std::setlocale(LC_CTYPE,nullptr);
-			if(::std::setlocale(LC_CTYPE,"en_US.utf8")==nullptr)
-				die_with(locale::str::setlocale_error);
 			push_and_disable_msvc_warning(26494);//未初始化警告diss
 			char_t c;
 			ptrdiff_t s;
@@ -22718,7 +23742,6 @@ protected:\
 				i+=s;
 				aret+=c;
 			}
-			::std::setlocale(LC_CTYPE,old_lc.c_str());
 			return aret;
 		}
 
@@ -22869,7 +23892,7 @@ protected:\
 
 //file_end
 
-		#line 65 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/str_code_convert.hpp"
+		#line 57 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/str_code_convert.hpp"
 	}
 	namespace elc::defs{
 		using namespace elc::APIs::str_code_convert;
