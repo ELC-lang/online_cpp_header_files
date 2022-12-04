@@ -13678,22 +13678,22 @@ struct null_data_stream:noexcept_data_iostream,instance_struct<null_data_stream>
 
 //operator<< of template<class char_T>struct text_ostream
 template<class text_ostream_T,class char_T=typename text_ostream_T::char_type> requires(type_info<text_ostream_T>.base_on<text_ostream<char_T>>)
-auto&operator<<(text_ostream_T&stream,const char_T ch)noexcept(type_info<text_ostream_T>.base_on<noexcept_text_ostream<char_T>>){
+decltype(auto)operator<<(text_ostream_T&&stream,const char_T ch)noexcept(type_info<text_ostream_T>.base_on<noexcept_text_ostream<char_T>>){
 	stream.write(&ch,1);
 	return stream;
 }
 template<class text_ostream_T,class char_T=typename text_ostream_T::char_type> requires(type_info<text_ostream_T>.base_on<text_ostream<char_T>>)
-auto&operator<<(text_ostream_T&stream,array_like_view_t<const char_T>str)noexcept(type_info<text_ostream_T>.base_on<noexcept_text_ostream<char_T>>){
+decltype(auto)operator<<(text_ostream_T&&stream,array_like_view_t<const char_T>str)noexcept(type_info<text_ostream_T>.base_on<noexcept_text_ostream<char_T>>){
 	stream.write(str.data(),str.size());
 	return stream;
 }
 template<class text_ostream_T,class char_T=typename text_ostream_T::char_type> requires(type_info<text_ostream_T>.base_on<text_ostream<char_T>>)
-auto&operator<<(text_ostream_T&stream,const char_T*str)noexcept(type_info<text_ostream_T>.base_on<noexcept_text_ostream<char_T>>){
+decltype(auto)operator<<(text_ostream_T&&stream,const char_T*str)noexcept(type_info<text_ostream_T>.base_on<noexcept_text_ostream<char_T>>){
 	return stream << array_end_by_zero_t<const char_T>{str};
 }
 //operator>> of template<class char_T>struct text_istream
 template<class text_istream_T,class char_T=typename text_istream_T::char_type> requires(type_info<text_istream_T>.base_on<text_istream<char_T>>)
-text_istream<char_T>&operator>>(text_istream<char_T>&stream,char_T&ch)noexcept(type_info<text_istream_T>.base_on<noexcept_text_istream<char_T>>){
+decltype(auto)operator>>(text_istream_T&stream,char_T&ch)noexcept(type_info<text_istream_T>.base_on<noexcept_text_istream<char_T>>){
 	stream.read(&ch,1);
 	return stream;
 }
@@ -13702,23 +13702,23 @@ text_istream<char_T>&operator>>(text_istream<char_T>&stream,char_T&ch)noexcept(t
 
 //operator<< of template<class T>struct data_ostream
 template<class data_ostream_T,class T> requires(type_info<data_ostream_T>.base_on<data_ostream> && ::std::is_trivially_copyable_v<T>)
-auto&operator<<(data_ostream_T&stream,const T&data)noexcept(type_info<data_ostream_T>.base_on<noexcept_data_ostream>){
+decltype(auto)operator<<(data_ostream_T&&stream,const T&data)noexcept(type_info<data_ostream_T>.base_on<noexcept_data_ostream>){
 	stream.write(&data,1);
 	return stream;
 }
 template<class data_ostream_T,class T,size_t N> requires(type_info<data_ostream_T>.base_on<data_ostream> && ::std::is_trivially_copyable_v<T>)
-auto&operator<<(data_ostream_T&stream,const T(&data)[N])noexcept(type_info<data_ostream_T>.base_on<noexcept_data_ostream>){
+decltype(auto)operator<<(data_ostream_T&&stream,const T(&data)[N])noexcept(type_info<data_ostream_T>.base_on<noexcept_data_ostream>){
 	stream.write(data,N);
 	return stream;
 }
 //operator>> of template<class T>struct data_istream
 template<class data_istream_T,class T> requires(type_info<data_istream_T>.base_on<data_istream> && ::std::is_trivially_copyable_v<T>)
-auto&operator>>(data_istream_T&stream,T&data)noexcept(type_info<data_istream_T>.base_on<noexcept_data_istream>){
+decltype(auto)operator>>(data_istream_T&&stream,T&data)noexcept(type_info<data_istream_T>.base_on<noexcept_data_istream>){
 	stream.read(&data,1);
 	return stream;
 }
 template<class data_istream_T,class T,size_t N> requires(type_info<data_istream_T>.base_on<data_istream> && ::std::is_trivially_copyable_v<T>)
-data_istream&operator>>(data_istream&stream,T(&data)[N])noexcept(type_info<data_istream_T>.base_on<noexcept_data_istream>){
+decltype(auto)operator>>(data_istream_T&&stream,T(&data)[N])noexcept(type_info<data_istream_T>.base_on<noexcept_data_istream>){
 	stream.read(data,N);
 	return stream;
 }
@@ -23748,19 +23748,36 @@ protected:\
 				die_with(locale::str::setlocale_error);
 			ptrdiff_t s=0;
 			push_and_disable_msvc_warning(26494);//未初始化警告diss
+			ptrdiff_t v;
 			char r[MB_LEN_MAX];
+			int ch;
 			pop_msvc_warning();
 			for(size_t i=0;i<size;i++){
-				//read a char
-				s=::std::fread(r+s,1,MB_LEN_MAX-s,stream);
-				if(s==0)
-					return i;
 				//convert it to utf-32
-				s=::std::mbrtoc32(&buffer[i],r,MB_LEN_MAX,&stat);
-				if(s < 0)//-3 或 -1
-					die_with(locale::str::code_convert_error);
+				{
+					if(s)
+					try_char_covert:
+						v=::std::mbrtoc32(&buffer[i],r,s,&stat);
+					else
+						goto read_char;
+					if(v < 0){//-3 或 -1
+						if(s>=MB_LEN_MAX)
+							die_with(locale::str::code_convert_error);
+						//read a char
+					read_char:
+						if(assign(ch,::std::fgetc(stream))!=EOF)
+							r[s++]=char(ch);
+						elseif(s==0)
+							return i;
+						else
+							die_with(locale::str::code_convert_error);
+						goto try_char_covert;
+					}
+				}
+				//success
 				//move the other char that not handled in 'r'
-				copy_assign[size_t(s)](r,r+size_t(s));
+				copy_assign[size_t(v)](r,r+size_t(v));
+				s-=size_t(v);
 			}
 			::std::setlocale(LC_CTYPE,old_lc.c_str());
 			return size;
@@ -23934,7 +23951,7 @@ protected:\
 
 //file_end
 
-		#line 102 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/streams.hpp"
+		#line 119 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/streams.hpp"
 	}
 #endif
 
