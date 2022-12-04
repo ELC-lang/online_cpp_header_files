@@ -7,4 +7,4 @@
 
 ## 例子  
 
-<https://godbolt.org/z/njM6rrexf>
+<https://godbolt.org/z/3eav315a1>
