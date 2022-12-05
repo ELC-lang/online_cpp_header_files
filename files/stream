@@ -499,7 +499,7 @@ TYPE_MAPPER(unsigned long long)
 		template<class T>
 		inline constexpr type_uniquer_t type_uniquer{};
 		//任意类型转算数类型
-		constexpr inline struct to_arithmetic_t{
+		inline constexpr struct to_arithmetic_t{
 			template<class T,class type>
 			//由于::std::is_convertible_v的歧义性质，使用requires表达式辅助推断type是否为实际支持的类型
 			//由于requires表达式的强制性质，使用::std::is_convertible_v辅助推断隐式转换是否可行
@@ -778,10 +778,16 @@ TYPE_MAPPER(unsigned long long)
 				return to_arithmetic_base(::std::forward<T>(v));
 			}
 		}to_arithmetic{};
+		//判断wchar_t是否和char_t相同
+		inline constexpr bool wchar_t_same_as_char_t=sizeof(wchar_t)==sizeof(char_t);
+		//判断wchar_t是否和char16_t相同
+		inline constexpr bool wchar_t_same_as_char16_t=sizeof(wchar_t)==sizeof(char16_t);
 	}
 	using basic_environment::BIT_POSSIBILITY;
 	using basic_environment::unsigned_specific_size_t;
 	using basic_environment::to_arithmetic;
+	using basic_environment::wchar_t_same_as_char_t;
+	using basic_environment::wchar_t_same_as_char16_t;
 
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
 //_undefs.hpp
@@ -930,7 +936,7 @@ TYPE_MAPPER(unsigned long long)
 
 //file_end
 
-	#line 98 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 104 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -2266,15 +2272,15 @@ constexpr struct min_t{
 	static constexpr bool get_limit_able=was_not_an_ill_form(::std::numeric_limits<T>::min());
 
 	template<class...Args> requires able<Args...>
-	[[nodiscard]]constexpr auto operator()(Args&&...rest)const{
+	[[nodiscard]]constexpr auto operator()(Args&&...rest)const noexcept{
 		return ::std::min(forward<Args>(rest)...);
 	}
 	template<class T> requires able<::std::initializer_list<T>>
-	[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const{
+	[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const noexcept{
 		return ::std::min(l);
 	}
 	template<typename T> requires get_limit_able<T>
-	[[nodiscard]]constexpr auto operator()(type_info_t<T>)const{
+	[[nodiscard]]constexpr auto operator()(type_info_t<T>)const noexcept{
 		return ::std::numeric_limits<T>::min();
 	}
 }min{};
@@ -2294,15 +2300,15 @@ constexpr struct max_t{
 	static constexpr bool get_limit_able=was_not_an_ill_form(::std::numeric_limits<T>::max());
 
 	template<class...Args> requires able<Args...>
-	[[nodiscard]]constexpr auto operator()(Args&&...rest)const{
+	[[nodiscard]]constexpr auto operator()(Args&&...rest)const noexcept{
 		return ::std::max(forward<Args>(rest)...);
 	}
 	template<class T> requires able<::std::initializer_list<T>>
-	[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const{
+	[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const noexcept{
 		return ::std::max(l);
 	}
 	template<typename T> requires get_limit_able<T>
-	[[nodiscard]]constexpr auto operator()(type_info_t<T>)const{
+	[[nodiscard]]constexpr auto operator()(type_info_t<T>)const noexcept{
 		return ::std::numeric_limits<T>::max();
 	}
 }max{};
@@ -2738,11 +2744,11 @@ namespace note_n{
 	template<typename T>\
 	struct name##_t{\
 		T value;\
-		force_inline constexpr name##_t(T a):value(a){}\
+		force_inline constexpr name##_t(T a)noexcept:value(a){}\
 		template<class U>\
-		force_inline constexpr name##_t(name##_t<U>a):value(a.value){}\
-		force_inline constexpr operator T(){return value;}\
-		force_inline constexpr T operator()(){return value;}\
+		force_inline constexpr name##_t(name##_t<U>a)noexcept:value(a.value){}\
+		force_inline constexpr operator T()noexcept{return value;}\
+		force_inline constexpr T operator()()noexcept{return value;}\
 	};\
 	template<typename T>\
 	constexpr name##_t<T>name(T v){return{v};}
@@ -2859,12 +2865,12 @@ namespace array_like_n{
 		typedef array_like_view_t<T>base_t;
 		using base_t::base_t;
 
-		[[nodiscard]]constexpr static size_t get_length_of(T*ptr){
+		[[nodiscard]]constexpr static size_t get_length_of(T*ptr)noexcept{
 			if(*ptr)return get_length_of(ptr+1)+1;
 			else return 0;
 		}
 
-		constexpr array_end_by_zero_t(T*ptr):base_t(ptr,get_length_of(ptr)){}
+		constexpr array_end_by_zero_t(T*ptr)noexcept:base_t(ptr,get_length_of(ptr)){}
 	};
 
 	template<class T>
@@ -2909,41 +2915,41 @@ constexpr size_t number_of_possible_values_per=uintmax_t(max(type_info<::std::ma
 	用法: data_cast<T>(byte*) -> T&
 */
 template<class T>
-[[nodiscard]]force_inline constexpr T&data_cast(byte*p){return*reinterpret_cast<T*>(p);}
+[[nodiscard]]force_inline constexpr T&data_cast(byte*p)noexcept{return*reinterpret_cast<T*>(p);}
 template<class T>
-[[nodiscard]]force_inline constexpr T&launder_data_cast(byte*p){return*::std::launder(data_cast<T>(p));}
+[[nodiscard]]force_inline constexpr T&launder_data_cast(byte*p)noexcept{return*::std::launder(data_cast<T>(p));}
 /*!
 	功能: byte* 类型数据转换为 T*，不进行任何检查
 	用法: data_ptr_cast<T>(byte*) -> T*
 */
 template<class T>
-[[nodiscard]]force_inline constexpr T*data_ptr_cast(byte*p){return reinterpret_cast<T*>(p);}
+[[nodiscard]]force_inline constexpr T*data_ptr_cast(byte*p)noexcept{return reinterpret_cast<T*>(p);}
 template<class T>
-[[nodiscard]]force_inline constexpr T*launder_data_ptr_cast(byte*p){return ::std::launder(data_ptr_cast<T>(p));}
+[[nodiscard]]force_inline constexpr T*launder_data_ptr_cast(byte*p)noexcept{return ::std::launder(data_ptr_cast<T>(p));}
 /*!
 	功能: T* 指针转换为 byte*，不进行任何检查
 	用法: cast_to_data(T*) -> byte*
 */
 template<class T>
-[[nodiscard]]force_inline constexpr byte*cast_to_data(T*p){return reinterpret_cast<byte*>(p);}
+[[nodiscard]]force_inline constexpr byte*cast_to_data(T*p)noexcept{return reinterpret_cast<byte*>(p);}
 template<class T>
-[[nodiscard]]force_inline constexpr byte*launder_cast_to_data(T*p){return ::std::launder(cast_to_data(p));}
+[[nodiscard]]force_inline constexpr byte*launder_cast_to_data(T*p)noexcept{return ::std::launder(cast_to_data(p));}
 /*!
 	功能: const T* 指针转换为 const byte*，不进行任何检查
 	用法: cast_to_data(const T*) -> const byte*
 */
 template<class T>
-[[nodiscard]]force_inline constexpr const byte*cast_to_data(const T*p){return reinterpret_cast<const byte*>(p);}
+[[nodiscard]]force_inline constexpr const byte*cast_to_data(const T*p)noexcept{return reinterpret_cast<const byte*>(p);}
 template<class T>
-[[nodiscard]]force_inline constexpr const byte*launder_cast_to_data(const T*p){return ::std::launder(cast_to_data(p));}
+[[nodiscard]]force_inline constexpr const byte*launder_cast_to_data(const T*p)noexcept{return ::std::launder(cast_to_data(p));}
 /*!
 	功能: T& 转换为 U&，不进行任何检查
 	用法: union_cast<U>(T&) -> U&
 */
 template<class U,class T>
-[[nodiscard]]force_inline constexpr U&union_cast(T&t){return*reinterpret_cast<U*>(&t);}
+[[nodiscard]]force_inline constexpr U&union_cast(T&t)noexcept{return*reinterpret_cast<U*>(&t);}
 template<class U,class T>
-[[nodiscard]]force_inline constexpr U&launder_union_cast(T&t){return*::std::launder(union_cast<U>(t));}
+[[nodiscard]]force_inline constexpr U&launder_union_cast(T&t)noexcept{return*::std::launder(union_cast<U>(t));}
 
 /*!
 	功能: data_block辅助变量模板，接受数个类型并表现为其中的最大对齐值
@@ -2983,17 +2989,17 @@ struct data_block:non_copy_construct_able,non_move_construct_able{
 					_data[i]=byte{};
 	}
 	pop_msvc_warning();
-	force_inline constexpr operator byte*(){return _data;}
-	force_inline constexpr operator const byte*()const{return _data;}
+	force_inline constexpr operator byte*()noexcept{return _data;}
+	force_inline constexpr operator const byte*()const noexcept{return _data;}
 	template<class T> requires(sizeof(T)<=size&&alignof(T)<=align)
-	force_inline constexpr auto&operator=(T&&t){
+	force_inline constexpr auto&operator=(T&&t)noexcept{
 		return data_cast<remove_cvref<T>>(_data)=forward<T>(t);
 	}
 	//begin & end
-	force_inline constexpr byte*begin(){return _data;}
-	force_inline constexpr byte*end(){return _data+size;}
-	force_inline constexpr const byte*begin()const{return _data;}
-	force_inline constexpr const byte*end()const{return _data+size;}
+	force_inline constexpr byte*begin()noexcept{return _data;}
+	force_inline constexpr byte*end()noexcept{return _data+size;}
+	force_inline constexpr const byte*begin()const noexcept{return _data;}
+	force_inline constexpr const byte*end()const noexcept{return _data+size;}
 };
 /*!
 	功能: data_block辅助类模板，接受一个size_t描述对齐大小的类型模板
@@ -3008,12 +3014,12 @@ struct alignas(max_align_of<Ts...>)align_as_t{};
 template<class T>
 struct data_view:array_like_view_t<byte>{
 	using array_like_view_t<byte>::array_like_view_t;
-	constexpr data_view(T*p):array_like_view_t<byte>{cast_to_data(p),sizeof(T)}{}
+	constexpr data_view(T*p)noexcept:array_like_view_t<byte>{cast_to_data(p),sizeof(T)}{}
 };
 template<class T>
 struct data_view<const T>:array_like_view_t<const byte>{
 	using array_like_view_t<const byte>::array_like_view_t;
-	constexpr data_view(const T*p):array_like_view_t<const byte>{cast_to_data(p),sizeof(T)}{}
+	constexpr data_view(const T*p)noexcept:array_like_view_t<const byte>{cast_to_data(p),sizeof(T)}{}
 };
 
 /*!
@@ -3021,7 +3027,7 @@ struct data_view<const T>:array_like_view_t<const byte>{
 	用法: full_equal_in_byte(const T&a,const T&b) -> bool
 */
 template<class T>
-[[nodiscard]]constexpr bool full_equal_in_byte(const T&a,const T&b){
+[[nodiscard]]constexpr bool full_equal_in_byte(const T&a,const T&b)noexcept{
 	return equal(cast_to_data(&a),cast_to_data(&b),sizeof(T));
 }
 
@@ -3134,7 +3140,7 @@ namespace hash_n{
 	inline struct hash_t{
 	private:
 		template<class T>
-		[[nodiscard]]static constexpr inline bool nothrow_helper()noexcept{
+		[[nodiscard]]static inline constexpr bool nothrow_helper()noexcept{
 			if constexpr(is_pointer<T>)
 				return noexcept(pointer_hash(declvalue(const T&)));
 			elseif constexpr(is_fundamental_hash<T>)
@@ -3155,7 +3161,7 @@ namespace hash_n{
 		static constexpr bool nothrow=nothrow_helper<T>();
 	private:
 		template<class T>
-		[[nodiscard]]static constexpr inline bool able_helper()noexcept{
+		[[nodiscard]]static inline constexpr bool able_helper()noexcept{
 			if constexpr(is_pointer<T>)
 				return true;
 			elseif constexpr(is_fundamental_hash<T>)
@@ -3273,14 +3279,14 @@ namespace hash_n{
 
 				size=size%bitnumof_void;
 				if(value._value==0 || size==0)
-					return {void_hash};
+					return{void_hash};
 				if(size >= bit_range_max){
 					const bool is_npos = ::std::popcount(value._value)%BIT_POSSIBILITY;
 					aret = is_npos?npos_hash:void_hash;
 					size-=bit_range_max;
 				}
 				if(!size)
-					return {aret};
+					return{aret};
 			}
 			rot_iterator<decltype(aret)>rotl_offset = size;
 			while(size--){
@@ -3310,7 +3316,7 @@ namespace hash_n{
 		@returns The hash value of the array.
 		*/
 		template<class T>
-		[[nodiscard]]constexpr inline hash_value_t hash(const T*a,size_t size)const noexcept(nothrow<const T>){
+		[[nodiscard]]inline constexpr hash_value_t hash(const T*a,size_t size)const noexcept(nothrow<const T>){
 			return with_calculated_before(hash(nothing),0,a,size);
 		}
 		/*!
@@ -3335,7 +3341,7 @@ namespace hash_n{
 		@returns array_like_view_t<T> 对象的哈希值。
 		*/
 		template<class T> requires is_not_signal_value_for_array_like<T>
-		[[nodiscard]]constexpr inline hash_value_t hash(const array_like_view_t<T>a)const noexcept(nothrow<T>){
+		[[nodiscard]]inline constexpr hash_value_t hash(const array_like_view_t<T>a)const noexcept(nothrow<T>){
 			return hash(a.begin(),a.size());
 		}
 		/*!
@@ -3348,7 +3354,7 @@ namespace hash_n{
 		@returns array_like_view_t<T> 对象的哈希值。
 		*/
 		template<class T> requires is_not_signal_value_for_array_like<T>
-		[[nodiscard]]constexpr inline hash_value_t with_calculated_before(hash_value_t before,size_t before_size,const array_like_view_t<T>a)const noexcept{
+		[[nodiscard]]inline constexpr hash_value_t with_calculated_before(hash_value_t before,size_t before_size,const array_like_view_t<T>a)const noexcept{
 			return with_calculated_before(before,before_size,a.begin(),a.size());
 		}
 
@@ -3395,7 +3401,7 @@ namespace range_n{
 
 		template <class U> requires(type_info<T>.can_convert_to<U>)
 		constexpr operator range_t<U>()const noexcept(type_info<T>.can_nothrow_convert_to<U>){
-			return {_begin,_end};
+			return{_begin,_end};
 		}
 	};
 
@@ -4334,12 +4340,12 @@ private:
 	[[no_unique_address]]bool _is_false;
 	[[no_unique_address]]bool _is_unknown;
 public:
-	constexpr logical_bool(special_init_t,bool is_true,bool is_false,bool is_unknown=0):_is_true(is_true),_is_false(is_false),_is_unknown(is_unknown){}
-	constexpr logical_bool(bool a):_is_true(a),_is_false(!a),_is_unknown(0){}
-	constexpr logical_bool(const logical_bool&)=default;
-	constexpr logical_bool&operator=(const logical_bool&)& =default;
-	constexpr explicit operator bool()const{return _is_true && !_is_unknown;}
-	constexpr logical_bool operator!()const{
+	constexpr logical_bool(special_init_t,bool is_true,bool is_false,bool is_unknown=0)noexcept:_is_true(is_true),_is_false(is_false),_is_unknown(is_unknown){}
+	constexpr logical_bool(bool a)noexcept:_is_true(a),_is_false(!a),_is_unknown(0){}
+	constexpr logical_bool(const logical_bool&)noexcept=default;
+	constexpr logical_bool&operator=(const logical_bool&)&noexcept=default;
+	constexpr explicit operator bool()const noexcept{return _is_true && !_is_unknown;}
+	constexpr logical_bool operator!()const noexcept{
 		logical_bool aret=*this;
 		swap(aret._is_true,aret._is_false);
 		return aret;
@@ -4386,7 +4392,7 @@ Returns true if all bytes in the input are zero.
 @returns True if all bytes in the input are zero.
 */
 template<class T>
-constexpr inline bool is_all_byte_zero(T&&a){
+inline constexpr bool is_all_byte_zero(T&&a)noexcept{
 	const byte*ptr=cast_to_data(addressof(a));
 	const byte*end=ptr+sizeof(a);
 	while(ptr!=end)
@@ -4491,9 +4497,9 @@ template<typename T>
 class maybe_fail_reference{
 	T*_ref_to;
 public:
-	constexpr maybe_fail_reference(T&a):_ref_to(&a){}
+	constexpr maybe_fail_reference(T&a)noexcept:_ref_to(&a){}
 	constexpr maybe_fail_reference(const maybe_fail_reference&)=default;
-	constexpr maybe_fail_reference(note::fail_t):_ref_to(nullptr){}
+	constexpr maybe_fail_reference(note::fail_t)noexcept:_ref_to(nullptr){}
 
 	[[nodiscard]]bool not_fail()noexcept{return _ref_to;}
 	[[nodiscard]]bool fail()noexcept{return!not_fail();}
@@ -4600,7 +4606,7 @@ namespace rand_n{
 		static constexpr auto  εντροπία_size = εντροπία_num * sizeof(seed_type);
 		byte _εντροπία_data[εντροπία_size];
 
-		inline static constexpr void sowing_seed_one_step(seed_type&seed)noexcept{seed=13*seed+7;}
+		static inline constexpr void sowing_seed_one_step(seed_type&seed)noexcept{seed=13*seed+7;}
 	public:
 		[[nodiscard]]inline constexpr seed_type get_origin()const noexcept{return _seed_origin;}
 		inline constexpr void set(seed_type seed)noexcept{
@@ -4710,7 +4716,7 @@ namespace rand_n{
 		typedef base_rand_t base_t;
 	public:
 		using base_t::base_t;
-		[[nodiscard]]force_inline static constexpr this_t with_seed(rand_seed_t&seed)noexcept{return this_t(seed);}
+		[[nodiscard]]static force_inline constexpr this_t with_seed(rand_seed_t&seed)noexcept{return this_t(seed);}
 		//rand
 		[[nodiscard]]force_inline T operator()()const noexcept{return _seed.gen_randbit<T>();}
 		//浮点特供：[0,1)和[0,1]
@@ -4797,7 +4803,7 @@ namespace rand_n{
 		typedef base_rand_t base_t;
 	public:
 		using base_t::base_t;
-		[[nodiscard]]force_inline static constexpr this_t with_seed(rand_seed_t&seed)noexcept{return this_t(seed);}
+		[[nodiscard]]static force_inline constexpr this_t with_seed(rand_seed_t&seed)noexcept{return this_t(seed);}
 		[[nodiscard]]force_inline T operator()()const noexcept{
 			return _seed.gen_randbit<unsigned char>()&unsigned char{1};
 		}
@@ -5396,18 +5402,18 @@ protected:\
 */
 namespace overhead_n{
 	using namespace ::elc::defs;
-	constexpr size_t overhead_get_align(size_t align){
+	constexpr size_t overhead_get_align(size_t align)noexcept{
 		return max(align,alignof(size_t));//保证最高对齐需求
 	}
-	constexpr size_t overhead_get_offset_value(size_t align){
+	constexpr size_t overhead_get_offset_value(size_t align)noexcept{
 		align=overhead_get_align(align);
 		return (size_t(sizeof(size_t)/align)+bool(sizeof(size_t)%align))*align;//等同于sizeof(size_t)-sizeof(size_t)%align+(sizeof(size_t)%align?align:0)
 		//暨，偏移量既要大于sizeof(size_t)以装下overhead，又要是align的整数倍以保证T实例的对齐被满足
 	}
-	constexpr size_t correct_size(size_t size,size_t align){
+	constexpr size_t correct_size(size_t size,size_t align)noexcept{
 		return size+overhead_get_offset_value(align);
 	}
-	constexpr size_t correct_align(size_t align){
+	constexpr size_t correct_align(size_t align)noexcept{
 		return overhead_get_align(align);
 	}
 	inline pointer correct_pointer(pointer a,size_t align){
@@ -6242,18 +6248,18 @@ protected:\
 		typedef string_view_t<char16_t>string_view_u16_t;
 		typedef string_view_t<char32_t>string_view_u32_t;
 
-		constexpr size_t utf16_to_utf8_code_size=2;
-		constexpr size_t utf32_to_utf8_code_size = 4;
-		constexpr size_t utf32_to_utf16_code_size = 2;
+		inline constexpr size_t utf16_to_utf8_code_size=2;
+		inline constexpr size_t utf32_to_utf8_code_size = 4;
+		inline constexpr size_t utf32_to_utf16_code_size = 2;
 
 		using range_n::npos;
 		inline namespace convert_impl {
-			constexpr size_t decode_utf8(char32_t *out, const char8_t *in, size_t in_size_max)noexcept {
+			inline constexpr size_t decode_utf8(char32_t *out, const char8_t *in, size_t in_size_max)noexcept{
 				push_and_disable_msvc_warning(26494);//未初始化警告diss
 				char8_t code1, code2, code3, code4;
 				pop_msvc_warning();
 				code1 = *in++;
-				if(code1 < 0x80) { /* 1-byte sequence */
+				if(code1 < 0x80){ /* 1-byte sequence */
 					*out = code1;
 					return 1;
 				}
@@ -6302,7 +6308,7 @@ protected:\
 					return 4;
 				}
 			}
-			constexpr size_t get_decode_utf8_size(const char8_t* in)noexcept {
+			inline constexpr size_t get_decode_utf8_size(const char8_t* in)noexcept{
 				if(*in < 0x80) /* 1-byte sequence */
 					return 1;
 				elseif(*in < 0xC2)
@@ -6316,13 +6322,13 @@ protected:\
 				else
 					return npos;
 			}
-			constexpr size_t decode_utf16(char32_t *out, const char16_t *in, size_t in_size_max)noexcept {
+			inline constexpr size_t decode_utf16(char32_t *out, const char16_t *in, size_t in_size_max)noexcept{
 				const char16_t code1 = *in++;
-				if(code1 >= 0xD800 && code1 < 0xDC00) { /* surrogate pair */
+				if(code1 >= 0xD800 && code1 < 0xDC00){ /* surrogate pair */
 					if(in_size_max < 2)
 						return npos;
 					const char16_t code2 = *in++;
-					if(code2 >= 0xDC00 && code2 < 0xE000) {
+					if(code2 >= 0xDC00 && code2 < 0xE000){
 						*out = (code1 << 10) + code2 - 0x35FDC00;
 						return 2;
 					}
@@ -6331,29 +6337,29 @@ protected:\
 				*out = code1;
 				return 1;
 			}
-			constexpr size_t get_decode_utf16_size(const char16_t* in)noexcept {
+			inline constexpr size_t get_decode_utf16_size(const char16_t* in)noexcept{
 				if(*in >= 0xD800 && *in < 0xDC00) /* surrogate pair */
 					return 2;
 				else
 					return 1;
 			}
-			constexpr size_t encode_utf8(char8_t *out, char32_t in) {
-				if(in < 0x80) {
+			inline constexpr size_t encode_utf8(char8_t *out, char32_t in)noexcept{
+				if(in < 0x80){
 					*out++ = (char8_t)in;
 					return 1;
 				}
-				elseif(in < 0x800) {
+				elseif(in < 0x800){
 					*out++ = char8_t((in >> 6) + 0xC0);
 					*out++ = char8_t((in & 0x3F) + 0x80);
 					return 2;
 				}
-				elseif(in < 0x10000) {
+				elseif(in < 0x10000){
 					*out++ = char8_t((in >> 12) + 0xE0);
 					*out++ = ((in >> 6) & 0x3F) + 0x80;
 					*out++ = (in & 0x3F) + 0x80;
 					return 3;
 				}
-				elseif(in < 0x110000) {
+				elseif(in < 0x110000){
 					*out++ = char8_t((in >> 18) + 0xF0);
 					*out++ = ((in >> 12) & 0x3F) + 0x80;
 					*out++ = ((in >> 6) & 0x3F) + 0x80;
@@ -6362,7 +6368,7 @@ protected:\
 				}
 				return npos;
 			}
-			constexpr size_t get_encode_utf8_size(char32_t in) {
+			inline constexpr size_t get_encode_utf8_size(char32_t in)noexcept{
 				if(in < 0x80)
 					return 1;
 				elseif(in < 0x800)
@@ -6374,19 +6380,19 @@ protected:\
 				else
 					return npos;
 			}
-			constexpr size_t encode_utf16(char16_t *out, char32_t in) {
-				if(in < 0x10000) {
+			inline constexpr size_t encode_utf16(char16_t *out, char32_t in)noexcept{
+				if(in < 0x10000){
 					*out++ = char16_t(in);
 					return 1;
 				}
-				elseif(in < 0x110000) {
+				elseif(in < 0x110000){
 					*out++ = char16_t((in >> 10) + 0xD7C0);
 					*out++ = (in & 0x3FF) + 0xDC00;
 					return 2;
 				}
 				return npos;
 			}
-			constexpr size_t get_encode_utf16_size(char32_t in) {
+			inline constexpr size_t get_encode_utf16_size(char32_t in)noexcept{
 				if(in < 0x10000)
 					return 1;
 				elseif(in < 0x110000)
@@ -6401,16 +6407,16 @@ protected:\
 			string_view_t<in_char_t> _processed_input;
 			string_view_t<out_char_t> _processed_output;
 		public:
-			constexpr code_convert_result(bool success, string_view_t<in_char_t> processed_input, string_view_t<out_char_t> processed_output) : _success(success), _processed_input(processed_input), _processed_output(processed_output) {}
-			constexpr bool success() const { return _success; }
-			constexpr string_view_t<in_char_t> processed_input() const { return _processed_input; }
-			constexpr string_view_t<out_char_t> processed_output() const { return _processed_output; }
-			constexpr explicit operator bool() const { return success(); }
+			inline constexpr code_convert_result(bool success, string_view_t<in_char_t> processed_input, string_view_t<out_char_t> processed_output)noexcept:_success(success),_processed_input(processed_input),_processed_output(processed_output){}
+			inline constexpr bool success()const noexcept{ return _success; }
+			inline constexpr string_view_t<in_char_t> processed_input()const noexcept{ return _processed_input; }
+			inline constexpr string_view_t<out_char_t> processed_output()const noexcept{ return _processed_output; }
+			inline constexpr explicit operator bool()const noexcept{ return success(); }
 		};
-		constexpr auto get_utf8_to_utf16_size(const char8_t *in, size_t len){
+		inline constexpr auto get_utf8_to_utf16_size(const char8_t *in, size_t len)noexcept{
 			size_t out_size = 0;
 			const auto end = in + len;
-			while(in < end) {
+			while(in < end){
 				char32_t code;
 				const auto size = decode_utf8(&code, in, end - in);
 				if(size == npos)
@@ -6422,10 +6428,10 @@ protected:\
 				in += size;
 			}
 		}
-		constexpr auto get_utf8_to_utf16_size(string_view_u8_t in){
+		inline constexpr auto get_utf8_to_utf16_size(string_view_u8_t in)noexcept{
 			return get_utf8_to_utf16_size(in.data(), in.size());
 		}
-		constexpr auto utf8_to_utf16(char16_t *out, const char8_t *in, size_t len) {
+		inline constexpr auto utf8_to_utf16(char16_t *out, const char8_t *in, size_t len)noexcept{
 			const auto end = in + len;
 			push_and_disable_msvc_warning(26494);//未初始化警告diss
 			char32_t code;
@@ -6433,10 +6439,10 @@ protected:\
 			//for return
 			const auto out_start = out;
 			const auto in_start = in;
-			auto result_builder = [&](bool success) {
+			auto result_builder = [&](bool success)noexcept{
 				return code_convert_result<char8_t, char16_t>(success, string_view_t<char8_t>(in_start, in - in_start), string_view_t<char16_t>(out_start, out - out_start));
 			};
-			while(in < end) {
+			while(in < end){
 				const auto size = decode_utf8(&code, in, end - in);
 				if(size == npos)
 					return result_builder(false);
@@ -6448,13 +6454,13 @@ protected:\
 			}
 			return result_builder(true);
 		}
-		constexpr auto utf8_to_utf16(char16_t *out, string_view_u8_t in) {
+		inline constexpr auto utf8_to_utf16(char16_t *out, string_view_u8_t in)noexcept{
 			return utf8_to_utf16(out, in.data(), in.size());
 		}
-		constexpr auto get_utf8_to_utf32_size(const char8_t *in, size_t len){
+		inline constexpr auto get_utf8_to_utf32_size(const char8_t *in, size_t len)noexcept{
 			size_t out_size = 0;
 			const auto end = in + len;
-			while(in < end) {
+			while(in < end){
 				const auto tmp = get_decode_utf8_size(in);
 				if(tmp == npos)
 					return npos;
@@ -6463,10 +6469,10 @@ protected:\
 			}
 			return out_size;
 		}
-		constexpr auto get_utf8_to_utf32_size(string_view_u8_t in){
+		inline constexpr auto get_utf8_to_utf32_size(string_view_u8_t in)noexcept{
 			return get_utf8_to_utf32_size(in.data(), in.size());
 		}
-		constexpr auto utf8_to_utf32(char32_t *out, const char8_t *in, size_t len) {
+		inline constexpr auto utf8_to_utf32(char32_t *out, const char8_t *in, size_t len)noexcept{
 			const auto end = in + len;
 			push_and_disable_msvc_warning(26494);//未初始化警告diss
 			char32_t code;
@@ -6474,10 +6480,10 @@ protected:\
 			//for return
 			const auto out_start = out;
 			const auto in_start = in;
-			auto result_builder = [&](bool success) {
+			auto result_builder = [&](bool success)noexcept{
 				return code_convert_result<char8_t, char32_t>(success, string_view_t<char8_t>(in_start, in - in_start), string_view_t<char32_t>(out_start, out - out_start));
 			};
-			while(in < end) {
+			while(in < end){
 				const auto size = decode_utf8(&code, in, end - in);
 				if(size == npos)
 					return result_builder(false);
@@ -6486,13 +6492,13 @@ protected:\
 			}
 			return result_builder(true);
 		}
-		constexpr auto utf8_to_utf32(char32_t *out, string_view_u8_t in) {
+		inline constexpr auto utf8_to_utf32(char32_t *out, string_view_u8_t in)noexcept{
 			return utf8_to_utf32(out, in.data(), in.size());
 		}
-		constexpr auto get_utf16_to_utf8_size(const char16_t *in, size_t len){
+		inline constexpr auto get_utf16_to_utf8_size(const char16_t *in, size_t len)noexcept{
 			size_t out_size = 0;
 			const auto end = in + len;
-			while(in < end) {
+			while(in < end){
 				char32_t code;
 				const auto size = decode_utf16(&code, in, end - in);
 				if(size == npos)
@@ -6505,10 +6511,10 @@ protected:\
 			}
 			return out_size;
 		}
-		constexpr auto get_utf16_to_utf8_size(string_view_u16_t in){
+		inline constexpr auto get_utf16_to_utf8_size(string_view_u16_t in)noexcept{
 			return get_utf16_to_utf8_size(in.data(), in.size());
 		}
-		constexpr auto utf16_to_utf8(char8_t *out, const char16_t *in, size_t len) {
+		inline constexpr auto utf16_to_utf8(char8_t *out, const char16_t *in, size_t len)noexcept{
 			const auto end = in + len;
 			push_and_disable_msvc_warning(26494);//未初始化警告diss
 			char32_t code;
@@ -6516,10 +6522,10 @@ protected:\
 			//for return
 			const auto out_start = out;
 			const auto in_start = in;
-			auto result_builder = [&](bool success) {
+			auto result_builder = [&](bool success)noexcept{
 				return code_convert_result<char16_t, char8_t>(success, string_view_t<char16_t>(in_start, in - in_start), string_view_t<char8_t>(out_start, out - out_start));
 			};
-			while(in < end) {
+			while(in < end){
 				const auto size = decode_utf16(&code, in, end - in);
 				if(size == npos)
 					return result_builder(false);
@@ -6531,13 +6537,13 @@ protected:\
 			}
 			return result_builder(true);
 		}
-		constexpr auto utf16_to_utf8(char8_t *out, string_view_u16_t in) {
+		inline constexpr auto utf16_to_utf8(char8_t *out, string_view_u16_t in)noexcept{
 			return utf16_to_utf8(out, in.data(), in.size());
 		}
-		constexpr auto get_utf16_to_utf32_size(const char16_t *in, size_t len){
+		inline constexpr auto get_utf16_to_utf32_size(const char16_t *in, size_t len)noexcept{
 			size_t out_size = 0;
 			const auto end = in + len;
-			while(in < end) {
+			while(in < end){
 				char32_t code;
 				const auto size = decode_utf16(&code, in, end - in);
 				if(size == npos)
@@ -6547,18 +6553,18 @@ protected:\
 			}
 			return out_size;
 		}
-		constexpr auto get_utf16_to_utf32_size(string_view_u16_t in){
+		inline constexpr auto get_utf16_to_utf32_size(string_view_u16_t in)noexcept{
 			return get_utf16_to_utf32_size(in.data(), in.size());
 		}
-		constexpr auto utf16_to_utf32(char32_t *out, const char16_t *in, size_t len) {
+		inline constexpr auto utf16_to_utf32(char32_t *out, const char16_t *in, size_t len)noexcept{
 			const auto end = in + len;
 			//for return
 			const auto out_start = out;
 			const auto in_start = in;
-			auto result_builder = [&](bool success) {
+			auto result_builder = [&](bool success)noexcept{
 				return code_convert_result<char16_t, char32_t>(success, string_view_t<char16_t>(in_start, in - in_start), string_view_t<char32_t>(out_start, out - out_start));
 			};
-			while(in < end) {
+			while(in < end){
 				char32_t code;
 				const auto size = decode_utf16(&code, in, end - in);
 				if(size == npos)
@@ -6568,13 +6574,13 @@ protected:\
 			}
 			return result_builder(true);
 		}
-		constexpr auto utf16_to_utf32(char32_t *out, string_view_u16_t in) {
+		inline constexpr auto utf16_to_utf32(char32_t *out, string_view_u16_t in)noexcept{
 			return utf16_to_utf32(out, in.data(), in.size());
 		}
-		constexpr auto get_utf32_to_utf8_size(const char32_t *in, size_t len){
+		inline constexpr auto get_utf32_to_utf8_size(const char32_t *in, size_t len)noexcept{
 			size_t out_size = 0;
 			const auto end = in + len;
-			while(in < end) {
+			while(in < end){
 				const auto tmp = get_encode_utf8_size(*in);
 				if(tmp == npos)
 					return npos;
@@ -6583,18 +6589,18 @@ protected:\
 			}
 			return out_size;
 		}
-		constexpr auto get_utf32_to_utf8_size(string_view_u32_t in){
+		inline constexpr auto get_utf32_to_utf8_size(string_view_u32_t in)noexcept{
 			return get_utf32_to_utf8_size(in.data(), in.size());
 		}
-		constexpr auto utf32_to_utf8(char8_t *out, const char32_t *in, size_t len) {
+		inline constexpr auto utf32_to_utf8(char8_t *out, const char32_t *in, size_t len)noexcept{
 			const auto end = in + len;
 			//for return
 			const auto out_start = out;
 			const auto in_start = in;
-			auto result_builder = [&](bool success) {
+			auto result_builder = [&](bool success)noexcept{
 				return code_convert_result<char32_t, char8_t>(success, string_view_t<char32_t>(in_start, in - in_start), string_view_t<char8_t>(out_start, out - out_start));
 			};
-			while(in < end) {
+			while(in < end){
 				auto tmp = encode_utf8(out, *in);
 				if(tmp == npos)
 					return result_builder(false);
@@ -6603,13 +6609,13 @@ protected:\
 			}
 			return result_builder(true);
 		}
-		constexpr auto utf32_to_utf8(char8_t *out, string_view_u32_t in) {
+		inline constexpr auto utf32_to_utf8(char8_t *out, string_view_u32_t in)noexcept{
 			return utf32_to_utf8(out, in.data(), in.size());
 		}
-		constexpr auto get_utf32_to_utf16_size(const char32_t *in, size_t len){
+		inline constexpr auto get_utf32_to_utf16_size(const char32_t *in, size_t len)noexcept{
 			size_t out_size = 0;
 			const auto end = in + len;
-			while(in < end) {
+			while(in < end){
 				const auto tmp = get_encode_utf16_size(*in);
 				if(tmp == npos)
 					return npos;
@@ -6618,18 +6624,18 @@ protected:\
 			}
 			return out_size;
 		}
-		constexpr auto get_utf32_to_utf16_size(string_view_u32_t in){
+		inline constexpr auto get_utf32_to_utf16_size(string_view_u32_t in)noexcept{
 			return get_utf32_to_utf16_size(in.data(), in.size());
 		}
-		constexpr auto utf32_to_utf16(char16_t *out, const char32_t *in, size_t len) {
+		inline constexpr auto utf32_to_utf16(char16_t *out, const char32_t *in, size_t len)noexcept{
 			const auto end = in + len;
 			//for return
 			const auto out_start = out;
 			const auto in_start = in;
-			auto result_builder = [&](bool success) {
+			auto result_builder = [&](bool success)noexcept{
 				return code_convert_result<char32_t, char16_t>(success, string_view_t<char32_t>(in_start, in - in_start), string_view_t<char16_t>(out_start, out - out_start));
 			};
-			while(in < end) {
+			while(in < end){
 				auto tmp = encode_utf16(out, *in);
 				if(tmp == npos)
 					return result_builder(false);
@@ -6638,16 +6644,16 @@ protected:\
 			}
 			return result_builder(true);
 		}
-		constexpr auto utf32_to_utf16(char16_t *out, string_view_u32_t in) {
+		inline constexpr auto utf32_to_utf16(char16_t *out, string_view_u32_t in)noexcept{
 			return utf32_to_utf16(out, in.data(), in.size());
 		}
-		constexpr auto utf32_to_utf8(char32_t ch, char8_t *out) {
+		inline constexpr auto utf32_to_utf8(char32_t ch, char8_t *out)noexcept{
 			return utf32_to_utf8(out, &ch, 1);
 		}
-		constexpr auto utf32_to_utf16(char32_t ch, char16_t *out) {
+		inline constexpr auto utf32_to_utf16(char32_t ch, char16_t *out)noexcept{
 			return utf32_to_utf16(out, &ch, 1);
 		}
-		constexpr auto utf16_to_utf8(char16_t ch, char8_t *out) {
+		inline constexpr auto utf16_to_utf8(char16_t ch, char8_t *out)noexcept{
 			return utf16_to_utf8(out, &ch, 1);
 		}
 
@@ -7126,6 +7132,51 @@ protected:\
 
 		using namespace elc::defs;
 
+		struct die_state{
+			#if SYSTEM_TYPE == windows
+				HANDLE hConsole;
+				//text_color
+				WORD text_color;
+			#elif SYSTEM_TYPE == linux
+				//nothing
+			#endif
+		};
+
+		void Init_die_state(die_state&state)noexcept{
+			#if SYSTEM_TYPE == windows
+				state.hConsole=GetStdHandle(STD_ERROR_HANDLE);
+				//chenge color to red
+				CONSOLE_SCREEN_BUFFER_INFO csbi;
+				GetConsoleScreenBufferInfo(state.hConsole,&csbi);
+				state.text_color=csbi.wAttributes;
+				SetConsoleTextAttribute(state.hConsole,FOREGROUND_RED);
+			#endif
+		}
+
+		void ConsoleLog(const die_state&state,string_view_t<char> str)noexcept{
+			#if SYSTEM_TYPE == windows
+				WriteConsoleA(state.hConsole,str.data(),(DWORD)str.size(),nullptr,nullptr);
+			#elif SYSTEM_TYPE == linux
+				fputs(str.data(),stderr);
+			#endif
+		}
+		void ConsoleLog(const die_state&state,string_view_t<wchar_t> str)noexcept{
+			#if SYSTEM_TYPE == windows
+				WriteConsoleW(state.hConsole,str.data(),(DWORD)str.size(),nullptr,nullptr);
+			#elif SYSTEM_TYPE == linux
+				fputws(str.data(),stderr);
+			#endif
+		}
+		void ConsoleLogEnd(const die_state&state)noexcept{
+			#if SYSTEM_TYPE == windows
+				FlushFileBuffers(state.hConsole);
+				//chenge color back
+				SetConsoleTextAttribute(state.hConsole,state.text_color);
+			#elif SYSTEM_TYPE == linux
+				fflush(stderr);
+			#endif
+		}
+
 		/// @brief 终止整个程序并可能的触发断点或输出错误信息
 		[[noreturn]]inline void die()noexcept{
 			#if SYSTEM_TYPE == windows
@@ -7134,10 +7185,11 @@ protected:\
 			#endif
 			#if defined(_WINMAIN_)
 				::MessageBoxW(NULL,L"elc died.",NULL,MB_ICONERROR);
-			#else
-				::std::fputs("elc died.\n",stderr);
-				::std::fflush(stderr);
 			#endif
+			die_state state;
+			Init_die_state(state);
+			ConsoleLog(state,"elc died.\n");
+			ConsoleLogEnd(state);
 			::std::abort();
 		}
 		/// @brief 同 die() ，但是有详细的错误信息
@@ -7148,7 +7200,7 @@ protected:\
 					__debugbreak();
 			#endif
 			if(err_msg){
-				#if SYSTEM_TYPE == windows
+				if constexpr(wchar_t_same_as_char16_t){
 					push_and_disable_msvc_warning(26494);//未初始化警告diss
 					wchar_t err_msg_in_wchar[2048];
 					pop_msvc_warning();
@@ -7156,14 +7208,27 @@ protected:\
 					err_msg_in_wchar[size]=L'\0';
 					#if defined(_WINMAIN_)
 						::MessageBoxW(NULL,err_msg_in_wchar,NULL,MB_ICONERROR);
-					#else
-						auto std_err=GetStdHandle(STD_ERROR_HANDLE);
-						WriteConsoleW(std_err,L"elc died because:\n",17,NULL,NULL);
-						WriteConsoleW(std_err,err_msg_in_wchar,(DWORD)size,NULL,NULL);
-						WriteConsoleW(std_err,L"\n",1,NULL,NULL);
-						FlushFileBuffers(std_err);
 					#endif
-				#else
+					die_state state;
+					Init_die_state(state);
+					ConsoleLog(state,L"elc died because:\n");
+					ConsoleLog(state,err_msg_in_wchar);
+					ConsoleLog(state,L"\n");
+					ConsoleLogEnd(state);
+				}
+				elseif constexpr(wchar_t_same_as_char_t){
+					string_view_t<wchar_t> err_msg_in_wchar{(const wchar_t*)err_msg.data(),err_msg.size()};
+					#if defined(_WINMAIN_)
+						::MessageBoxW(NULL,err_msg_in_wchar.data(),NULL,MB_ICONERROR);
+					#endif
+					die_state state;
+					Init_die_state(state);
+					ConsoleLog(state,L"elc died because:\n");
+					ConsoleLog(state,err_msg_in_wchar);
+					ConsoleLog(state,L"\n");
+					ConsoleLogEnd(state);
+				}
+				else{
 					::std::mbstate_t stat{};
 					push_and_disable_msvc_warning(26494);//未初始化警告diss
 					char err_msg_in_char[2048];
@@ -7179,11 +7244,16 @@ protected:\
 						err_msg_write += s;
 					}
 					*err_msg_write = '\0';
-					::std::fputs("elc died because:\n",stderr);
-					::std::fputs(err_msg_in_char,stderr);
-					::std::fputc('\n',stderr);
-					::std::fflush(stderr);
-				#endif
+					#if defined(_WINMAIN_)
+						::MessageBoxA(NULL,err_msg_in_char,NULL,MB_ICONERROR);
+					#endif
+					die_state state;
+					Init_die_state(state);
+					ConsoleLog(state,"elc died because:\n");
+					ConsoleLog(state,err_msg_in_char);
+					ConsoleLog(state,"\n");
+					ConsoleLogEnd(state);
+				}
 			}
 			else
 				die();
@@ -7337,7 +7407,7 @@ protected:\
 
 //file_end
 
-		#line 95 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
+		#line 159 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
 	}
 	//
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
@@ -7357,7 +7427,7 @@ protected:\
 
 //file_end
 
-	#line 98 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
+	#line 162 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
 
 	namespace elc::defs{
 		using elc::APIs::die::die;
@@ -9155,7 +9225,7 @@ namespace iterator_n{
 				return noexcept(declvalue(base_t_w).get_value());
 		}
 
-		[[nodiscard]]static constexpr auto value_type_getter(){
+		[[nodiscard]]static constexpr auto value_type_getter()noexcept{
 			if constexpr(type_info<::std::remove_pointer_t<base_t_w>> == type_info<value_t>)
 				return type_info<decltype(*((base_t_w)_m))>;
 			elseif constexpr(was_not_an_ill_form(declvalue(base_t_w)->get_value()))
@@ -9419,7 +9489,7 @@ namespace function_base_n{
 	{using type=Ret_t(Args_t...)noexcept(nothrow);};
 
 	template<typename T>
-	[[nodiscard]]constexpr auto function_type_getter_conditional_helper(){
+	[[nodiscard]]constexpr auto function_type_getter_conditional_helper()noexcept{
 		if constexpr(::std::is_function_v<T>)
 			return type_info<T>;
 		elseif constexpr(is_pointer<T> && ::std::is_function_v<::std::remove_pointer_t<T>>)//不支持多级函数指针：懒得写（其实挺简单的），而且function_t若支持多级函数指针的推导指引会很不安全
@@ -9517,7 +9587,7 @@ namespace function_base_n{
 	{using type=Ret_t(Args_t...)noexcept;};
 
 	template<typename T>
-	[[nodiscard]]constexpr auto function_type_getter_conditional_helper(){
+	[[nodiscard]]constexpr auto function_type_getter_conditional_helper()noexcept{
 		if constexpr(::std::is_function_v<T>)
 			return type_info<T>;
 		elseif constexpr(is_pointer<T> && ::std::is_function_v<::std::remove_pointer_t<T>>)//不支持多级函数指针：懒得写（其实挺简单的），而且function_t若支持多级函数指针的推导指引会很不安全
@@ -10967,11 +11037,11 @@ class ref_t:non_copyable,non_moveable{
 public:
 	constexpr ref_t()noexcept=default;
 	constexpr explicit ref_t(never_ref_num_zero_t)noexcept:_ref_num(1){}
-	constexpr inline void add_ref()const noexcept{_ref_num++;}
+	inline constexpr void add_ref()const noexcept{_ref_num++;}
 protected:
-	[[nodiscard]]constexpr inline bool cut_ref()const noexcept{return!--_ref_num;}
+	[[nodiscard]]inline constexpr bool cut_ref()const noexcept{return!--_ref_num;}
 public:
-	constexpr inline void init_never_ref_num_zero()noexcept{add_ref();}
+	inline constexpr void init_never_ref_num_zero()noexcept{add_ref();}
 	[[nodiscard]]link_num_t link_num()const noexcept{return _ref_num;}
 };
 
@@ -11519,12 +11589,12 @@ template<typename T>
 struct can_map_all:cons_t<can_map_all<T>>,is_common_attribute(can_map_all){
 	typedef can_map_all<T> this_t;
 private:
-	distinctive inline static list_t<this_t> type_list;
+	distinctive static inline list_t<this_t> type_list;
 
 	template<class,class func_t>
 	friend inline void map_all_helper(func_t&&a);
 public:
-	constexpr can_map_all(){
+	constexpr can_map_all()noexcept{
 		type_list.add(this);
 	}
 };
@@ -11633,10 +11703,10 @@ namespace array_n{
 
 		#if defined(DEBUG) || defined(_DEBUG)
 		/*return{ptr,size};*/
-		constexpr array_t(T*a,size_t s):_m(a),_size_for_debug_view(s){}
+		constexpr array_t(T*a,size_t s):_m(a),_size_for_debug_view(s)noexcept{}
 		#else
 		/*return{ptr};*/
-		constexpr array_t(T*a):_m(a){}
+		constexpr array_t(T*a)noexcept:_m(a){}
 		#endif
 		/*返回一个自身的副本*/
 		[[nodiscard]]this_t copy()const noexcept(copy_get.nothrow<T>) requires(copy_get.able<T>){
@@ -12154,7 +12224,7 @@ namespace function_n{
 		);
 
 		template<class T>
-		static constexpr bool get_data_able_helper(){
+		static constexpr bool get_data_able_helper()noexcept{
 			if constexpr(base_on_this_t_or_more_stringent_restrictions<T>)
 				return true;
 			elseif constexpr(is_function_t<T>)
@@ -12169,7 +12239,7 @@ namespace function_n{
 		template<class T>
 		static constexpr bool get_data_able=get_data_able_helper<T>();
 		template<class T>
-		static constexpr bool get_data_nothrow_helper() {
+		static constexpr bool get_data_nothrow_helper()noexcept{
 			if constexpr(base_on_this_t_or_more_stringent_restrictions<T>)
 				return true;
 			elseif constexpr(is_function_t<T>)
@@ -12300,7 +12370,7 @@ namespace function_n{
 		);
 
 		template<class T>
-		static constexpr bool get_data_able_helper(){
+		static constexpr bool get_data_able_helper()noexcept{
 			if constexpr(base_on_this_t_or_more_stringent_restrictions<T>)
 				return true;
 			elseif constexpr(is_function_t<T>)
@@ -12315,7 +12385,7 @@ namespace function_n{
 		template<class T>
 		static constexpr bool get_data_able=get_data_able_helper<T>();
 		template<class T>
-		static constexpr bool get_data_nothrow_helper() {
+		static constexpr bool get_data_nothrow_helper()noexcept{
 			if constexpr(base_on_this_t_or_more_stringent_restrictions<T>)
 				return true;
 			elseif constexpr(is_function_t<T>)
@@ -12442,7 +12512,7 @@ namespace function_n{
 		);
 
 		template<class T>
-		static constexpr bool get_data_able_helper(){
+		static constexpr bool get_data_able_helper()noexcept{
 			if constexpr(base_on_this_t_or_more_stringent_restrictions<T>)
 				return true;
 			elseif constexpr(is_function_t<T>)
@@ -12457,7 +12527,7 @@ namespace function_n{
 		template<class T>
 		static constexpr bool get_data_able=get_data_able_helper<T>();
 		template<class T>
-		static constexpr bool get_data_nothrow_helper() {
+		static constexpr bool get_data_nothrow_helper()noexcept{
 			if constexpr(base_on_this_t_or_more_stringent_restrictions<T>)
 				return true;
 			elseif constexpr(is_function_t<T>)
@@ -13224,7 +13294,7 @@ namespace map_n{
 
 			struct seek_value_t{
 				const T*_m;
-				constexpr seek_value_t(const T&a):_m(addressof(a)){};
+				constexpr seek_value_t(const T&a)noexcept:_m(addressof(a)){};
 				[[nodiscard]]bool operator==(const data_t&a)const noexcept_as(a._value==*_m){
 					return bool(a._value==*_m);
 				}
@@ -15978,7 +16048,7 @@ protected:\
 		template<typename T,class stream_T> requires(!::std::is_arithmetic_v<remove_cvref<T>> &&
 													 to_arithmetic.able<remove_cvref<T>> &&
 													 type_info<stream_T>.base_on<text_ostream<char_t>>) decltype(auto)
-		operator<<(stream_T&& stream, T&& data) noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>> && to_arithmetic.nothrow<T>) {
+		operator<<(stream_T&& stream, T&& data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>> && to_arithmetic.nothrow<T>) {
 			return stream << to_arithmetic(forward<T>(data));
 		}
 
@@ -17213,7 +17283,7 @@ protected:
 	virtual hash_t get_others_hash_with_calculated_before_detail([[maybe_unused]]hash_t before,[[maybe_unused]]size_t before_size,[[maybe_unused]]ptr_t&p,[[maybe_unused]]size_t pos,[[maybe_unused]]size_t size)noexcept override final{ return before; }
 protected:
 	[[nodiscard]]virtual bool same_struct(ptr_t)noexcept override final{return false;}
-	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form([[maybe_unused]]size_t begin)noexcept override final{return {0,0};}
+	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form([[maybe_unused]]size_t begin)noexcept override final{return{0,0};}
 	[[nodiscard]]virtual bool same_struct_equal(ptr_t with)noexcept override final{return false;}
 	[[nodiscard]]virtual base_t::compare_type same_struct_compare(ptr_t with)noexcept override final{return strong_ordering::equivalent;}
 	[[nodiscard]]virtual float_size_t get_base_memory_cost()noexcept override final{return 0;}
@@ -17312,7 +17382,7 @@ public:
 	[[nodiscard]]virtual bool same_struct(ptr_t with)noexcept override final{
 		return true;//总size被保证一样
 	}
-	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form(size_t begin)noexcept override final{return {&_m[begin],note::size(_size-begin)};}
+	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form(size_t begin)noexcept override final{return{&_m[begin],note::size(_size-begin)};}
 	[[nodiscard]]virtual bool same_struct_equal(ptr_t with)noexcept(equal.nothrow<char_T>)override final{
 		auto wp=down_cast<this_t*>(with.get());
 		if(_m==wp->_m)
@@ -17446,7 +17516,7 @@ public:
 	[[nodiscard]]virtual bool same_struct(ptr_t)noexcept override final{
 		return true;//总size被保证一样
 	}
-	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form(size_t begin)noexcept override final{return {&_m[begin],note::size(get_size()-begin)};}
+	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form(size_t begin)noexcept override final{return{&_m[begin],note::size(get_size()-begin)};}
 	[[nodiscard]]virtual bool same_struct_equal(ptr_t with)noexcept(equal.nothrow<char_T>)override final{
 		auto wp=down_cast<this_t*>(with.get());
 		return equal(_m, wp->_m);
@@ -17690,7 +17760,7 @@ protected:
 	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form(size_t begin)noexcept override final{
 		auto result = _to->get_the_largest_complete_data_block_begin_form(_sub_begin+begin);
 		auto size	= min(result.size(),_sub_size-begin);
-		return {result.begin(), note::size(size)};
+		return{result.begin(), note::size(size)};
 	}
 	[[nodiscard]]virtual bool same_struct_equal(ptr_t with)noexcept(equal.nothrow<char_T>)override final{
 		auto wp=down_cast<this_t*>(with.get());
@@ -17993,7 +18063,7 @@ protected:
 			const char_T* head_begin = _m.end() - _used_size;
 			const char_T* head_end	 = _m.end();
 			const char_T* ret_begin	 = begin+head_begin;
-			return {ret_begin, head_end};
+			return{ret_begin, head_end};
 		}
 	}
 	[[nodiscard]]virtual bool same_struct_equal(ptr_t with)noexcept(equal.nothrow<char_T>)override final{
@@ -18315,7 +18385,7 @@ protected:
 			return _to->get_the_largest_complete_data_block_begin_form(begin);
 		else {
 			begin-=_to_size;
-			return {_m.begin()+begin,note::size(_used_size-begin)};
+			return{_m.begin()+begin,note::size(_used_size-begin)};
 		}
 	}
 	[[nodiscard]]virtual bool same_struct_equal(ptr_t with)noexcept(equal.nothrow<char_T>)override final{
@@ -19420,10 +19490,10 @@ protected:
 		if constexpr(construct<char_T>.trivial<const char_T&> && destruct.trivial<char_T>){
 			if(!_static_data_p)
 				_static_data_p=get<comn_string_data_t<char_T>>(max_static_data_size,_value);
-			return {_static_data_p->get_data(_static_data_p),note::size(min(_size-begin,max_static_data_size))};
+			return{_static_data_p->get_data(_static_data_p),note::size(min(_size-begin,max_static_data_size))};
 		}
 		else
-			return {&_value,note::size<size_t>(1)};
+			return{&_value,note::size<size_t>(1)};
 	}
 	[[nodiscard]]virtual bool same_struct_equal(ptr_t with)noexcept(equal.nothrow<char_T>)override final{
 		auto wp=down_cast<this_t*>(with.get());
@@ -19539,11 +19609,11 @@ protected:
 		//END_BLOCK
 
 		//BLOCK: 已知需要拷贝cso全部内容，判断是否值得结束cso的检查
-		force_inline static constexpr bool the_size_worth_to_end_cso(size_t size)noexcept{
+		static force_inline constexpr bool the_size_worth_to_end_cso(size_t size)noexcept{
 			constexpr auto max_size=max(sizeof(comn_string_data_t<char_T>)*2/sizeof(char_T),(size_t)1);
 			return size>=max_size;
 		}
-		force_inline static void full_copy_cso_check(const string_t&str)noexcept{
+		static force_inline void full_copy_cso_check(const string_t&str)noexcept{
 			if(the_size_worth_to_end_cso(str.size()))
 				str._cso_check();
 		}
@@ -19873,7 +19943,7 @@ protected:
 				return _m->get_substr_data(begin,size);
 			}
 			else
-				return {};
+				return{};
 		}
 		[[nodiscard]]const char_T*	data()const noexcept{ if(_in_cso())return _get_cso_data();else return _m->get_data(_m); }
 		[[nodiscard]]char_T* writeable_data()noexcept{ return unique_c_str(); }
@@ -24123,7 +24193,7 @@ protected:\
 		template<typename T,class stream_T> requires(!::std::is_arithmetic_v<remove_cvref<T>> &&
 													 to_arithmetic.able<remove_cvref<T>> &&
 													 type_info<stream_T>.base_on<text_ostream<char_t>>) decltype(auto)
-		operator<<(stream_T&& stream, T&& data) noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>> && to_arithmetic.nothrow<T>) {
+		operator<<(stream_T&& stream, T&& data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>> && to_arithmetic.nothrow<T>) {
 			return stream << to_arithmetic(forward<T>(data));
 		}
 

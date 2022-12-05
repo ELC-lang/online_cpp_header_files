@@ -457,7 +457,7 @@ TYPE_MAPPER(unsigned long long)
 		template<class T>
 		inline constexpr type_uniquer_t type_uniquer{};
 		//任意类型转算数类型
-		constexpr inline struct to_arithmetic_t{
+		inline constexpr struct to_arithmetic_t{
 			template<class T,class type>
 			//由于::std::is_convertible_v的歧义性质，使用requires表达式辅助推断type是否为实际支持的类型
 			//由于requires表达式的强制性质，使用::std::is_convertible_v辅助推断隐式转换是否可行
@@ -736,10 +736,16 @@ TYPE_MAPPER(unsigned long long)
 				return to_arithmetic_base(::std::forward<T>(v));
 			}
 		}to_arithmetic{};
+		//判断wchar_t是否和char_t相同
+		inline constexpr bool wchar_t_same_as_char_t=sizeof(wchar_t)==sizeof(char_t);
+		//判断wchar_t是否和char16_t相同
+		inline constexpr bool wchar_t_same_as_char16_t=sizeof(wchar_t)==sizeof(char16_t);
 	}
 	using basic_environment::BIT_POSSIBILITY;
 	using basic_environment::unsigned_specific_size_t;
 	using basic_environment::to_arithmetic;
+	using basic_environment::wchar_t_same_as_char_t;
+	using basic_environment::wchar_t_same_as_char16_t;
 
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
 //_undefs.hpp
@@ -888,7 +894,7 @@ TYPE_MAPPER(unsigned long long)
 
 //file_end
 
-	#line 98 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 104 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -2224,15 +2230,15 @@ constexpr struct min_t{
 	static constexpr bool get_limit_able=was_not_an_ill_form(::std::numeric_limits<T>::min());
 
 	template<class...Args> requires able<Args...>
-	[[nodiscard]]constexpr auto operator()(Args&&...rest)const{
+	[[nodiscard]]constexpr auto operator()(Args&&...rest)const noexcept{
 		return ::std::min(forward<Args>(rest)...);
 	}
 	template<class T> requires able<::std::initializer_list<T>>
-	[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const{
+	[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const noexcept{
 		return ::std::min(l);
 	}
 	template<typename T> requires get_limit_able<T>
-	[[nodiscard]]constexpr auto operator()(type_info_t<T>)const{
+	[[nodiscard]]constexpr auto operator()(type_info_t<T>)const noexcept{
 		return ::std::numeric_limits<T>::min();
 	}
 }min{};
@@ -2252,15 +2258,15 @@ constexpr struct max_t{
 	static constexpr bool get_limit_able=was_not_an_ill_form(::std::numeric_limits<T>::max());
 
 	template<class...Args> requires able<Args...>
-	[[nodiscard]]constexpr auto operator()(Args&&...rest)const{
+	[[nodiscard]]constexpr auto operator()(Args&&...rest)const noexcept{
 		return ::std::max(forward<Args>(rest)...);
 	}
 	template<class T> requires able<::std::initializer_list<T>>
-	[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const{
+	[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const noexcept{
 		return ::std::max(l);
 	}
 	template<typename T> requires get_limit_able<T>
-	[[nodiscard]]constexpr auto operator()(type_info_t<T>)const{
+	[[nodiscard]]constexpr auto operator()(type_info_t<T>)const noexcept{
 		return ::std::numeric_limits<T>::max();
 	}
 }max{};
@@ -2696,11 +2702,11 @@ namespace note_n{
 	template<typename T>\
 	struct name##_t{\
 		T value;\
-		force_inline constexpr name##_t(T a):value(a){}\
+		force_inline constexpr name##_t(T a)noexcept:value(a){}\
 		template<class U>\
-		force_inline constexpr name##_t(name##_t<U>a):value(a.value){}\
-		force_inline constexpr operator T(){return value;}\
-		force_inline constexpr T operator()(){return value;}\
+		force_inline constexpr name##_t(name##_t<U>a)noexcept:value(a.value){}\
+		force_inline constexpr operator T()noexcept{return value;}\
+		force_inline constexpr T operator()()noexcept{return value;}\
 	};\
 	template<typename T>\
 	constexpr name##_t<T>name(T v){return{v};}
@@ -2817,12 +2823,12 @@ namespace array_like_n{
 		typedef array_like_view_t<T>base_t;
 		using base_t::base_t;
 
-		[[nodiscard]]constexpr static size_t get_length_of(T*ptr){
+		[[nodiscard]]constexpr static size_t get_length_of(T*ptr)noexcept{
 			if(*ptr)return get_length_of(ptr+1)+1;
 			else return 0;
 		}
 
-		constexpr array_end_by_zero_t(T*ptr):base_t(ptr,get_length_of(ptr)){}
+		constexpr array_end_by_zero_t(T*ptr)noexcept:base_t(ptr,get_length_of(ptr)){}
 	};
 
 	template<class T>
@@ -2867,41 +2873,41 @@ constexpr size_t number_of_possible_values_per=uintmax_t(max(type_info<::std::ma
 	用法: data_cast<T>(byte*) -> T&
 */
 template<class T>
-[[nodiscard]]force_inline constexpr T&data_cast(byte*p){return*reinterpret_cast<T*>(p);}
+[[nodiscard]]force_inline constexpr T&data_cast(byte*p)noexcept{return*reinterpret_cast<T*>(p);}
 template<class T>
-[[nodiscard]]force_inline constexpr T&launder_data_cast(byte*p){return*::std::launder(data_cast<T>(p));}
+[[nodiscard]]force_inline constexpr T&launder_data_cast(byte*p)noexcept{return*::std::launder(data_cast<T>(p));}
 /*!
 	功能: byte* 类型数据转换为 T*，不进行任何检查
 	用法: data_ptr_cast<T>(byte*) -> T*
 */
 template<class T>
-[[nodiscard]]force_inline constexpr T*data_ptr_cast(byte*p){return reinterpret_cast<T*>(p);}
+[[nodiscard]]force_inline constexpr T*data_ptr_cast(byte*p)noexcept{return reinterpret_cast<T*>(p);}
 template<class T>
-[[nodiscard]]force_inline constexpr T*launder_data_ptr_cast(byte*p){return ::std::launder(data_ptr_cast<T>(p));}
+[[nodiscard]]force_inline constexpr T*launder_data_ptr_cast(byte*p)noexcept{return ::std::launder(data_ptr_cast<T>(p));}
 /*!
 	功能: T* 指针转换为 byte*，不进行任何检查
 	用法: cast_to_data(T*) -> byte*
 */
 template<class T>
-[[nodiscard]]force_inline constexpr byte*cast_to_data(T*p){return reinterpret_cast<byte*>(p);}
+[[nodiscard]]force_inline constexpr byte*cast_to_data(T*p)noexcept{return reinterpret_cast<byte*>(p);}
 template<class T>
-[[nodiscard]]force_inline constexpr byte*launder_cast_to_data(T*p){return ::std::launder(cast_to_data(p));}
+[[nodiscard]]force_inline constexpr byte*launder_cast_to_data(T*p)noexcept{return ::std::launder(cast_to_data(p));}
 /*!
 	功能: const T* 指针转换为 const byte*，不进行任何检查
 	用法: cast_to_data(const T*) -> const byte*
 */
 template<class T>
-[[nodiscard]]force_inline constexpr const byte*cast_to_data(const T*p){return reinterpret_cast<const byte*>(p);}
+[[nodiscard]]force_inline constexpr const byte*cast_to_data(const T*p)noexcept{return reinterpret_cast<const byte*>(p);}
 template<class T>
-[[nodiscard]]force_inline constexpr const byte*launder_cast_to_data(const T*p){return ::std::launder(cast_to_data(p));}
+[[nodiscard]]force_inline constexpr const byte*launder_cast_to_data(const T*p)noexcept{return ::std::launder(cast_to_data(p));}
 /*!
 	功能: T& 转换为 U&，不进行任何检查
 	用法: union_cast<U>(T&) -> U&
 */
 template<class U,class T>
-[[nodiscard]]force_inline constexpr U&union_cast(T&t){return*reinterpret_cast<U*>(&t);}
+[[nodiscard]]force_inline constexpr U&union_cast(T&t)noexcept{return*reinterpret_cast<U*>(&t);}
 template<class U,class T>
-[[nodiscard]]force_inline constexpr U&launder_union_cast(T&t){return*::std::launder(union_cast<U>(t));}
+[[nodiscard]]force_inline constexpr U&launder_union_cast(T&t)noexcept{return*::std::launder(union_cast<U>(t));}
 
 /*!
 	功能: data_block辅助变量模板，接受数个类型并表现为其中的最大对齐值
@@ -2941,17 +2947,17 @@ struct data_block:non_copy_construct_able,non_move_construct_able{
 					_data[i]=byte{};
 	}
 	pop_msvc_warning();
-	force_inline constexpr operator byte*(){return _data;}
-	force_inline constexpr operator const byte*()const{return _data;}
+	force_inline constexpr operator byte*()noexcept{return _data;}
+	force_inline constexpr operator const byte*()const noexcept{return _data;}
 	template<class T> requires(sizeof(T)<=size&&alignof(T)<=align)
-	force_inline constexpr auto&operator=(T&&t){
+	force_inline constexpr auto&operator=(T&&t)noexcept{
 		return data_cast<remove_cvref<T>>(_data)=forward<T>(t);
 	}
 	//begin & end
-	force_inline constexpr byte*begin(){return _data;}
-	force_inline constexpr byte*end(){return _data+size;}
-	force_inline constexpr const byte*begin()const{return _data;}
-	force_inline constexpr const byte*end()const{return _data+size;}
+	force_inline constexpr byte*begin()noexcept{return _data;}
+	force_inline constexpr byte*end()noexcept{return _data+size;}
+	force_inline constexpr const byte*begin()const noexcept{return _data;}
+	force_inline constexpr const byte*end()const noexcept{return _data+size;}
 };
 /*!
 	功能: data_block辅助类模板，接受一个size_t描述对齐大小的类型模板
@@ -2966,12 +2972,12 @@ struct alignas(max_align_of<Ts...>)align_as_t{};
 template<class T>
 struct data_view:array_like_view_t<byte>{
 	using array_like_view_t<byte>::array_like_view_t;
-	constexpr data_view(T*p):array_like_view_t<byte>{cast_to_data(p),sizeof(T)}{}
+	constexpr data_view(T*p)noexcept:array_like_view_t<byte>{cast_to_data(p),sizeof(T)}{}
 };
 template<class T>
 struct data_view<const T>:array_like_view_t<const byte>{
 	using array_like_view_t<const byte>::array_like_view_t;
-	constexpr data_view(const T*p):array_like_view_t<const byte>{cast_to_data(p),sizeof(T)}{}
+	constexpr data_view(const T*p)noexcept:array_like_view_t<const byte>{cast_to_data(p),sizeof(T)}{}
 };
 
 /*!
@@ -2979,7 +2985,7 @@ struct data_view<const T>:array_like_view_t<const byte>{
 	用法: full_equal_in_byte(const T&a,const T&b) -> bool
 */
 template<class T>
-[[nodiscard]]constexpr bool full_equal_in_byte(const T&a,const T&b){
+[[nodiscard]]constexpr bool full_equal_in_byte(const T&a,const T&b)noexcept{
 	return equal(cast_to_data(&a),cast_to_data(&b),sizeof(T));
 }
 
@@ -3092,7 +3098,7 @@ namespace hash_n{
 	inline struct hash_t{
 	private:
 		template<class T>
-		[[nodiscard]]static constexpr inline bool nothrow_helper()noexcept{
+		[[nodiscard]]static inline constexpr bool nothrow_helper()noexcept{
 			if constexpr(is_pointer<T>)
 				return noexcept(pointer_hash(declvalue(const T&)));
 			elseif constexpr(is_fundamental_hash<T>)
@@ -3113,7 +3119,7 @@ namespace hash_n{
 		static constexpr bool nothrow=nothrow_helper<T>();
 	private:
 		template<class T>
-		[[nodiscard]]static constexpr inline bool able_helper()noexcept{
+		[[nodiscard]]static inline constexpr bool able_helper()noexcept{
 			if constexpr(is_pointer<T>)
 				return true;
 			elseif constexpr(is_fundamental_hash<T>)
@@ -3231,14 +3237,14 @@ namespace hash_n{
 
 				size=size%bitnumof_void;
 				if(value._value==0 || size==0)
-					return {void_hash};
+					return{void_hash};
 				if(size >= bit_range_max){
 					const bool is_npos = ::std::popcount(value._value)%BIT_POSSIBILITY;
 					aret = is_npos?npos_hash:void_hash;
 					size-=bit_range_max;
 				}
 				if(!size)
-					return {aret};
+					return{aret};
 			}
 			rot_iterator<decltype(aret)>rotl_offset = size;
 			while(size--){
@@ -3268,7 +3274,7 @@ namespace hash_n{
 		@returns The hash value of the array.
 		*/
 		template<class T>
-		[[nodiscard]]constexpr inline hash_value_t hash(const T*a,size_t size)const noexcept(nothrow<const T>){
+		[[nodiscard]]inline constexpr hash_value_t hash(const T*a,size_t size)const noexcept(nothrow<const T>){
 			return with_calculated_before(hash(nothing),0,a,size);
 		}
 		/*!
@@ -3293,7 +3299,7 @@ namespace hash_n{
 		@returns array_like_view_t<T> 对象的哈希值。
 		*/
 		template<class T> requires is_not_signal_value_for_array_like<T>
-		[[nodiscard]]constexpr inline hash_value_t hash(const array_like_view_t<T>a)const noexcept(nothrow<T>){
+		[[nodiscard]]inline constexpr hash_value_t hash(const array_like_view_t<T>a)const noexcept(nothrow<T>){
 			return hash(a.begin(),a.size());
 		}
 		/*!
@@ -3306,7 +3312,7 @@ namespace hash_n{
 		@returns array_like_view_t<T> 对象的哈希值。
 		*/
 		template<class T> requires is_not_signal_value_for_array_like<T>
-		[[nodiscard]]constexpr inline hash_value_t with_calculated_before(hash_value_t before,size_t before_size,const array_like_view_t<T>a)const noexcept{
+		[[nodiscard]]inline constexpr hash_value_t with_calculated_before(hash_value_t before,size_t before_size,const array_like_view_t<T>a)const noexcept{
 			return with_calculated_before(before,before_size,a.begin(),a.size());
 		}
 
@@ -3353,7 +3359,7 @@ namespace range_n{
 
 		template <class U> requires(type_info<T>.can_convert_to<U>)
 		constexpr operator range_t<U>()const noexcept(type_info<T>.can_nothrow_convert_to<U>){
-			return {_begin,_end};
+			return{_begin,_end};
 		}
 	};
 
@@ -4292,12 +4298,12 @@ private:
 	[[no_unique_address]]bool _is_false;
 	[[no_unique_address]]bool _is_unknown;
 public:
-	constexpr logical_bool(special_init_t,bool is_true,bool is_false,bool is_unknown=0):_is_true(is_true),_is_false(is_false),_is_unknown(is_unknown){}
-	constexpr logical_bool(bool a):_is_true(a),_is_false(!a),_is_unknown(0){}
-	constexpr logical_bool(const logical_bool&)=default;
-	constexpr logical_bool&operator=(const logical_bool&)& =default;
-	constexpr explicit operator bool()const{return _is_true && !_is_unknown;}
-	constexpr logical_bool operator!()const{
+	constexpr logical_bool(special_init_t,bool is_true,bool is_false,bool is_unknown=0)noexcept:_is_true(is_true),_is_false(is_false),_is_unknown(is_unknown){}
+	constexpr logical_bool(bool a)noexcept:_is_true(a),_is_false(!a),_is_unknown(0){}
+	constexpr logical_bool(const logical_bool&)noexcept=default;
+	constexpr logical_bool&operator=(const logical_bool&)&noexcept=default;
+	constexpr explicit operator bool()const noexcept{return _is_true && !_is_unknown;}
+	constexpr logical_bool operator!()const noexcept{
 		logical_bool aret=*this;
 		swap(aret._is_true,aret._is_false);
 		return aret;
@@ -4344,7 +4350,7 @@ Returns true if all bytes in the input are zero.
 @returns True if all bytes in the input are zero.
 */
 template<class T>
-constexpr inline bool is_all_byte_zero(T&&a){
+inline constexpr bool is_all_byte_zero(T&&a)noexcept{
 	const byte*ptr=cast_to_data(addressof(a));
 	const byte*end=ptr+sizeof(a);
 	while(ptr!=end)
@@ -4449,9 +4455,9 @@ template<typename T>
 class maybe_fail_reference{
 	T*_ref_to;
 public:
-	constexpr maybe_fail_reference(T&a):_ref_to(&a){}
+	constexpr maybe_fail_reference(T&a)noexcept:_ref_to(&a){}
 	constexpr maybe_fail_reference(const maybe_fail_reference&)=default;
-	constexpr maybe_fail_reference(note::fail_t):_ref_to(nullptr){}
+	constexpr maybe_fail_reference(note::fail_t)noexcept:_ref_to(nullptr){}
 
 	[[nodiscard]]bool not_fail()noexcept{return _ref_to;}
 	[[nodiscard]]bool fail()noexcept{return!not_fail();}
@@ -4558,7 +4564,7 @@ namespace rand_n{
 		static constexpr auto  εντροπία_size = εντροπία_num * sizeof(seed_type);
 		byte _εντροπία_data[εντροπία_size];
 
-		inline static constexpr void sowing_seed_one_step(seed_type&seed)noexcept{seed=13*seed+7;}
+		static inline constexpr void sowing_seed_one_step(seed_type&seed)noexcept{seed=13*seed+7;}
 	public:
 		[[nodiscard]]inline constexpr seed_type get_origin()const noexcept{return _seed_origin;}
 		inline constexpr void set(seed_type seed)noexcept{
@@ -4668,7 +4674,7 @@ namespace rand_n{
 		typedef base_rand_t base_t;
 	public:
 		using base_t::base_t;
-		[[nodiscard]]force_inline static constexpr this_t with_seed(rand_seed_t&seed)noexcept{return this_t(seed);}
+		[[nodiscard]]static force_inline constexpr this_t with_seed(rand_seed_t&seed)noexcept{return this_t(seed);}
 		//rand
 		[[nodiscard]]force_inline T operator()()const noexcept{return _seed.gen_randbit<T>();}
 		//浮点特供：[0,1)和[0,1]
@@ -4755,7 +4761,7 @@ namespace rand_n{
 		typedef base_rand_t base_t;
 	public:
 		using base_t::base_t;
-		[[nodiscard]]force_inline static constexpr this_t with_seed(rand_seed_t&seed)noexcept{return this_t(seed);}
+		[[nodiscard]]static force_inline constexpr this_t with_seed(rand_seed_t&seed)noexcept{return this_t(seed);}
 		[[nodiscard]]force_inline T operator()()const noexcept{
 			return _seed.gen_randbit<unsigned char>()&unsigned char{1};
 		}
