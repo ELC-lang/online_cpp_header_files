@@ -7193,6 +7193,9 @@ protected:\
 				GetConsoleScreenBufferInfo(state.hConsole,&csbi);
 				state.text_color=csbi.wAttributes;
 				SetConsoleTextAttribute(state.hConsole,FOREGROUND_RED);
+			#elif SYSTEM_TYPE == linux
+				//chenge color to red
+				fputs("\033[31m",stderr);
 			#endif
 		}
 
@@ -7217,6 +7220,8 @@ protected:\
 				SetConsoleTextAttribute(state.hConsole,state.text_color);
 			#elif SYSTEM_TYPE == linux
 				fflush(stderr);
+				//chenge color back
+				fputs("\033[0m",stderr);
 			#endif
 		}
 
@@ -7450,7 +7455,7 @@ protected:\
 
 //file_end
 
-		#line 159 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
+		#line 164 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
 	}
 	//
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
@@ -7470,7 +7475,7 @@ protected:\
 
 //file_end
 
-	#line 162 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
+	#line 167 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/die.hpp"
 
 	namespace elc::defs{
 		using elc::APIs::die::die;
