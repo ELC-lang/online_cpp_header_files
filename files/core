@@ -6679,6 +6679,8 @@ protected:\
 		inline constexpr auto utf16_to_utf8(char16_t ch, char8_t *out)noexcept{
 			return utf16_to_utf8(out, &ch, 1);
 		}
+		inline constexpr void utf16_to_utf32(char32_t *out, char16_t in)noexcept=delete;
+		inline constexpr void utf8_to_utf16(char16_t *out, char8_t in)noexcept=delete;
 
 		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
 //_undefs.hpp
@@ -6827,7 +6829,7 @@ protected:\
 
 //file_end
 
-		#line 435 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
+		#line 437 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
 	}
 	//
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
@@ -6847,7 +6849,7 @@ protected:\
 
 //file_end
 
-	#line 438 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
+	#line 440 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
 #endif
 
 //file_end
@@ -7245,7 +7247,7 @@ protected:\
 					ConsoleLogEnd(state);
 				}
 				elseif constexpr(wchar_t_same_as_char_t){
-					string_view_t<wchar_t> err_msg_in_wchar{(const wchar_t*)err_msg.data(),err_msg.size()};
+					const string_view_t<wchar_t> err_msg_in_wchar{(const wchar_t*)err_msg.data(),err_msg.size()};
 					#if defined(_WINMAIN_)
 						::MessageBoxW(NULL,err_msg_in_wchar.data(),NULL,MB_ICONERROR);
 					#endif
@@ -7266,7 +7268,7 @@ protected:\
 					for(auto c:err_msg){
 						s = ::std::c32rtomb(err_msg_write, c, &stat);
 						push_and_disable_msvc_warning(26475)//强转警告diss
-						if(s == size_t(-1))
+						if(s == range_n::npos)
 							die();
 						pop_msvc_warning();
 						err_msg_write += s;
@@ -7905,6 +7907,9 @@ namespace elc::defs::locale::str{
 	inline namespace streams{
 		inline constexpr auto stream_read_error=es"流读取错误"_constexpr_str;
 		inline constexpr auto stream_write_error=es"流写入错误"_constexpr_str;
+	}
+	inline namespace die{
+		//TODO
 	}
 }
 
@@ -16244,6 +16249,16 @@ protected:\
 		decltype(auto)operator<<(stream_T&&stream,const type_name_t&name)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
 			return stream << to_char_t_str(name);
 		}
+		//output type_info
+		template<class stream_T> requires(type_info<stream_T>.base_on<text_ostream<char_t>>)
+		decltype(auto)operator<<(stream_T&&stream,const base_type_info_t&info)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
+			return stream << info.get_name();
+		}
+		//output ::std::type_info
+		template<class stream_T> requires(type_info<stream_T>.base_on<text_ostream<char_t>>)
+		decltype(auto)operator<<(stream_T&&stream,const ::std::type_info&info)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
+			return stream << type_name_t{info.name()};
+		}
 	}
 
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
@@ -16405,7 +16420,7 @@ protected:\
 
 //file_end
 
-	#line 23 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
+	#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
 }
 #endif
 
