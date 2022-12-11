@@ -6374,6 +6374,8 @@ protected:\
 					*out = (code1 << 18) + (code2 << 12) + (code3 << 6) + code4 - 0x3C82080;
 					return 4;
 				}
+				else
+					return npos;
 			}
 			inline constexpr size_t get_decode_utf8_size(const char8_t* in)noexcept{
 				if(*in < 0x80) /* 1-byte sequence */
@@ -6726,6 +6728,29 @@ protected:\
 		inline constexpr void utf16_to_utf32(char32_t *out, char16_t in)noexcept=delete;
 		inline constexpr void utf8_to_utf16(char16_t *out, char8_t in)noexcept=delete;
 
+		//
+
+		//utf32 to utf32 for compatible
+		inline constexpr auto utf32_to_utf32(char32_t *out, const char32_t *in, size_t len)noexcept{
+			const auto end = in + len;
+			//for return
+			const auto out_start = out;
+			const auto in_start = in;
+			auto result_builder = [&](bool success)noexcept{
+				return code_convert_result<char32_t, char32_t>(success, string_view_t<char32_t>(in_start, in - in_start), string_view_t<char32_t>(out_start, out - out_start));
+			};
+			while(in < end){
+				*out++ = *in++;
+			}
+			return result_builder(true);
+		}
+		inline constexpr auto utf32_to_utf32(char32_t *out, string_view_u32_t in)noexcept{
+			return utf32_to_utf32(out, in.data(), in.size());
+		}
+		inline constexpr auto utf32_to_utf32(char32_t ch, char32_t *out)noexcept{
+			return utf32_to_utf32(out, &ch, 1);
+		}
+		
 		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
 //_undefs.hpp
 /*
@@ -6873,7 +6898,7 @@ protected:\
 
 //file_end
 
-		#line 437 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
+		#line 462 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
 	}
 	//
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
@@ -6893,7 +6918,7 @@ protected:\
 
 //file_end
 
-	#line 440 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
+	#line 465 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/char_set.hpp"
 #endif
 
 //file_end
@@ -11784,7 +11809,7 @@ namespace array_n{
 
 		#if defined(DEBUG) || defined(_DEBUG)
 		/*return{ptr,size};*/
-		constexpr array_t(T*a,size_t s):_m(a),_size_for_debug_view(s)noexcept{}
+		constexpr array_t(T*a,size_t s)noexcept:_m(a),_size_for_debug_view(s){}
 		#else
 		/*return{ptr};*/
 		constexpr array_t(T*a)noexcept:_m(a){}
