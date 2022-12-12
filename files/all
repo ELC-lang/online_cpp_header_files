@@ -32828,11 +32828,12 @@ protected:\
 		#endif
 		handle_type;
 
+
 		//定义基础类型
 		//用配套的系统api可以从handle_type指代的文件流中读写的基础类型，越大越好
 		typedef
 		#if SYSTEM_TYPE == windows
-			char8_t//windows下的char8_t是utf-8，可以使用WriteFile和ReadFile从控制台的handle_type中读写
+			wchar_t//windows下的wchar_t是utf-16，可以使用WriteConsoleW和ReadConsoleW从控制台的handle_type中读写
 		#elif SYSTEM_TYPE == linux
 			char//linux下的char是utf-8，可以使用write和read从控制台的handle_type中读写
 		#endif
@@ -32840,7 +32841,7 @@ protected:\
 
 		constexpr size_t code_convert_buf_size=
 		#if SYSTEM_TYPE == windows
-			char_set::utf32_to_utf8_code_size
+			char_set::utf32_to_utf16_code_size
 		#elif SYSTEM_TYPE == linux
 			char_set::utf32_to_utf8_code_size
 		#endif
@@ -32848,18 +32849,26 @@ protected:\
 
 		constexpr inline bool need_code_convert=type_info<base_input_char_type>!=type_info<char_t>;
 
+		inline bool is_terminal_stream(handle_type handle)noexcept{
+			#if SYSTEM_TYPE == windows
+				return GetFileType(handle)==FILE_TYPE_CHAR;
+			#elif SYSTEM_TYPE == linux
+				return isatty(handle);
+			#endif
+		}
+
 		//编码转换
 		//code_convert_impl
 		inline auto code_convert_to_input_char_t_impl(base_input_char_type* out, const char32_t* in, size_t size)noexcept{
 			#if SYSTEM_TYPE == windows
-				return char_set::utf32_to_utf8(out, in, size);
+				return char_set::utf32_to_utf16((char16_t*)out, in, size);
 			#elif SYSTEM_TYPE == linux
 				return char_set::utf32_to_utf8(out, in, size);
 			#endif
 		}
 		inline auto code_convert_to_char_t_impl(char32_t* out, const base_input_char_type* in, size_t size)noexcept{
 			#if SYSTEM_TYPE == windows
-				return char_set::utf8_to_utf32(out, in, size);
+				return char_set::utf16_to_utf32(out, (const char16_t*)in, size);
 			#elif SYSTEM_TYPE == linux
 				return char_set::utf8_to_utf32(out, in, size);
 			#endif
@@ -32867,7 +32876,7 @@ protected:\
 		//单个字符
 		inline auto code_convert_to_input_char_t_impl(char32_t in, base_input_char_type* out)noexcept{
 			#if SYSTEM_TYPE == windows
-				return char_set::utf32_to_utf8(in, out);
+				return char_set::utf32_to_utf16(in, (char16_t*)out);
 			#elif SYSTEM_TYPE == linux
 				return char_set::utf32_to_utf8(in, out);
 			#endif
@@ -32876,31 +32885,31 @@ protected:\
 
 		//初始化流
 		force_inline handle_type init_output_stream()noexcept{
+			auto aret=
 			#if SYSTEM_TYPE == windows
-				//set code page to utf-8(65001)
-				SetConsoleOutputCP(65001);
-				return GetStdHandle(STD_OUTPUT_HANDLE);
+				GetStdHandle(STD_OUTPUT_HANDLE);
 			#elif SYSTEM_TYPE == linux
-				return STDOUT_FILENO;
+				STDOUT_FILENO;
 			#endif
+			return aret;
 		}
 		force_inline handle_type init_input_stream()noexcept{
+			auto aret=
 			#if SYSTEM_TYPE == windows
-				//set code page to utf-8(65001)
-				SetConsoleCP(65001);
-				return GetStdHandle(STD_INPUT_HANDLE);
+				GetStdHandle(STD_INPUT_HANDLE);
 			#elif SYSTEM_TYPE == linux
-				return STDIN_FILENO;
+				STDIN_FILENO;
 			#endif
+			return aret;
 		}
 		force_inline handle_type init_error_stream()noexcept{
+			auto aret=
 			#if SYSTEM_TYPE == windows
-				//set code page to utf-8(65001)
-				SetConsoleCP(65001);
-				return GetStdHandle(STD_ERROR_HANDLE);
+				GetStdHandle(STD_ERROR_HANDLE);
 			#elif SYSTEM_TYPE == linux
-				return STDERR_FILENO;
+				STDERR_FILENO;
 			#endif
+			return aret;
 		}
 
 		//basic_read_impl
@@ -32923,6 +32932,29 @@ protected:\
 				return write_count;
 			#elif SYSTEM_TYPE == linux
 				return write(handle, buffer, size);
+			#endif
+		}
+		//由于windows的WriteFile不能正确处理终端io，特化终端io所需的impl of read/write
+		//basic_read_for_terminal_impl
+		inline size_t basic_read_for_terminal_impl(handle_type handle, base_input_char_type* buffer, size_t size)noexcept{
+			#if SYSTEM_TYPE == windows
+				DWORD read_count;
+				push_and_disable_msvc_warning(6031);//返回值忽略警告diss
+				ReadConsoleW(handle, buffer,(DWORD)size, &read_count, nullptr);
+				pop_msvc_warning();
+				return read_count;
+			#elif SYSTEM_TYPE == linux
+				return read(handle, buffer, size*sizeof(base_input_char_type))/sizeof(base_input_char_type);
+			#endif
+		}
+		//basic_write_for_terminal_impl
+		inline size_t basic_write_for_terminal_impl(handle_type handle, const base_input_char_type* buffer, size_t size)noexcept{
+			#if SYSTEM_TYPE == windows
+				DWORD write_count;
+				WriteConsoleW(handle, buffer,(DWORD)size, &write_count, nullptr);
+				return write_count;
+			#elif SYSTEM_TYPE == linux
+				return write(handle, buffer, size*sizeof(base_input_char_type))/sizeof(base_input_char_type);
 			#endif
 		}
 		//basic_flush_impl
@@ -32999,11 +33031,11 @@ protected:\
 		}
 
 		inline void write_text_to_terminal_stream(handle_type stream,const char_t*buffer,size_t size)noexcept{
-			#if SYSTEM_TYPE == windows
-				if(GetConsoleOutputCP() != 65001)
-					SetConsoleOutputCP(65001);//set code page to utf-8(65001)
-			#endif
 			if constexpr(need_code_convert){
+				if (!is_terminal_stream(stream)){
+					basic_write_impl(stream,buffer,size*sizeof(char_t));
+					return;
+				}
 				//convert utf-32 text to base_input_char_type and write it to stream
 				push_and_disable_msvc_warning(26494);//未初始化警告diss
 				ptrdiff_t s;
@@ -33015,7 +33047,7 @@ protected:\
 					if(s == range_n::npos)
 						die_with(locale::str::code_convert_error);
 					//write it to stream
-					basic_write_impl(stream,r,s*sizeof(base_input_char_type));
+					basic_write_for_terminal_impl(stream,r,s);
 				}
 			}else{
 				//write it to stream
@@ -33023,10 +33055,15 @@ protected:\
 			}
 		}
 		inline size_t read_text_from_terminal_stream(handle_type stream,char_t*buffer,size_t size,handle_type echo_stream)noexcept{
+			if(!is_terminal_stream(stream)){
+				//read it from stream
+				auto read_size=basic_read_impl(stream,buffer,size*sizeof(char_t))/sizeof(char_t);
+				if(echo_stream)
+					basic_write_impl(echo_stream,buffer,read_size*sizeof(char_t));
+				return read_size;
+			}
 			//GetConsoleMode if LINE_INPUT_MODE
 			#if SYSTEM_TYPE == windows
-				if(GetConsoleCP() != 65001)
-					SetConsoleCP(65001);//set code page to utf-8(65001)
 				DWORD ConsoleModeBackup;
 				GetConsoleMode(stream, &ConsoleModeBackup);
 				//disable line input mode
@@ -33053,7 +33090,7 @@ protected:\
 				size_t i=0;
 				for(;i<size;i++){
 					//read it from stream
-					s=basic_read_impl(stream,r+v,sizeof(base_input_char_type)*(code_convert_buf_size-v));
+					s=basic_read_for_terminal_impl(stream,r+v,code_convert_buf_size-v);
 					if(s == 0)
 						break;
 					r[s+v]=0;
@@ -33063,7 +33100,7 @@ protected:\
 						die_with(locale::str::code_convert_error);
 					s=z.processed_output().size();
 					if(echo_stream)
-						basic_write_impl(echo_stream,r,s*sizeof(base_input_char_type));
+						basic_write_for_terminal_impl(echo_stream,r,s);
 					v=code_convert_buf_size-s;
 					copy_assign[v](r,r+s);
 				}
@@ -33233,7 +33270,7 @@ protected:\
 
 //file_end
 
-		#line 304 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/streams.hpp"
+		#line 341 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/streams.hpp"
 	}
 #endif
 
