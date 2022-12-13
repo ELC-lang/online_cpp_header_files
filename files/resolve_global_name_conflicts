@@ -1910,7 +1910,7 @@ pop_msvc_warning();
 */
 
 /// 快捷定义特殊类型的constexpr
-#define defspecflag(name)\
+#define defspecflag(name) \
 constexpr struct name##_t{} name{}
 
 /// 引用计数从不为0的构造
@@ -2698,7 +2698,7 @@ constexpr struct compare_t{
 项目地址：https://github.com/steve02081504/ELC
 */
 namespace note_n{
-	#define def_note(name)\
+	#define def_note(name) \
 	template<typename T>\
 	struct name##_t{\
 		T value;\
@@ -4446,7 +4446,7 @@ struct invoke_t{
 	};
 	template<class Ret_t>
 	static constexpr with_return_type_t<Ret_t>with_return_type{};
-	
+
 	/*!
 	A function that returns a lambda that applies a function to a value.
 

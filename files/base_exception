@@ -58,65 +58,6 @@ elc使用的字符串.
 	#define ELC_LOCALE
 	#include <locale>
 	//
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/default_data_type.hpp"
-//default_data_type.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-namespace elc{
-	/*ELC内部string统一采用char_t宽字符，使用setlocale(LC_ALL,"en_US.utf8")下的UTF编码。*/
-	typedef char32_t char_t;
-	/*c_string表示*/
-	typedef char_t* string_ptr_t;
-	/*c_string表示*/
-	typedef const char_t* const_string_ptr_t;
-	/*ELC内部钦定int_t类型*/
-	typedef int64_t int_t;
-	/*ELC内部钦定uint_t类型*/
-	typedef uint64_t uint_t;
-	/*ELC内部钦定float_t类型*/
-	typedef double float_t;
-	/*ELC内部钦定float_size_t类型，用以描述内存大小的浮点状况*/
-	typedef long double float_size_t;
-}
-
-//file_end
-
-	#line 17 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/_char.hpp"
-//_char.hpp
-/*
-未完成的elc解释器_share文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/steve02081504/ELC
-*/
-namespace elc::defs::locale{
-	inline const ::std::locale default_locale{"en_US.utf8"};
-	namespace char_n{
-		template <class charT> bool isspace (charT c){ return isspace (c,default_locale); }
-		template <class charT> bool isprint (charT c){ return isprint (c,default_locale); }
-		template <class charT> bool iscntrl (charT c){ return iscntrl (c,default_locale); }
-		template <class charT> bool isupper (charT c){ return isupper (c,default_locale); }
-		template <class charT> bool islower (charT c){ return islower (c,default_locale); }
-		template <class charT> bool isalpha (charT c){ return isalpha (c,default_locale); }
-		template <class charT> bool isdigit (charT c){ return isdigit (c,default_locale); }
-		template <class charT> bool ispunct (charT c){ return ispunct (c,default_locale); }
-		template <class charT> bool isxdigit(charT c){ return isxdigit(c,default_locale); }
-		template <class charT> bool isalnum (charT c){ return isalnum (c,default_locale); }
-		template <class charT> bool isgraph (charT c){ return isgraph (c,default_locale); }
-		template <class charT> charT toupper(charT c){ return toupper (c,default_locale); }
-		template <class charT> charT tolower(charT c){ return tolower (c,default_locale); }
-	}
-}
-
-//file_end
-
-	#line 18 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
-	//
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 //base_defs
 //at namespace ::
@@ -1984,7 +1925,7 @@ pop_msvc_warning();
 */
 
 /// 快捷定义特殊类型的constexpr
-#define defspecflag(name)\
+#define defspecflag(name) \
 constexpr struct name##_t{} name{}
 
 /// 引用计数从不为0的构造
@@ -2772,7 +2713,7 @@ constexpr struct compare_t{
 项目地址：https://github.com/steve02081504/ELC
 */
 namespace note_n{
-	#define def_note(name)\
+	#define def_note(name) \
 	template<typename T>\
 	struct name##_t{\
 		T value;\
@@ -4520,7 +4461,7 @@ struct invoke_t{
 	};
 	template<class Ret_t>
 	static constexpr with_return_type_t<Ret_t>with_return_type{};
-	
+
 	/*!
 	A function that returns a lambda that applies a function to a value.
 
@@ -5052,7 +4993,7 @@ using rand_n::rand_seed;
 
 //file_end
 
-	#line 20 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
+	#line 17 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
 	//
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //_defs.hpp
@@ -5321,7 +5262,7 @@ protected:\
 
 //file_end
 
-	#line 22 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
+	#line 19 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/zh_cn.hpp"
 //zh_cn.hpp
 /*
@@ -5375,7 +5316,7 @@ namespace elc::defs::locale::str{
 
 //file_end
 
-	#line 23 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
+	#line 20 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
 //_undefs.hpp
 /*
@@ -5523,7 +5464,7 @@ namespace elc::defs::locale::str{
 
 //file_end
 
-	#line 24 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
+	#line 21 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
 	//
 #endif
 
