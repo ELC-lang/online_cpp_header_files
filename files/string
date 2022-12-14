@@ -3004,8 +3004,10 @@ struct data_block:non_copy_construct_able,non_move_construct_able{
 /*!
 	功能: data_block辅助类模板，接受一个size_t描述对齐大小的类型模板
 */
+push_and_disable_msvc_warning(4324);
 template<class...Ts>
 struct alignas(max_align_of<Ts...>)align_as_t{};
+pop_msvc_warning();
 
 /*!
 	功能: data_view类模板,接受一个类型参数，提供对byte数组的访问和遍历
@@ -6290,9 +6292,6 @@ protected:\
 
 #define GET_PROPS(c, result) ((result)=UTRIE_GET16(&propstrie, c))
 
-#define IS_THAT_CONTROL_SPACE(c) \
-	(c<=0x9f && ((c>=TAB && c<=CR) || (c>=0x1c && c <=0x1f) || c==0x85))
-
 //file_end
 
 		#line 22 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/char_set/_body.hpp"
@@ -8571,34 +8570,34 @@ force_inline constexpr auto auto_to_utf32(char8_t ch, char32_t *out)noexcept{
 项目地址：https://github.com/steve02081504/ELC
 */
 /* Checks if ch is a lower case letter.*/
-constexpr inline bool islower(char_t c)noexcept{
+inline constexpr bool islower(char_t c)noexcept{
 	uint32_t props;
 	GET_PROPS(c, props);
 	return(GET_CATEGORY(props)==U_LOWERCASE_LETTER);
 }
 
 /* Checks if ch is an upper case letter.*/
-constexpr inline bool isupper(char_t c)noexcept{
+inline constexpr bool isupper(char_t c)noexcept{
 	uint32_t props;
 	GET_PROPS(c, props);
 	return(GET_CATEGORY(props)==U_UPPERCASE_LETTER);
 }
 
 /* Checks if ch is a title case letter; usually upper case letters.*/
-constexpr inline bool istitle(char_t c)noexcept{
+inline constexpr bool istitle(char_t c)noexcept{
 	uint32_t props;
 	GET_PROPS(c, props);
 	return(GET_CATEGORY(props)==U_TITLECASE_LETTER);
 }
 
 /* Checks if ch is a decimal digit. */
-constexpr inline bool isdigit(char_t c)noexcept{
+inline constexpr bool isdigit(char_t c)noexcept{
 	uint32_t props;
 	GET_PROPS(c, props);
 	return(GET_CATEGORY(props)==U_DECIMAL_DIGIT_NUMBER);
 }
 
-constexpr inline bool isxdigit(char_t c)noexcept{
+inline constexpr bool isxdigit(char_t c)noexcept{
 	uint32_t props;
 
 	/* check ASCII and Fullwidth ASCII a-fA-F */
@@ -8614,41 +8613,41 @@ constexpr inline bool isxdigit(char_t c)noexcept{
 }
 
 /* Checks if the Unicode character is a letter.*/
-constexpr inline bool isalpha(char_t c)noexcept{
+inline constexpr bool isalpha(char_t c)noexcept{
 	uint32_t props;
 	GET_PROPS(c, props);
 	return((CAT_MASK(props)&U_GC_L_MASK)!=0);
 }
 
 /* Checks if c is a letter or a decimal digit */
-constexpr inline bool isalnum(char_t c)noexcept{
+inline constexpr bool isalnum(char_t c)noexcept{
 	uint32_t props;
 	GET_PROPS(c, props);
 	return((CAT_MASK(props)&(U_GC_L_MASK|U_GC_ND_MASK))!=0);
 }
 
 /* Checks if ch is a unicode character with assigned character type.*/
-constexpr inline bool isdefined(char_t c)noexcept{
+inline constexpr bool isdefined(char_t c)noexcept{
 	uint32_t props;
 	GET_PROPS(c, props);
 	return(GET_CATEGORY(props)!=0);
 }
 
 /* Checks if the Unicode character is a base form character that can take a diacritic.*/
-constexpr inline bool isbase(char_t c)noexcept{
+inline constexpr bool isbase(char_t c)noexcept{
 	uint32_t props;
 	GET_PROPS(c, props);
 	return((CAT_MASK(props)&(U_GC_L_MASK|U_GC_N_MASK|U_GC_MC_MASK|U_GC_ME_MASK))!=0);
 }
 
 /* Checks if the Unicode character is a control character.*/
-constexpr inline bool iscntrl(char_t c)noexcept{
+inline constexpr bool iscntrl(char_t c)noexcept{
 	uint32_t props;
 	GET_PROPS(c, props);
 	return((CAT_MASK(props)&(U_GC_CC_MASK|U_GC_CF_MASK|U_GC_ZL_MASK|U_GC_ZP_MASK))!=0);
 }
 
-constexpr inline bool isISOControl(char_t c)noexcept{
+inline constexpr bool isISOControl(char_t c)noexcept{
 	return (uint32_t)c<=0x9f && (c<=0x1f || c>=0x7f);
 }
 
@@ -8657,7 +8656,7 @@ constexpr inline bool isISOControl(char_t c)noexcept{
 	(c<=0x9f && ((c>=TAB && c<=CR) || (c>=0x1c && c <=0x1f) || c==0x85))
 
 /* Checks if the Unicode character is a space character.*/
-constexpr inline bool isspace(char_t c)noexcept{
+inline constexpr bool isspace(char_t c)noexcept{
 	uint32_t props;
 	GET_PROPS(c, props);
 	return((CAT_MASK(props)&U_GC_Z_MASK)!=0 || IS_THAT_CONTROL_SPACE(c));
@@ -8665,7 +8664,7 @@ constexpr inline bool isspace(char_t c)noexcept{
 
 #undef IS_THAT_CONTROL_SPACE
 
-constexpr inline bool isblank(char_t c)noexcept{
+inline constexpr bool isblank(char_t c)noexcept{
 	if((uint32_t)c<=0x9f){
 		return c==9 || c==0x20; /* TAB or SPACE */
 	}else{
@@ -8677,14 +8676,14 @@ constexpr inline bool isblank(char_t c)noexcept{
 }
 
 /* Checks if the Unicode character is printable.*/
-constexpr inline bool isprint(char_t c)noexcept{
+inline constexpr bool isprint(char_t c)noexcept{
 	uint32_t props;
 	GET_PROPS(c, props);
 	/* comparing ==0 returns false for the categories mentioned */
 	return((CAT_MASK(props)&U_GC_C_MASK)==0);
 }
 
-constexpr inline bool isgraph(char_t c)noexcept{
+inline constexpr bool isgraph(char_t c)noexcept{
 	uint32_t props;
 	GET_PROPS(c, props);
 	/* comparing ==0 returns false for the categories mentioned */
@@ -8693,7 +8692,7 @@ constexpr inline bool isgraph(char_t c)noexcept{
 				   ==0);
 }
 
-constexpr inline bool ispunct(char_t c)noexcept{
+inline constexpr bool ispunct(char_t c)noexcept{
 	uint32_t props;
 	GET_PROPS(c, props);
 	return((CAT_MASK(props)&U_GC_P_MASK)!=0);
@@ -8727,8 +8726,6 @@ constexpr inline bool ispunct(char_t c)noexcept{
 #undef UTRIE_GET16
 
 #undef GET_PROPS
-
-#undef IS_THAT_CONTROL_SPACE
 
 //file_end
 
@@ -13830,6 +13827,8 @@ namespace array_n{
 		void clear()noexcept(re_construct.nothrow<this_t>){
 			re_construct(this);
 		}
+		[[nodiscard]]T*data()noexcept{return _m;}
+		[[nodiscard]]const T*data()const noexcept{return _m;}
 		[[nodiscard]]T&operator[](size_t pos)noexcept{return _m[pos];}
 		[[nodiscard]]const T&operator[](size_t pos)const noexcept{return _m[pos];}
 		[[nodiscard]]explicit operator hash_t()const noexcept(hash.nothrow<T>){return hash(_m,size());}
@@ -19349,16 +19348,16 @@ struct comn_string_data_t final:base_string_data_t<char_T>,instance_struct<comn_
 	}
 
 	comn_string_data_t(string_view_t str)noexcept(construct_nothrow&&copy_assign_nothrow):_m(note::size(str.size()+1)){
-		copy_assign[str.size()](note::from(str.begin()),note::to((char_T*)_m));
+		copy_assign[str.size()](note::from(str.begin()),note::to(_m.data()));
 		_m[str.size()]=zero;
 	}
 	comn_string_data_t(ptr_t str)noexcept(construct_nothrow&&copy_assign_nothrow):_m(note::size(str->get_size()+1)){
 		const auto size=this->get_size();
-		str->copy_part_data_to((char_T*)_m,0,size);
+		str->copy_part_data_to(_m.data(),0,size);
 		_m[size]=zero;
 	}
 	comn_string_data_t(ptr_t str,size_t pos,size_t size)noexcept(construct_nothrow&&copy_assign_nothrow):_m(note::size(size+1)){
-		str->copy_part_data_to((char_T*)_m,pos,size);
+		str->copy_part_data_to(_m.data(),pos,size);
 		_m[size]=zero;
 	}
 	comn_string_data_t(size_t size,char_T ch)noexcept(construct_nothrow&&copy_assign_nothrow):_m(note::size(size+1),ch){
@@ -19376,10 +19375,10 @@ struct comn_string_data_t final:base_string_data_t<char_T>,instance_struct<comn_
 		_m.clear();
 		base_t::be_replace_as(a);
 	}
-	[[nodiscard]]virtual string_ptr_t get_c_str(ptr_t&)noexcept override final{ return (char_T*)_m; }
+	[[nodiscard]]virtual string_ptr_t get_c_str(ptr_t&)noexcept override final{ return _m.data(); }
 	[[nodiscard]]virtual string_ptr_t get_unique_c_str(ptr_t&p)noexcept(get_data_nothrow)override final{
 		if(this->is_unique())
-			return (char_T*)_m;
+			return _m.data();
 		else
 			return base_t::get_unique_c_str(p);
 	}
@@ -20038,7 +20037,7 @@ struct end_apply_string_data_t final:base_string_data_t<char_T>,instance_struct<
 		_to(str)
 	{
 		_m.resize(get_next_gold_size_to_resize_for_array(_to_size+_used_size));
-		copy_assign[_used_size](note::from(end.begin()),note::to((char_T*)_m));
+		copy_assign[_used_size](note::from(end.begin()),note::to(_m.data()));
 	}
 	end_apply_string_data_t(ptr_t str,size_t count,char_T ch)noexcept:
 		_to_size(str->get_size()),
@@ -20046,7 +20045,7 @@ struct end_apply_string_data_t final:base_string_data_t<char_T>,instance_struct<
 		_to(str)
 	{
 		_m.resize(get_next_gold_size_to_resize_for_array(_to_size+_used_size));
-		copy_assign[_used_size](ch,note::to((char_T*)_m));
+		copy_assign[_used_size](ch,note::to(_m.data()));
 	}
 	end_apply_string_data_t(ptr_t str,size_t count)noexcept:
 		_to_size(str->get_size()),
@@ -20154,7 +20153,7 @@ public:
 	[[nodiscard]]virtual ptr_t apply_str_to_end(string_view_t str)noexcept(copy_construct_nothrow&&apply_data_nothrow)override final{
 		if(this->is_unique()){
 			if(_m.size()-_used_size>=str.size())
-				copy_assign[str.size()](note::from(str.begin()),note::to((char_T*)_m+_used_size));
+				copy_assign[str.size()](note::from(str.begin()),note::to(_m.data()+_used_size));
 			else{
 				const auto size_now=this->get_size()+str.size();
 				const auto size_new=get_next_gold_size_to_resize_for_array(size_now);
@@ -20230,7 +20229,7 @@ public:
 		if(this->is_unique() && _used_size>=size){
 			_used_size-=size;
 			self_changed();
-			return get<comn_string_data_t<char_T>>(string_view_t{(char_T*)_m+_used_size,size});
+			return get<comn_string_data_t<char_T>>(string_view_t{_m.data()+_used_size,size});
 		}
 		else
 			return base_t::do_pop_back(size,self);
