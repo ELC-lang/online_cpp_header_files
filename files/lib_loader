@@ -2861,6 +2861,23 @@ namespace array_like_n{
 		typedef T* iterator;
 		typedef const T* const_iterator;
 		typedef array_like_view_t<T>this_t;
+		struct reverse_iterator{
+			T* _m;
+			constexpr reverse_iterator(T*p)noexcept:_m(p){}
+			constexpr reverse_iterator(const reverse_iterator&)noexcept=default;
+			constexpr reverse_iterator(reverse_iterator&&)noexcept=default;
+			constexpr reverse_iterator operator++()noexcept{_m--;return *this;}
+			constexpr reverse_iterator operator--()noexcept{_m++;return *this;}
+			constexpr reverse_iterator operator++(int)noexcept{auto tmp=*this;this->operator++();return tmp;}
+			constexpr reverse_iterator operator--(int)noexcept{auto tmp=*this;this->operator--();return tmp;}
+			[[nodiscard]]constexpr T& operator*()noexcept{return*_m;}
+			[[nodiscard]]constexpr T* operator->()noexcept{return _m;}
+			[[nodiscard]]constexpr reverse_iterator operator+(ptrdiff_t diff)noexcept{return _m-diff;}
+			[[nodiscard]]constexpr reverse_iterator operator-(ptrdiff_t diff)noexcept{return _m+diff;}
+			[[nodiscard]]constexpr operator T*()noexcept{return _m;}
+			[[nodiscard]]constexpr bool operator==(T*p)noexcept{return _m==p;}
+			[[nodiscard]]constexpr auto operator<=>(T*p)noexcept{return _m<=>p;}
+		};
 	private:
 		T*_begin=nullptr;
 		size_t _size=0;
@@ -2886,12 +2903,15 @@ namespace array_like_n{
 		[[nodiscard]]constexpr const_iterator cbegin()const noexcept{return remove_const(this)->begin();}
 		[[nodiscard]]constexpr const_iterator cend()const noexcept{return remove_const(this)->end();}
 
+		[[nodiscard]]constexpr reverse_iterator rbegin()noexcept{return _begin+size()-1;}
+		[[nodiscard]]constexpr reverse_iterator rend()noexcept{return _begin-1;}
+
 		[[nodiscard]]constexpr T&front()noexcept{return _begin[0];}
 		[[nodiscard]]constexpr const T&front()const noexcept{return _begin[0];}
 		[[nodiscard]]constexpr T&back()noexcept{return _begin[size()-1];}
 		[[nodiscard]]constexpr const T&back()const noexcept{return _begin[size()-1];}
 
-		[[nodiscard]]constexpr bool empty()const noexcept{return size();}
+		[[nodiscard]]constexpr bool empty()const noexcept{return!size();}
 
 		[[nodiscard]]constexpr T&operator[](size_t pos)noexcept{return begin()[pos];}
 		[[nodiscard]]constexpr const T&operator[](size_t pos)const noexcept{return remove_const(*this)[pos];}
@@ -11211,9 +11231,46 @@ namespace iterator_n{
 		base_t_rw _m;
 		template<typename build_base_t_T> requires(construct<base_t_rw>.able<build_base_t_T>)
 		constexpr reverse_base_t(build_base_t_T&& a)noexcept(construct<base_t_rw>.nothrow<build_base_t_T>):_m(a){}
-		[[nodiscard]]auto get_before()noexcept_as(declvalue(base_t_w).get_next()){ return ((base_t_w&)_m).get_next(); }
-		[[nodiscard]]auto get_next()noexcept_as(declvalue(base_t_w).get_before()){ return ((base_t_w&)_m).get_before(); }
-		[[nodiscard]]auto get_handle()noexcept_as(declvalue(base_t_w).get_handle()){ return ((base_t_w&)_m).get_handle(); }
+		constexpr reverse_base_t(const reverse_base_t&a)noexcept(construct<base_t_rw>.nothrow<const base_t_rw&>):_m(a._m){}
+		constexpr reverse_base_t(reverse_base_t&&a)noexcept(construct<base_t_rw>.nothrow<base_t_rw&&>):_m(move(a._m)){}
+		constexpr reverse_base_t& operator=(const reverse_base_t&a)&noexcept{_m=a._m;return*this;}
+		constexpr reverse_base_t& operator=(const reverse_base_t&&a)&noexcept{_m=move(a._m);return*this;}
+		constexpr auto operator==(const reverse_base_t&a)noexcept{return _m==a._m;}
+		constexpr auto operator<=>(const reverse_base_t&a)noexcept{return _m<=>a._m;}
+
+		static constexpr bool is_pointer=::std::is_pointer_v<base_t_w>;
+
+		[[nodiscard]]static constexpr bool is_get_before_noexcept()noexcept{
+			if constexpr(is_pointer)
+				return true;
+			else return noexcept(declvalue(base_t_w).get_next());
+		}
+		[[nodiscard]]static constexpr bool is_get_next_noexcept()noexcept{
+			if constexpr(is_pointer)
+				return true;
+			else return noexcept(declvalue(base_t_w).get_before());
+		}
+		[[nodiscard]]static constexpr bool is_get_handle_noexcept()noexcept{
+			if constexpr(is_pointer)
+				return true;
+			else return noexcept(declvalue(base_t_w).get_handle());
+		}
+
+		[[nodiscard]]auto get_before()noexcept(is_get_before_noexcept()){
+			if constexpr(is_pointer)
+				return _m+1;
+			else return ((base_t_w&)_m).get_next();
+		}
+		[[nodiscard]]auto get_next()noexcept(is_get_next_noexcept()){ 
+			if constexpr(is_pointer)
+				return _m-1;
+			else return ((base_t_w&)_m).get_before();
+		}
+		[[nodiscard]]auto get_handle()noexcept(is_get_handle_noexcept()){ 
+			if constexpr(is_pointer)
+				return _m;
+			else return ((base_t_w&)_m).get_handle();
+		}
 	};
 	template<typename base_t> requires(compare.able<base_t>)
 	[[nodiscard]]auto operator<=>(const reverse_base_t<base_t>&a,const reverse_base_t<base_t>&b)noexcept(compare.nothrow<base_t>){
@@ -11235,6 +11292,9 @@ namespace iterator_n{
 	[[nodiscard]]auto operator==(T&& a,const reverse_base_t<base_t>& b)noexcept(equal.nothrow<base_t,T>){
 		return equal((const base_t&)b._m,a);
 	}
+	template<typename base_t>
+	inline void swap(reverse_base_t<base_t>&a,reverse_base_t<base_t>&b)noexcept_as(swap(a._m,b._m))
+	{swap(a._m,b._m);}
 
 	template<typename value_t,typename base_t_w>
 	class same_base_t{
@@ -11335,7 +11395,7 @@ namespace iterator_n{
 		template<typename build_base_t_T> requires(construct<base_t_rw>.able<build_base_t_T>)
 		constexpr same_base_t(build_base_t_T&&a)noexcept(construct<base_t_rw>.nothrow<build_base_t_T>):_m(a){}
 		constexpr same_base_t(const this_t&a)noexcept(construct<base_t_rw>.nothrow<const base_t_rw>):_m(a._m){}
-		constexpr same_base_t(this_t&&a)noexcept_as(declvalue(this_t).swap_with(a)){swap_with(a);}
+		constexpr same_base_t(this_t&&a)noexcept_as(construct<base_t_rw>.nothrow<base_t_rw&&>):_m(move(a._m)){}
 		template<typename other_T,typename other_base_t> requires(construct<base_t_rw>.able<other_base_t>)
 		constexpr same_base_t(const same_base_t<other_T,other_base_t>&a)noexcept(construct<base_t_rw>.nothrow<other_base_t>):_m(a._m){}
 		~same_base_t()noexcept(destruct.nothrow<base_t_rw>)=default;
@@ -13796,7 +13856,7 @@ namespace array_n{
 		此重载适用于T[N]，std::init_list<T>以及range_t<const T*>
 		*/
 		//template<as_concept<get<T>.as_array.able> U>
-		template<class U> requires(get<T>.as_array.able<U>)
+		template<class U> requires(get<T>.as_array.able<U> && type_info<remove_cvref<U>>!=type_info<this_t>)
 		array_t(U&&a)noexcept(get<T>.as_array.nothrow<U>){
 			_m=get<T>.as_array(forward<U>(a));
 			#if defined(DEBUG) || defined(_DEBUG)
@@ -13904,6 +13964,26 @@ namespace array_n{
 		}
 		[[nodiscard]]const_iterator cend()const noexcept{
 			return end();
+		}
+		typedef reverse_iterator_t<T>reverse_iterator;
+		typedef reverse_const_iterator_t<T>reverse_const_iterator;
+		[[nodiscard]]reverse_iterator rbegin()noexcept{
+			return _m+size()-1;
+		}
+		[[nodiscard]]constexpr reverse_iterator rend()noexcept{
+			return _m-1;
+		}
+		[[nodiscard]]reverse_const_iterator rbegin()const noexcept{
+			return _m+size()-1;
+		}
+		[[nodiscard]]constexpr reverse_const_iterator rend()const noexcept{
+			return _m-1;
+		}
+		[[nodiscard]]reverse_const_iterator rcbegin()const noexcept{
+			return rbegin();
+		}
+		[[nodiscard]]constexpr reverse_const_iterator rcend()const noexcept{
+			return rend();
 		}
 
 		[[nodiscard]]constexpr auto operator<=>(array_like_view_t<const T> a)const noexcept(compare.nothrow<array_like_view_t<T>>){
@@ -26948,6 +27028,7 @@ protected:\
 
 		#line 94 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/library_load.hpp"
 	}
+	//
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
 //undef_decl_system_type.hpp
 /*
@@ -26965,7 +27046,7 @@ protected:\
 
 //file_end
 
-	#line 96 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/library_load.hpp"
+	#line 97 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/library_load.hpp"
 #endif
 
 //file_end
