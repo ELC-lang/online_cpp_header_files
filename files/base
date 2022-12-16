@@ -2763,12 +2763,14 @@ namespace array_like_n{
 	constexpr bool is_not_signal_value_for_array_like=!is_signal_value_for_array_like<T>;
 
 	template<class T,class U>
-	constexpr bool is_array_like_for=was_not_an_ill_form_with_parameter(
+	constexpr bool strict_is_array_like_for=was_not_an_ill_form_with_parameter(
 										(U v){
 											begin_of_array_like<T>(v);
 											size_of_array_like<T>(v);
 										}
 									);
+	template<class T,class U>
+	constexpr bool is_array_like_for=strict_is_array_like_for<T,U>||strict_is_array_like_for<const T,U>;
 
 	template<class T>
 	struct array_like_view_t{
@@ -2784,20 +2786,23 @@ namespace array_like_n{
 			constexpr reverse_iterator operator--()noexcept{_m++;return *this;}
 			constexpr reverse_iterator operator++(int)noexcept{auto tmp=*this;this->operator++();return tmp;}
 			constexpr reverse_iterator operator--(int)noexcept{auto tmp=*this;this->operator--();return tmp;}
-			[[nodiscard]]constexpr T& operator*()noexcept{return*_m;}
-			[[nodiscard]]constexpr T* operator->()noexcept{return _m;}
-			[[nodiscard]]constexpr reverse_iterator operator+(ptrdiff_t diff)noexcept{return _m-diff;}
-			[[nodiscard]]constexpr reverse_iterator operator-(ptrdiff_t diff)noexcept{return _m+diff;}
-			[[nodiscard]]constexpr operator T*()noexcept{return _m;}
-			[[nodiscard]]constexpr bool operator==(T*p)noexcept{return _m==p;}
+			[[nodiscard]]constexpr T& operator*()const noexcept{return*_m;}
+			[[nodiscard]]constexpr T& operator[](ptrdiff_t a)const noexcept{return*(_m-a);}
+			[[nodiscard]]constexpr T* operator->()const noexcept{return _m;}
+			[[nodiscard]]constexpr reverse_iterator operator+(ptrdiff_t diff)const noexcept{return _m-diff;}
+			[[nodiscard]]constexpr reverse_iterator operator-(ptrdiff_t diff)const noexcept{return _m+diff;}
+			[[nodiscard]]constexpr operator T*()const noexcept{return _m;}
+			[[nodiscard]]constexpr bool operator==(T*p)const noexcept{return _m==p;}
+			[[nodiscard]]constexpr bool operator==(const reverse_iterator&a)const noexcept{return _m==a._m;}
 			[[nodiscard]]constexpr auto operator<=>(T*p)noexcept{return _m<=>p;}
+			[[nodiscard]]constexpr bool operator<=>(const reverse_iterator&a)const noexcept{return a._m<=>_m;}
 		};
 	private:
 		T*_begin=nullptr;
 		size_t _size=0;
 	public:
 		constexpr explicit array_like_view_t(T*a,size_t b)noexcept:_begin(a),_size(b){}
-		template<class U> requires is_array_like_for<T,U>
+		template<class U> requires strict_is_array_like_for<T,U>
 		explicit constexpr_as_auto array_like_view_t(U&&a)noexcept_as(begin_of_array_like<T>(a),size_of_array_like<T>(a)):array_like_view_t(begin_of_array_like<T>(a),size_of_array_like<T>(a)){}
 		constexpr array_like_view_t(const this_t&)noexcept=default;
 
@@ -2866,6 +2871,7 @@ using array_like_n::is_array_like;
 using array_like_n::is_signal_value_for_array_like;
 using array_like_n::is_not_signal_value_for_array_like;
 using array_like_n::is_array_like_for;
+using array_like_n::strict_is_array_like_for;
 using array_like_n::array_like_view_t;
 using array_like_n::array_end_by_zero_t;
 
@@ -6267,7 +6273,7 @@ protected:\
 
 #define UTRIE_GET16(trie, c) _UTRIE_GET((trie), index, (trie)->indexLength, (c))
 
-#define GET_PROPS(c, result) ((result)=UTRIE_GET16(&propstrie, c))
+#define GET_PROPS(c) (UTRIE_GET16(&propstrie, c))
 
 //file_end
 
@@ -8548,35 +8554,29 @@ force_inline constexpr auto auto_to_utf32(char8_t ch, char32_t *out)noexcept{
 */
 /* Checks if ch is a lower case letter.*/
 inline constexpr bool islower(char_t c)noexcept{
-	uint32_t props;
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	return(GET_CATEGORY(props)==U_LOWERCASE_LETTER);
 }
 
 /* Checks if ch is an upper case letter.*/
 inline constexpr bool isupper(char_t c)noexcept{
-	uint32_t props;
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	return(GET_CATEGORY(props)==U_UPPERCASE_LETTER);
 }
 
 /* Checks if ch is a title case letter; usually upper case letters.*/
 inline constexpr bool istitle(char_t c)noexcept{
-	uint32_t props;
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	return(GET_CATEGORY(props)==U_TITLECASE_LETTER);
 }
 
 /* Checks if ch is a decimal digit. */
 inline constexpr bool isdigit(char_t c)noexcept{
-	uint32_t props;
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	return(GET_CATEGORY(props)==U_DECIMAL_DIGIT_NUMBER);
 }
 
 inline constexpr bool isxdigit(char_t c)noexcept{
-	uint32_t props;
-
 	/* check ASCII and Fullwidth ASCII a-fA-F */
 	if(
 		(c<=0x66 && c>=0x41 && (c<=0x46 || c>=0x61)) ||
@@ -8585,42 +8585,37 @@ inline constexpr bool isxdigit(char_t c)noexcept{
 		return true;
 	}
 
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	return(GET_CATEGORY(props)==U_DECIMAL_DIGIT_NUMBER);
 }
 
 /* Checks if the Unicode character is a letter.*/
 inline constexpr bool isalpha(char_t c)noexcept{
-	uint32_t props;
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	return((CAT_MASK(props)&U_GC_L_MASK)!=0);
 }
 
 /* Checks if c is a letter or a decimal digit */
 inline constexpr bool isalnum(char_t c)noexcept{
-	uint32_t props;
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	return((CAT_MASK(props)&(U_GC_L_MASK|U_GC_ND_MASK))!=0);
 }
 
 /* Checks if ch is a unicode character with assigned character type.*/
 inline constexpr bool isdefined(char_t c)noexcept{
-	uint32_t props;
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	return(GET_CATEGORY(props)!=0);
 }
 
 /* Checks if the Unicode character is a base form character that can take a diacritic.*/
 inline constexpr bool isbase(char_t c)noexcept{
-	uint32_t props;
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	return((CAT_MASK(props)&(U_GC_L_MASK|U_GC_N_MASK|U_GC_MC_MASK|U_GC_ME_MASK))!=0);
 }
 
 /* Checks if the Unicode character is a control character.*/
 inline constexpr bool iscntrl(char_t c)noexcept{
-	uint32_t props;
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	return((CAT_MASK(props)&(U_GC_CC_MASK|U_GC_CF_MASK|U_GC_ZL_MASK|U_GC_ZP_MASK))!=0);
 }
 
@@ -8634,8 +8629,7 @@ inline constexpr bool isISOControl(char_t c)noexcept{
 
 /* Checks if the Unicode character is a space character.*/
 inline constexpr bool isspace(char_t c)noexcept{
-	uint32_t props;
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	return((CAT_MASK(props)&U_GC_Z_MASK)!=0 || IS_THAT_CONTROL_SPACE(c));
 }
 
@@ -8646,23 +8640,20 @@ inline constexpr bool isblank(char_t c)noexcept{
 		return c==9 || c==0x20; /* TAB or SPACE */
 	}else{
 		/* Zs */
-		uint32_t props;
-		GET_PROPS(c, props);
+		const uint32_t props=GET_PROPS(c);
 		return(GET_CATEGORY(props)==U_SPACE_SEPARATOR);
 	}
 }
 
 /* Checks if the Unicode character is printable.*/
 inline constexpr bool isprint(char_t c)noexcept{
-	uint32_t props;
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	/* comparing ==0 returns false for the categories mentioned */
 	return((CAT_MASK(props)&U_GC_C_MASK)==0);
 }
 
 inline constexpr bool isgraph(char_t c)noexcept{
-	uint32_t props;
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	/* comparing ==0 returns false for the categories mentioned */
 	return((CAT_MASK(props)&
 					(U_GC_CC_MASK|U_GC_CF_MASK|U_GC_CS_MASK|U_GC_CN_MASK|U_GC_Z_MASK))
@@ -8670,8 +8661,7 @@ inline constexpr bool isgraph(char_t c)noexcept{
 }
 
 inline constexpr bool ispunct(char_t c)noexcept{
-	uint32_t props;
-	GET_PROPS(c, props);
+	const uint32_t props=GET_PROPS(c);
 	return((CAT_MASK(props)&U_GC_P_MASK)!=0);
 }
 
@@ -12475,7 +12465,7 @@ namespace get_n{
 				const APIs::alloc::source_location_guard slg;
 				if constexpr(type_info<T>.has_attribute(never_in_array))
 					template_error("You can\'t get an array for never_in_array type.");
-				auto size=a.size();
+				const auto size=a.size();
 				auto aret=alloc<T>[size]();
 				copy_construct[size](note::from(a.begin()),note::to(aret));
 				return aret;
@@ -13889,6 +13879,12 @@ namespace array_n{
 		}
 		[[nodiscard]]reverse_const_iterator rbegin()const noexcept{
 			return _m+size()-1;
+		}
+		[[nodiscard]]auto&back()noexcept{
+			return*rbegin();
+		}
+		[[nodiscard]]auto&back()const noexcept{
+			return*rbegin();
 		}
 		[[nodiscard]]constexpr reverse_const_iterator rend()const noexcept{
 			return _m-1;
