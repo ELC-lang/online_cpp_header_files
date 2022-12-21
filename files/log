@@ -11128,6 +11128,7 @@ namespace lifetime_n{
 
 		#line 23 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 	}
+	using namespace memory;
 	namespace base{
 		//依赖lifetime
 		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/tools/_body.hpp"
@@ -11799,7 +11800,7 @@ using function_base_n::function_data_wrapper_t;
 
 //file_end
 
-		#line 26 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+		#line 27 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 	}
 
 	namespace memory{
@@ -13762,7 +13763,7 @@ inline void test_end(){
 
 //file_end
 
-		#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+		#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 	}
 	using namespace memory;
 
@@ -15620,7 +15621,7 @@ inline void test_end(){
 
 //file_end
 
-		#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+		#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 	}
 	using namespace container;
 
@@ -16147,7 +16148,7 @@ inline void test_end(){
 
 //file_end
 
-		#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+		#line 41 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 	}
 	using namespace memory;//只是强迫症
 
@@ -16179,7 +16180,7 @@ inline void test_end(){
 
 //file_end
 
-		#line 46 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+		#line 47 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 	}
 	#endif
 
@@ -16342,7 +16343,7 @@ inline void test_end(){
 
 //file_end
 
-	#line 50 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+	#line 51 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 }
 namespace elc{
 	//导出base承诺于名称空间elc中提供的内容
@@ -16360,7 +16361,7 @@ namespace elc{
 
 //file_end
 
-	#line 53 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+	#line 54 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 }
 
 //file_end
