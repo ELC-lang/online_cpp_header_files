@@ -945,6 +945,117 @@ TYPE_MAPPER(uint_fast64_t)
 		inline constexpr bool wchar_t_same_as_char_t=sizeof(wchar_t)==sizeof(char_t);
 		//判断wchar_t是否和char16_t相同
 		inline constexpr bool wchar_t_same_as_char16_t=sizeof(wchar_t)==sizeof(char16_t);
+		/*
+		参考信息：
+		float:
+			Sign bit: 1 bit
+			Exponent width: 8 bits
+			Significand precision: 24 bits (23 explicitly stored)
+		double:
+			Sign bit: 1 bit
+			Exponent: 11 bits
+			Significand precision: 53 bits (52 explicitly stored)
+		long double(IEEE-754 binary128):
+			Sign bit: 1 bit
+			Exponent width: 15 bits
+			Significand precision: 113 bits (112 explicitly stored)
+		注意一下long double在msvc上是double，得预处理判断一下
+		*/
+		//自浮点数获取精确数部分，舍去指数和符号位
+		template<class T> requires(::std::is_floating_point_v<T>)
+		force_inline constexpr auto get_precision(T v)noexcept{
+			if constexpr(::std::is_same_v<T,float>){
+				auto tmp=*(uint32_t*)&v;
+				tmp&=0x007FFFFF;
+				return tmp;
+			}
+			else if constexpr(::std::is_same_v<T,double>){
+				auto tmp=*(uint64_t*)&v;
+				tmp&=0x000FFFFFFFFFFFFF;
+				return tmp;
+			}
+			else if constexpr(::std::is_same_v<T,long double>){
+				#if defined(_MSC_VER)//msvc上long double就是double
+					return get_precision((double)v);
+				#else
+					auto tmp=*(uint128_t*)&v;
+					tmp&=0x0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+					return tmp;
+				#endif
+			}
+		}
+		//自浮点数获取精确数的基（如float是2^23，double是2^52，long double是2^112）
+		template<class T> requires(::std::is_floating_point_v<T>)
+		force_inline constexpr auto get_precision_base(T)noexcept{
+			if constexpr(::std::is_same_v<T,float>){
+				return 0x800000;
+			}
+			else if constexpr(::std::is_same_v<T,double>){
+				return 0x10000000000000;
+			}
+			else if constexpr(::std::is_same_v<T,long double>){
+				#if defined(_MSC_VER)//msvc上long double就是double
+					return get_precision_base(double{});
+				#else
+					return 0x10000000000000000000000000000;
+				#endif
+			}
+		}
+		//（基础的）自浮点数获取指数部分，舍去基数和符号位
+		template<class T> requires(::std::is_floating_point_v<T>)
+		force_inline constexpr auto base_get_exponent(T v)noexcept{
+			if constexpr(::std::is_same_v<T,float>){
+				auto tmp=*(uint32_t*)&v;
+				tmp&=0x7FFFFFFF;
+				tmp>>=23;
+				return uint8_t(tmp);
+			}
+			else if constexpr(::std::is_same_v<T,double>){
+				auto tmp=*(uint64_t*)&v;
+				tmp&=0x7FFFFFFFFFFFFFFF;
+				tmp>>=52;
+				return uint16_t(tmp);
+			}
+			else if constexpr(::std::is_same_v<T,long double>){
+				#if defined(_MSC_VER)//msvc上long double就是double
+					return get_exponent((double)v);
+				#else
+					auto tmp=*(uint128_t*)&v;
+					tmp&=0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+					tmp>>=112;
+					return uint16_t(tmp);
+				#endif
+			}
+		}
+		//自浮点数获取指数部分，舍去基数和符号位
+		template<class T> requires(::std::is_floating_point_v<T>)
+		force_inline constexpr auto get_exponent(T v)noexcept{
+			const auto tmp=base_get_exponent(v);
+			if constexpr(::std::is_same_v<T,float>){
+				if(tmp==0)return -126;
+				else return int8_t(tmp)-127;
+			}
+			else if constexpr(::std::is_same_v<T,double>){
+				if(tmp==0)return -1022;
+				else return int16_t(tmp)-1023;
+			}
+			else if constexpr(::std::is_same_v<T,long double>){
+				#if defined(_MSC_VER)//msvc上long double就是double
+					return get_exponent((double)v);
+				#else
+					if(tmp==0)return -16382;
+					else return int16_t(tmp)-16383;
+				#endif
+			}
+		}
+		//自浮点数获取基数
+		template<class T> requires(::std::is_floating_point_v<T>)
+		force_inline constexpr auto get_base_num(T v)noexcept{
+			const auto tmp=base_get_exponent(v);
+			typedef decltype(get_precision_base(v)) precision_base_t;
+			if(tmp==0)return precision_base_t{};
+			else return get_precision_base(v);
+		}
 	}
 	using basic_environment::BIT_POSSIBILITY;
 	using basic_environment::unsigned_specific_size_t;
@@ -952,6 +1063,10 @@ TYPE_MAPPER(uint_fast64_t)
 	using basic_environment::to_arithmetic;
 	using basic_environment::wchar_t_same_as_char_t;
 	using basic_environment::wchar_t_same_as_char16_t;
+	using basic_environment::get_exponent;
+	using basic_environment::get_base_num;
+	using basic_environment::get_precision;
+	using basic_environment::get_precision_base;
 
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
 //_undefs.hpp
@@ -1100,7 +1215,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-	#line 113 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 228 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -16309,9 +16424,10 @@ public:
 	ubigint()noexcept = default;
 	ubigint(const ubigint&)noexcept = default;
 	ubigint(ubigint&&)noexcept = default;
+	ubigint(const zero_t&)noexcept:ubigint(){}
 	template<typename T> requires(::std::is_integral_v<T>&&::std::is_unsigned_v<T>)
 	ubigint(T value)noexcept{
-		constexpr auto size = sizeof(T)/sizeof(base_type)+(sizeof(T)%sizeof(base_type)?1:0);
+		constexpr auto size = sizeof(T)/sizeof(base_type)+((sizeof(T)%sizeof(base_type))?1:0);
 		_data.resize(size);
 		auto i=_data.begin();
 		while(value){
@@ -16347,6 +16463,10 @@ public:
 
 	ubigint& operator=(const ubigint&)&noexcept = default;
 	ubigint& operator=(ubigint&&)&noexcept = default;
+	ubigint& operator=(const zero_t&)noexcept{
+		_data.clear();
+		return*this;
+	}
 
 	~ubigint() = default;
 private:
@@ -16646,6 +16766,34 @@ public:
 		if(this_view.size() < other_view.size())return*this;
 		return ubigint{mod_base(this_view, other_view)};
 	}
+	//operator<<
+	template<typename T> requires ::std::integral<T>
+	[[nodiscard]]ubigint operator<<(T n)const&noexcept{
+		if(!*this)return ubigint{};
+		auto aret=*this;
+		aret<<=n;
+		return aret;
+	}
+	[[nodiscard]]ubigint operator<<(ubigint n)const&noexcept{
+		if(!*this)return ubigint{};
+		auto aret=*this;
+		aret<<=n;
+		return aret;
+	}
+	//operator>>
+	template<typename T> requires ::std::integral<T>
+	[[nodiscard]]ubigint operator>>(T n)const&noexcept{
+		if(!*this)return ubigint{};
+		auto aret=*this;
+		aret>>=n;
+		return aret;
+	}
+	[[nodiscard]]ubigint operator>>(ubigint n)const&noexcept{
+		if(!*this)return ubigint{};
+		auto aret=*this;
+		aret>>=n;
+		return aret;
+	}
 	//operator+=
 	ubigint& operator+=(const ubigint& other)&noexcept{
 		//using add_to_base to avoid new alloc
@@ -16700,6 +16848,80 @@ public:
 		shrink_to_fit();
 		return*this;
 	}
+	//operator<<=
+	template<typename T> requires ::std::integral<T>
+	ubigint& operator<<=(T n)&noexcept{
+		if(!*this)return*this;
+		if constexpr(::std::is_unsigned_v<T>){
+			if(n>bitnum_of(base_type)){
+				const auto oldsize=_data.size();
+				const auto newsize_diff=n/bitnum_of(base_type);
+				const auto newsize=oldsize+newsize_diff;
+				_data.forward_resize(newsize);
+				copy_assign[newsize_diff](note::to(_data.data()+oldsize), base_type{0});
+				n%=bitnum_of(base_type);
+			}
+			while(n--)
+				*this*=BIT_POSSIBILITY;
+		}else{
+			if(n<0)*this>>=abs(n);
+			else *this<<=abs(n);
+		}
+		return*this;
+	}
+	ubigint& operator<<=(ubigint n)&noexcept{
+		if(!*this)return*this;
+		if(n>bitnum_of(base_type)){
+			const auto oldsize=_data.size();
+			const auto newsize_diff=to_size_t(n/bitnum_of(base_type));
+			const auto newsize=oldsize+newsize_diff;
+			_data.forward_resize(newsize);
+			copy_assign[newsize_diff](note::to(_data.data()+oldsize), base_type{0});
+			n%=bitnum_of(base_type);
+		}
+		while(n){
+			*this*=BIT_POSSIBILITY;
+			--n;
+		}
+		return*this;
+	}
+	//operator>>=
+	template<typename T> requires ::std::integral<T>
+	ubigint& operator>>=(T n)&noexcept{
+		if(!*this)return*this;
+		if constexpr(::std::is_unsigned_v<T>){
+			if(n>bitnum_of(base_type)){
+				const auto oldsize=_data.size();
+				const auto newsize_diff=n/bitnum_of(base_type);
+				if(newsize_diff>=oldsize)return*this=zero;
+				const auto newsize=oldsize-newsize_diff;
+				_data.forward_resize(newsize);
+				n%=bitnum_of(base_type);
+			}
+			while(n-- && *this)
+				*this/=BIT_POSSIBILITY;
+		}else{
+			if(n<0)*this<<=abs(n);
+			else *this>>=abs(n);
+		}
+		return*this;
+	}
+	ubigint& operator>>=(ubigint n)&noexcept{
+		if(!*this)return*this;
+		if(n>bitnum_of(base_type)){
+			const auto oldsize=_data.size();
+			const auto newsize_diff=to_size_t(n/bitnum_of(base_type));
+			if(newsize_diff>=oldsize)return*this=zero;
+			const auto newsize=oldsize-newsize_diff;
+			_data.forward_resize(newsize);
+			n%=bitnum_of(base_type);
+		}
+		while(n && *this){
+			*this/=BIT_POSSIBILITY;
+			--n;
+		}
+		return*this;
+	}
 	//operatorX for rvalue
 	[[nodiscard]]ubigint&& operator+(const ubigint& other)&&noexcept{
 		return move(*this+=other);
@@ -16715,6 +16937,20 @@ public:
 	}
 	[[nodiscard]]ubigint&& operator%(const ubigint& other)&&noexcept{
 		return move(*this%=other);
+	}
+	template<typename T> requires ::std::integral<T>
+	[[nodiscard]]ubigint&& operator<<(T n)&&noexcept{
+		return move(*this<<=n);
+	}
+	[[nodiscard]]ubigint&& operator<<(const ubigint& other)&&noexcept{
+		return move(*this<<=other);
+	}
+	template<typename T> requires ::std::integral<T>
+	[[nodiscard]]ubigint&& operator>>(T n)&&noexcept{
+		return move(*this>>=n);
+	}
+	[[nodiscard]]ubigint&& operator>>(const ubigint& other)&&noexcept{
+		return move(*this>>=other);
 	}
 	[[nodiscard]]ubigint&& operator+(ubigint&& other)noexcept{
 		return move(other+=*this);
@@ -16733,6 +16969,24 @@ public:
 	}
 	[[nodiscard]]explicit operator bool()const noexcept{
 		return !operator!();
+	}
+	//operator++
+	ubigint& operator++()&noexcept{
+		return *this+=1u;
+	}
+	[[nodiscard]]ubigint operator++(int)&noexcept{
+		auto tmp = *this;
+		++*this;
+		return tmp;
+	}
+	//operator--
+	ubigint& operator--()&noexcept{
+		return *this-=1u;
+	}
+	[[nodiscard]]ubigint operator--(int)&noexcept{
+		auto tmp = *this;
+		--*this;
+		return tmp;
 	}
 };
 //求出最大公约数
@@ -16755,7 +17009,7 @@ inline ubigint gcd(ubigint a,ubigint b)noexcept{
 */
 class bigint{
 	ubigint _num;
-	bool _is_negative;
+	bool _is_negative=0;
 
 	bigint(const ubigint&num,bool is_negative)noexcept:_num(num),_is_negative(is_negative){
 		if(!_num)_is_negative = false;
@@ -16781,6 +17035,12 @@ public:
 	}
 	bigint& operator=(ubigint&&a)&noexcept{
 		_num = move(a);
+		_is_negative = false;
+		return *this;
+	}
+	template<typename T> requires(::std::is_integral_v<T>&&::std::is_unsigned_v<T>)
+	bigint& operator=(T value)&noexcept{
+		_num = value;
 		_is_negative = false;
 		return *this;
 	}
@@ -16916,6 +17176,47 @@ public:
 	[[nodiscard]]bigint operator%(T other)const&noexcept{
 		return *this%ubigint(abs(other));
 	}
+	//operator<<
+	template<typename T> requires ::std::is_integral_v<T>
+	[[nodiscard]]bigint operator<<(T n)const&noexcept{
+		return bigint{_num<<n,_is_negative};
+	}
+	[[nodiscard]]bigint operator<<(const bigint& n)const&noexcept{
+		if(n._is_negative)
+			return *this>>n._num;
+		else
+			return *this<<n._num;
+	}
+	[[nodiscard]]bigint operator<<(const ubigint& n)const&noexcept{
+		return {_num<<n,_is_negative};
+	}
+	//operator>>
+	template<typename T> requires ::std::is_integral_v<T>
+	[[nodiscard]]bigint operator>>(T n)const&noexcept{
+		return bigint{_num>>n,_is_negative};
+	}
+	[[nodiscard]]bigint operator>>(const bigint& n)const&noexcept{
+		if(n._is_negative)
+			return *this<<n._num;
+		else
+			return *this>>n._num;
+	}
+	[[nodiscard]]bigint operator>>(const ubigint& n)const&noexcept{
+		return {_num>>n,_is_negative};
+	}
+	//friend operator<< and operator>> for ubigint
+	[[nodiscard]]friend bigint operator<<(const ubigint& a,const bigint& b)noexcept{
+		if(b._is_negative)
+			return a>>b._num;
+		else
+			return a<<b._num;
+	}
+	[[nodiscard]]friend bigint operator>>(const ubigint& a,const bigint& b)noexcept{
+		if(b._is_negative)
+			return a<<b._num;
+		else
+			return a>>b._num;
+	}
 	//operator+=
 	bigint& operator+=(const bigint& other)&noexcept{
 		if(_is_negative == other._is_negative)
@@ -17009,6 +17310,51 @@ public:
 	bigint& operator%=(T other)&noexcept{
 		return *this%=ubigint(abs(other));
 	}
+	//operator<<=
+	template<typename T> requires ::std::is_integral_v<T>
+	bigint& operator<<=(T n)&noexcept{
+		_num <<= n;
+		return*this;
+	}
+	bigint& operator<<=(const bigint& other)&noexcept{
+		if(other._is_negative)
+			return*this>>=other._num;
+		else
+			return*this<<=other._num;
+	}
+	bigint& operator<<=(const ubigint& other)&noexcept{
+		_num <<= other;
+		return*this;
+	}
+	//operator>>=
+	template<typename T> requires ::std::is_integral_v<T>
+	bigint& operator>>=(T n)&noexcept{
+		_num >>= n;
+		return*this;
+	}
+	bigint& operator>>=(const bigint& other)&noexcept{
+		if(other._is_negative)
+			return*this<<=other._num;
+		else
+			return*this>>=other._num;
+	}
+	bigint& operator>>=(const ubigint& other)&noexcept{
+		_num >>= other;
+		return*this;
+	}
+	//friend operator<<= and operator>>= for ubigint
+	friend ubigint& operator<<=(ubigint& lhs, const bigint& rhs)noexcept{
+		if(rhs._is_negative)
+			return lhs>>=rhs._num;
+		else
+			return lhs<<=rhs._num;
+	}
+	friend ubigint& operator>>=(ubigint& lhs, const bigint& rhs)noexcept{
+		if(rhs._is_negative)
+			return lhs<<=rhs._num;
+		else
+			return lhs>>=rhs._num;
+	}
 	//operatorX for rvalue
 	[[nodiscard]]bigint&& operator+(const bigint& other)&&noexcept{
 		return move(*this+=other);
@@ -17046,6 +17392,32 @@ public:
 	[[nodiscard]]bigint&& operator%(T other)&&noexcept{
 		return move(*this%=other);
 	}
+	template<typename T> requires ::std::is_integral_v<T>
+	[[nodiscard]]bigint&& operator<<(T other)&&noexcept{
+		return move(*this<<=other);
+	}
+	[[nodiscard]]bigint&& operator<<(const bigint& other)&&noexcept{
+		return move(*this<<=other);
+	}
+	[[nodiscard]]bigint&& operator<<(const ubigint& other)&&noexcept{
+		return move(*this<<=other);
+	}
+	template<typename T> requires ::std::is_integral_v<T>
+	[[nodiscard]]bigint&& operator>>(T other)&&noexcept{
+		return move(*this>>=other);
+	}
+	[[nodiscard]]bigint&& operator>>(const bigint& other)&&noexcept{
+		return move(*this>>=other);
+	}
+	[[nodiscard]]bigint&& operator>>(const ubigint& other)&&noexcept{
+		return move(*this>>=other);
+	}
+	friend ubigint&& operator<<(ubigint&& lhs, const bigint& rhs)noexcept{
+		return move(lhs<<=rhs);
+	}
+	friend ubigint&& operator>>(ubigint&& lhs, const bigint& rhs)noexcept{
+		return move(lhs>>=rhs);
+	}
 	[[nodiscard]]bigint&& operator+(bigint&& other)noexcept{
 		return move(move(other)+*this);
 	}
@@ -17061,6 +17433,24 @@ public:
 	}
 	[[nodiscard]]explicit operator bool()const noexcept{
 		return !operator!();
+	}
+	//operator++
+	bigint& operator++()&noexcept{
+		return *this+=1u;
+	}
+	[[nodiscard]]bigint operator++(int)&noexcept{
+		auto tmp = *this;
+		++*this;
+		return tmp;
+	}
+	//operator--
+	bigint& operator--()&noexcept{
+		return *this-=1u;
+	}
+	[[nodiscard]]bigint operator--(int)&noexcept{
+		auto tmp = *this;
+		--*this;
+		return tmp;
 	}
 };
 
@@ -17097,7 +17487,7 @@ public:
 	bigfloat(T num)noexcept{
 		if(isNaN(num))return;
 		//将一个浮点类型无损的转换为两个bigint相除
-		bool sign = is_negative(num);
+		const bool sign = is_negative(num);
 		if(sign)num = -num;
 		if constexpr(::std::numeric_limits<T>::has_infinity)
 			if(num == ::std::numeric_limits<T>::infinity()){
@@ -17105,24 +17495,20 @@ public:
 				_denominator = 0;
 				return;
 			}
-		_numerator = 0;
-		_denominator = 1;
-		ptrdiff_t exp = 0;
-		while(num > BIT_POSSIBILITY){
-			num /= BIT_POSSIBILITY;
-			exp++;
+		{
+			const auto exponent = get_exponent(num);
+			const auto base_num = get_base_num(num);
+			const auto precision = get_precision(num);
+			const auto precision_base = get_precision_base(num);
+			_numerator = base_num + precision;
+			_denominator = precision_base;
+			if(exponent){
+				if(exponent>0)
+					_numerator<<=exponent;
+				else
+					_denominator<<=abs(exponent);
+			}
 		}
-		while(num != 0){
-			num *= BIT_POSSIBILITY;
-			_numerator *= BIT_POSSIBILITY;
-			exp--;
-			_numerator += static_cast<unsigned char>(num);
-			num -= static_cast<unsigned char>(num);
-		}
-		if(exp > 0)
-			_numerator *= (unsigned_specific_size_t<sizeof(T)>)pow(BIT_POSSIBILITY, exp);
-		else
-			_denominator *= (unsigned_specific_size_t<sizeof(T)>)pow(BIT_POSSIBILITY, -exp);
 		_numerator = copy_as_negative(_numerator, sign);
 		simplify();
 	}
