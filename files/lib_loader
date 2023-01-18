@@ -1782,6 +1782,7 @@ using ::std::countl_one;
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
+//TODO: 将magic_number分割为magic_number、math、bit三个文件
 namespace magic_number{
 	/*! 黄金分割比
 		数理逻辑不应通过强奸感性来定义审美.
@@ -1803,22 +1804,32 @@ namespace magic_number{
 
 	constexpr auto god=72;/// 神已死,神万岁.
 
+	/*! 无符号位的对应类型：帮助类型 */
+	template<typename T>
+	struct to_unsigned_t_helper{
+		using type=decltype(lambda{
+			if constexpr(::std::is_unsigned_v<T>||::std::is_floating_point_v<T>)
+				return T();
+			else
+				return::std::make_unsigned_t<T>();
+		}());
+	};
 	/*! 无符号位的对应类型 */
 	template<typename T>
-	using to_unsigned_t = decltype(lambda{
-		if constexpr(::std::is_unsigned_v<T>||::std::is_floating_point_v<T>)
-			return T();
-		else
-			return::std::make_unsigned_t<T>();
-	}());
+	using to_unsigned_t = typename to_unsigned_t_helper<T>::type;
+	/*! 有符号位的对应类型：帮助类型 */
+	template<typename T>
+	struct to_signed_t_helper{
+		using type=decltype(lambda{
+			if constexpr(::std::is_signed_v<T>||::std::is_floating_point_v<T>)
+				return T();
+			else
+				return::std::make_signed_t<T>();
+		}());
+	};
 	/*! 有符号位的对应类型 */
 	template<typename T>
-	using to_signed_t = decltype(lambda{
-		if constexpr(::std::is_signed_v<T>||::std::is_floating_point_v<T>)
-			return T();
-		else
-			return::std::make_signed_t<T>();
-	}());
+	using to_signed_t = typename to_signed_t_helper<T>::type;
 	//isNaN
 	template<class T> requires ::std::is_arithmetic_v<T>
 	[[nodiscard]]force_inline constexpr bool isNaN(const T v)noexcept{
@@ -1839,7 +1850,7 @@ namespace magic_number{
 		else
 			return false;
 	}
-	/*!符号位设置 */
+	/*! 符号位设置 */
 	template<typename T> requires ::std::is_arithmetic_v<T>
 	[[nodiscard]]force_inline constexpr T copy_as_negative(auto x,bool negative=1)noexcept{
 		if constexpr(::std::is_signed_v<decltype(x)>){
@@ -1882,6 +1893,20 @@ namespace magic_number{
 			return ::std::fmod(a,b);
 		else
 			return a%b;
+	}
+	//divmod
+	template<typename T1,typename T2> requires ::std::is_arithmetic_v<T1> and ::std::is_arithmetic_v<T2>
+	[[nodiscard]]force_inline constexpr auto divmod(T1 a,T2 b){
+		typedef decltype(a/b) quot_t;
+		typedef decltype(a%b) mod_t;
+		struct divmod_result{
+			quot_t quot;
+			mod_t mod;
+		};
+		if constexpr(::std::is_floating_point_v<T1>||::std::is_floating_point_v<T2>)
+			return divmod_result{::std::floor(a/b),::std::fmod(a,b)};
+		else
+			return divmod_result{a/b,a%b};
 	}
 	/*! 设置浮点舍入 */
 	template<typename T>
@@ -2135,6 +2160,20 @@ namespace magic_number{
 		else
 			return ::std::ceil(v);
 	}
+	//floor
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<class T> requires ::std::is_floating_point_v<T>
+	[[nodiscard]]force_inline constexpr auto floor(const T v)noexcept{
+		if in_consteval{
+			typedef decltype(::std::floor(v)) RT;
+			auto floor_impl = lambda(T x, T y)noexcept{
+				return feq(x,y) ? y : y-T{1};
+			};
+			return v<0 ? -static_cast<T>(to_uintmax_t(-v+T{1})) : floor_impl(v,static_cast<T>(to_uintmax_t(v)));
+		}
+		else
+			return ::std::floor(v);
+	}
 	//sqrt
 	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
 	template<class T> requires ::std::is_arithmetic_v<T>
@@ -2211,23 +2250,56 @@ namespace magic_number{
 		*/
 		return is_prime_num_no_pre_check(b);
 	}
+	/// 求小于或等于某数的素数
+	template<class T> requires ::std::is_arithmetic_v<T>
+	[[nodiscard]]inline constexpr T get_prime_num_less_or_eq_than(T a)noexcept;
 	/// 求大于或等于某数的素数
 	template<class T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]inline constexpr auto get_prime_num_big_or_eq_than(T a)noexcept{
-		if constexpr(::std::is_floating_point_v<T>)
+	[[nodiscard]]inline constexpr T get_prime_num_big_or_eq_than(T a)noexcept{
+		if constexpr(::std::is_floating_point_v<T>){
 			a=ceil(a);
-		auto b=abs(a);
-		if(b<4)return a;
-		//将ua转换为6x-1的形式.
+		}
+		if constexpr(::std::is_signed_v<T> || ::std::is_floating_point_v<T>){
+			if(is_negative(a)){
+				auto tmp = get_prime_num_less_or_eq_than(abs(a));
+				return copy_as_negative(tmp);
+			}
+		}
+		if(a<4)return a;
+		//将a转换为6x-1的形式.
 		{
-			T c=mod(b,6);
-			if(c==1 && is_prime_num_no_pre_check(b))return b;
-			b+=c?5-c:1;
+			T b=mod(a,6);
+			if(b==1 && is_prime_num_no_pre_check(a))return a;
+			a+=b?5-b:1;
 		}
 		//循环判断.
-		for(;;b+=6)
-			if(is_prime_num_no_pre_check(b))return b;
-			elseif(is_prime_num_no_pre_check(b+2))return b+2;
+		for(;;a+=6)
+			if(is_prime_num_no_pre_check(a))return a;
+			elseif(is_prime_num_no_pre_check(a+2))return a+2;
+	}
+	/// 求小于或等于某数的素数
+	template<class T> requires ::std::is_arithmetic_v<T>
+	[[nodiscard]]inline constexpr T get_prime_num_less_or_eq_than(T a)noexcept{
+		if constexpr(::std::is_floating_point_v<T>){
+			a=floor(a);
+		}
+		if constexpr(::std::is_signed_v<T> || ::std::is_floating_point_v<T>){
+			if(is_negative(a)){
+				auto tmp = get_prime_num_big_or_eq_than(abs(a));
+				return copy_as_negative(tmp);
+			}
+		}
+		if(a<4)return a;
+		//将a转换为6x-1的形式.
+		{
+			T b=mod(a,6);
+			if(b==1 && is_prime_num_no_pre_check(a))return a;
+			a-=b?b-1:5;
+		}
+		//循环判断.
+		for(;;a-=6)
+			if(is_prime_num_no_pre_check(a))return a;
+			elseif(is_prime_num_no_pre_check(a-2))return a-2;
 	}
 	/// 求大于某数的素数
 	template<class T> requires ::std::is_arithmetic_v<T>
@@ -2271,6 +2343,166 @@ namespace magic_number{
 			return y-diff;
 		}
 	}
+	//质因数分解
+	//由于array在之后定义所以泛型容器
+	//用法 get_prime_factorization(num).to<容器类型>(); 或 get_prime_factorization(num).unique().to<容器类型>();
+	constexpr struct get_prime_factorization_t{
+		template<class T>
+		class result_t{
+			T _m;
+		public:
+			template<class container_t>
+			static constexpr bool able=was_not_an_ill_form(declvalue(container_t&).push_back(declvalue(T)));
+
+			constexpr force_inline result_t(T m)noexcept:_m(m){}
+
+			template<class container_t> requires able<container_t>
+			[[nodiscard]]constexpr container_t to()const noexcept{
+				container_t aret;
+				//思路：获取小于等于m的所有素数，依次除以m，若能整除则将素数加入结果，否则跳过，直到m为1.
+				T i=T{2},m=abs(_m);
+				while(m!=1){
+					while(!(m%i)){
+						aret.push_back(i);
+						m/=i;
+					}
+					i=get_prime_num_big_than(i);
+				}
+				if constexpr(::std::is_signed_v<T> || ::std::is_floating_point_v<T>)
+					if(is_negative(_m))
+						aret.push_back(T{-1});
+				return aret;
+			}
+			//operator container_t()
+			template<class container_t>
+			[[nodiscard]]constexpr force_inline operator container_t()const noexcept{
+				return to<container_t>();
+			}
+			class unique_t{
+				T _m;
+			public:
+				constexpr force_inline unique_t(T m)noexcept:_m(m){}
+
+				template<class container_t> requires able<container_t>
+				[[nodiscard]]constexpr container_t to()const noexcept{
+					container_t aret;
+					//思路：获取小于等于m的所有素数，依次除以m，若能整除则将素数加入结果，否则跳过，直到m为1.
+					T i=T{2},m=abs(_m);
+					while(m!=1){
+						if(!(m%i)){
+							aret.push_back(i);
+							do m/=i;while(!(m%i));
+						}	
+						i=get_prime_num_big_than(i);
+					}
+					if constexpr(::std::is_signed_v<T> || ::std::is_floating_point_v<T>)
+						if(is_negative(_m))
+							aret.push_back(T{-1});
+					return aret;
+				}
+				//operator container_t()
+				template<class container_t>
+				[[nodiscard]]constexpr force_inline operator container_t()const noexcept{
+					return to<container_t>();
+				}
+			};
+			[[nodiscard]]constexpr force_inline auto unique()const noexcept{
+				return unique_t{_m};
+			}
+		};
+		template<class T> requires ::std::is_arithmetic_v<T>
+		[[nodiscard]]constexpr force_inline auto operator()(T m)const noexcept{
+			return result_t<T>{m};
+		}
+	}get_prime_factorization{};
+	//编译时质因数分解到质因数表
+	template<size_t number>
+	struct prime_factorization_table_t{
+		static constexpr size_t table_size=lambda{
+			size_t i=2,m=number;
+			size_t ret=0;
+			while(m!=1){
+				while(!(m%i)){
+					++ret;
+					m/=i;
+				}
+				i=get_prime_num_big_than(i);
+			}
+			return ret;
+		}();
+		size_t _table[table_size];
+		constexpr force_inline prime_factorization_table_t()noexcept{
+			size_t i=2,m=number;
+			size_t index=0;
+			while(m!=1){
+				while(!(m%i)){
+					_table[index++]=i;
+					m/=i;
+				}
+				i=get_prime_num_big_than(i);
+			}
+		}
+		[[nodiscard]]constexpr force_inline size_t operator[](size_t index)const noexcept{
+			return _table[index];
+		}
+		//begin and end for range for
+		[[nodiscard]]constexpr force_inline size_t* begin()noexcept{
+			return _table;
+		}
+		[[nodiscard]]constexpr force_inline size_t* end()noexcept{
+			return _table+table_size;
+		}
+		[[nodiscard]]constexpr force_inline const size_t* begin()const noexcept{
+			return _table;
+		}
+		[[nodiscard]]constexpr force_inline const size_t* end()const noexcept{
+			return _table+table_size;
+		}
+	};
+	//编译时的唯一质因数分解到质因数表
+	template<size_t number>
+	struct unique_prime_factorization_table_t{
+		static constexpr size_t table_size=lambda{
+			size_t i=2,m=number;
+			size_t ret=0;
+			while(m!=1){
+				if(!(m%i)){
+					++ret;
+					do m/=i;while(!(m%i));
+				}
+				i=get_prime_num_big_than(i);
+			}
+			return ret;
+		}();
+		size_t _table[table_size]={};
+		constexpr force_inline unique_prime_factorization_table_t()noexcept{
+			size_t i=2,m=number;
+			size_t index=0;
+			while(m!=1){
+				if(!(m%i)){
+					_table[index++]=i;
+					do m/=i;while(!(m%i));
+				}
+				i=get_prime_num_big_than(i);
+			}
+		}
+		[[nodiscard]]constexpr force_inline size_t operator[](size_t index)const noexcept{
+			return _table[index];
+		}
+		//begin and end for range for
+		[[nodiscard]]constexpr force_inline size_t* begin()noexcept{
+			return _table;
+		}
+		[[nodiscard]]constexpr force_inline size_t* end()noexcept{
+			return _table+table_size;
+		}
+		[[nodiscard]]constexpr force_inline const size_t* begin()const noexcept{
+			return _table;
+		}
+		[[nodiscard]]constexpr force_inline const size_t* end()const noexcept{
+			return _table+table_size;
+		}
+	};
 }
 using magic_number::to_unsigned_t;
 using magic_number::is_negative;
@@ -2278,6 +2510,7 @@ using magic_number::copy_as_negative;
 using magic_number::copy_as_not_negative;
 using magic_number::to_size_t;
 using magic_number::mod;
+using magic_number::divmod;
 using magic_number::set_rounding;
 using magic_number::get_rounding;
 using magic_number::rounding_auto_setter;
@@ -2286,12 +2519,14 @@ using magic_number::rotr;
 using magic_number::rotl_nomod;
 using magic_number::rotr_nomod;
 using magic_number::rot_iterator;
+using magic_number::feq;
 using magic_number::isNaN;
 using magic_number::abs;
 using magic_number::exp;
 using magic_number::log;
 using magic_number::pow;
 using magic_number::ceil;
+using magic_number::floor;
 using magic_number::sqrt;
 using magic_number::trunc;
 using magic_number::is_prime_num;
@@ -2299,6 +2534,9 @@ using magic_number::get_prime_num_big_or_eq_than;
 using magic_number::get_prime_num_big_than;
 using magic_number::get_next_gold_size_to_resize_for_array;
 using magic_number::get_next_gold_size_to_resize_for_hash;
+using magic_number::get_prime_factorization;
+using magic_number::prime_factorization_table_t;
+using magic_number::unique_prime_factorization_table_t;
 
 //file_end
 
@@ -4658,6 +4896,7 @@ namespace constexpr_str_n{
 		constexpr constexpr_str_t(const_string_ptr_t str):constexpr_str_t(str,array_end_by_zero_t::get_length_of(str)){}
 		[[nodiscard]]constexpr hash_t hash()const noexcept{return hash_result;}
 	};
+	using constexpr_str=constexpr_str_t<char_t>;
 	template<class char_T,size_t N>
 	struct constexpr_str_t_literal_helper{
 		typedef char_T*string_ptr_t;
@@ -4677,7 +4916,7 @@ namespace constexpr_str_n{
 	//别问，问就是傻逼c++
 	/// 告知其他elc库接口这是编译时常量字符串，并提供编译时计算好的内容，包括但不限于hash、bmh头、bitmark等，用于加速库操作
 	template<constexpr_str_t_literal_helper str_helper>
-	[[nodiscard]]inline consteval auto& operator ""_constexpr_str()noexcept{
+	[[nodiscard]]inline consteval const auto& operator ""_constexpr_str()noexcept{
 		return literal_result_provider<str_helper>::value;
 	}
 	/// 空字串常量且str或begin会指向一个0终止字符串（而不是nullptr），便于安全初始化
@@ -4686,6 +4925,7 @@ namespace constexpr_str_n{
 };
 using constexpr_str_n::constexpr_str_view_t;
 using constexpr_str_n::constexpr_str_t;
+using constexpr_str_n::constexpr_str;
 using constexpr_str_n::empty_constexpr_str_of;
 using constexpr_str_n::operator ""_constexpr_str;
 
@@ -9657,7 +9897,7 @@ protected:\
 			#endif
 		};
 
-		void Init_die_state(die_state&state)noexcept{
+		inline void Init_die_state(die_state&state)noexcept{
 			#if SYSTEM_TYPE == windows
 				state.hConsole=GetStdHandle(STD_ERROR_HANDLE);
 				//chenge color to red
@@ -9671,21 +9911,21 @@ protected:\
 			#endif
 		}
 
-		void ConsoleLog(const die_state&state,string_view_t<char> str)noexcept{
+		inline void ConsoleLog(const die_state&state,string_view_t<char> str)noexcept{
 			#if SYSTEM_TYPE == windows
 				WriteConsoleA(state.hConsole,str.data(),(DWORD)str.size(),nullptr,nullptr);
 			#elif SYSTEM_TYPE == linux
 				fputs(str.data(),stderr);
 			#endif
 		}
-		void ConsoleLog(const die_state&state,string_view_t<wchar_t> str)noexcept{
+		inline void ConsoleLog(const die_state&state,string_view_t<wchar_t> str)noexcept{
 			#if SYSTEM_TYPE == windows
 				WriteConsoleW(state.hConsole,str.data(),(DWORD)str.size(),nullptr,nullptr);
 			#elif SYSTEM_TYPE == linux
 				fputws(str.data(),stderr);
 			#endif
 		}
-		void ConsoleLogEnd(const die_state&state)noexcept{
+		inline void ConsoleLogEnd(const die_state&state)noexcept{
 			#if SYSTEM_TYPE == windows
 				FlushFileBuffers(state.hConsole);
 				//chenge color back
@@ -14383,13 +14623,13 @@ namespace array_n{
 		}
 		#undef expr
 
-		void push_back(const T&a){
+		void push_back(const T&a)noexcept(get<T>.apply_end.nothrow<const T&>){
 			get<T>.apply_end(note::to<T*&>(_m),a);
 		}
-		void push_back(T&&a){
+		void push_back(T&&a)noexcept(get<T>.apply_end.nothrow<T>){
 			get<T>.apply_end(note::to<T*&>(_m),move(a));
 		}
-		void remove(T a){
+		void remove(T a)noexcept(get<T>.remove.nothrow<T>){
 			get<T>.remove(a,note::from(_m));
 		}
 		//template<as_concept<get<T>.apply_end.able> U>
@@ -16531,7 +16771,11 @@ inline void test_end(){
 项目地址：https://github.com/steve02081504/ELC
 */
 class ubigint{
-	typedef unsigned_specific_size_fast_t<BIT_POSSIBILITY> base_type;
+	#if defined(_DEBUG)
+		typedef unsigned char base_type;
+	#else
+		typedef unsigned_specific_size_fast_t<BIT_POSSIBILITY> base_type;
+	#endif
 	typedef array_t<base_type> data_type;
 	static constexpr auto base_type_mod=number_of_possible_values_per<base_type>;
 	data_type _data;
@@ -16592,9 +16836,11 @@ private:
 	static void shrink_to_fit(data_type&a)noexcept{
 		auto size=a.size();
 		while(size--)
-			if(a[size]!=0)
-				break;
-		a.resize(size+1);
+			if(a[size]!=0){
+				a.resize(size+1);
+				return;
+			}
+		a.clear();
 	}
 	void shrink_to_fit()noexcept{
 		shrink_to_fit(_data);
@@ -16638,7 +16884,7 @@ public:
 				if(other<*i)
 					return false;
 				other-=*i;
-				other/=base_type_mod;
+				other=T(other/base_type_mod);
 				i++;
 			}
 			return other==0;
@@ -16808,21 +17054,37 @@ private:
 			return tmp;
 		}();
 		const calc_type divisor=calc_type(b.back());
-		base_type aret=base_type(dividend/divisor);
+		calc_type left=dividend/(divisor+1);
+		calc_type right=dividend/divisor;
+		base_type last_work_able=0;
+		//left<=a/b<=right
 		tryto=get_shrinked_data_view_of_data(tryto.data(),tryto.size());
-		while(aret!=0){
+		while(left<=right) {
 			//下面的muti_with_base至少会写入b.size()个元素，所以只需要置零buf中最后一个元素就行
 			buf.back()=0;
-			muti_with_base(buf.data(),b,aret);
+			const calc_type test=(left+right)/2;//二分法
+			muti_with_base(buf.data(),b,base_type(test));
 			const auto myview=get_shrinked_data_view_of_data(buf);
-			if(compare(tryto,myview)>=0){
-				sub_with_base(a,myview);
-				return aret;
+			const auto cmp=compare(tryto,myview);
+			if(cmp>=0)
+				last_work_able=base_type(test);
+			if(cmp>0){//tryto>myview：测试值太小或合适
+				left=test+1;
+				if(!base_type(left))//溢出了，test是最大的可用值
+					break;
 			}
-			else
-				aret--;
+			elseif(cmp<0)//tryto<myview：测试值太大
+				right=test-1;
+			else//tryto==myview：测试值合适
+				break;
 		}
-		return 0;
+		if(last_work_able==0)
+			return 0;
+		//下面的muti_with_base至少会写入b.size()个元素，所以只需要置零buf中最后一个元素就行
+		buf.back()=0;
+		muti_with_base(buf.data(),b,last_work_able);
+		sub_with_base(a,get_shrinked_data_view_of_data(buf));
+		return last_work_able;
 	}
 	[[nodiscard]]static base_type div_base(base_type*a,data_view_type b)noexcept{
 		array_t<base_type> fortry(note::size(b.size()+1));
@@ -16937,6 +17199,20 @@ public:
 			array_t<base_type> quot = div_with_base(mod, b_view);
 			shrink_to_fit(mod);
 			return divmod_result{ubigint{move(quot)},ubigint{move(mod)}};
+		}
+	}
+	[[nodiscard]]friend auto divmod(ubigint&& a,const ubigint& b)noexcept{
+		//直接使用a的内存而避免不必要的分配
+		typedef decltype(divmod(a,b)) divmod_result;
+		const auto b_view = b.get_data_view();
+		if(b_view.empty())return divmod_result{};
+		const auto a_view = a.get_data_view();
+		if(a_view.size() < b_view.size())return divmod_result{ubigint{},move(a)};
+		{
+			a._data.push_back(0);
+			array_t<base_type> quot = div_with_base(a._data, b_view);
+			shrink_to_fit(a._data);
+			return divmod_result{ubigint{move(quot)},move(a)};
 		}
 	}
 	//operator<<
@@ -17232,25 +17508,16 @@ public:
 [[nodiscard]]inline ubigint gcd(ubigint x, ubigint y)noexcept{
 	size_t shift = 0;
 	while(y){
-		// 如果 x 比 y 小，交换 x 和 y 的值
+		//都是偶数时，shift++并位移
+		const auto x_rzero=countr_zero(x);
+		const auto y_rzero=countr_zero(y);
+		shift+=min(x_rzero,y_rzero);
+		//一偶一奇时，只移动偶数 直到都是奇数
+		x>>=x_rzero;
+		y>>=y_rzero;
+		//都是奇数时，大数-=小数
 		if(x < y)swap(x, y);
-		if(is_even(x))
-			// x,y 都是偶数
-			if(is_even(y)){
-				x >>= 1u;
-				y >>= 1u;
-				shift++;
-			}
-			// x 是偶数，y 是奇数
-			else
-				x >>= 1u;
-		else
-			// x 是奇数，y 是偶数
-			if(is_even(y))
-				y >>= 1u;
-			// x, y 都是奇数
-			else
-				x -= y;
+		x-=y;
 	}
 	// 返回 x 左移 shift 位的结果
 	return x << shift;
@@ -17780,6 +18047,34 @@ public:
 				_denominator = zero;
 				return;
 			}
+		//优先进行猜测以处理近似的简单分数
+		{
+			T integer_part;
+			T fraction_part=::std::modf(num,&integer_part);
+			size_t numerator=1,denominator;
+			if(fraction_part){
+				//猜测分数
+				constexpr size_t max_numerator = 1u<<7;
+				while(numerator<max_numerator){
+					denominator = to_size_t(numerator/fraction_part);
+					if(feq(T(numerator)/denominator,fraction_part)){//近似相等即可
+						const auto numerator_backup=numerator;
+						//补正整数部分
+						numerator += to_size_t(integer_part*denominator);
+						//更新
+						_numerator = numerator;
+						_denominator = denominator;
+						//校验
+						if(convert_to<T>()==num)//保证无损所以不用feq
+							return;
+						//回滚
+						_numerator = numerator_backup;
+					}
+					numerator++;
+				}
+			}
+		}
+		//其余情况
 		{
 			const auto exponent = get_exponent(num);
 			const auto base_num = get_base_num(num);
@@ -17839,17 +18134,15 @@ public:
 			//将精度调整到T的精度，获取有精度损失但仍然可能过精的数
 			{
 				auto result=divmod(_numerator,_denominator);//同时获取商和余数
-				if(result.mod){
-					while(result.mod && !(result.quot>>precision_base_bitnum)){
-						_numerator<<=precision_base_bitnum;//扩大数字来容纳可能在除法中产生的数
-						exp-=precision_base_bitnum;//指数相应的减少
-						result=divmod(_numerator,_denominator);
-					}
-					_numerator=result.quot;//有损舍入精度
-					const auto tmp=countr_zero(_numerator);
-					_numerator>>=tmp;
-					exp+=tmp;
+				while(result.mod && !(result.quot>>precision_base_bitnum)){
+					_numerator<<=precision_base_bitnum;//扩大数字来容纳可能在除法中产生的数
+					exp-=precision_base_bitnum;//指数相应的减少
+					result=divmod(_numerator,_denominator);
 				}
+				_numerator=move(result.quot);//有损舍入精度
+				const auto tmp=countr_zero(_numerator);
+				_numerator>>=tmp;
+				exp+=tmp;
 			}
 			{
 				//对多余的精度进行舍入，仍然，这是可能有损的
@@ -17899,12 +18192,49 @@ public:
 	[[nodiscard]]friend bool is_negative(const ubigfloat&)noexcept{
 		return false;
 	}
+	//friend get_numerator
+	[[nodiscard]]friend ubigint get_numerator(const ubigfloat& a)noexcept{
+		return a._numerator;
+	}
+	[[nodiscard]]friend ubigint&& get_numerator(ubigfloat&& a)noexcept{
+		return move(a._numerator);
+	}
+	//friend get_denominator
+	[[nodiscard]]friend ubigint get_denominator(const ubigfloat& a)noexcept{
+		return a._denominator;
+	}
+	[[nodiscard]]friend ubigint&& get_denominator(ubigfloat&& a)noexcept{
+		return move(a._denominator);
+	}
+	//friend isNaN
+	[[nodiscard]]friend constexpr bool isNaN(const ubigfloat&)noexcept{
+		return false;
+	}
+	//friend isinf
+	[[nodiscard]]friend bool isinf(const ubigfloat&a)noexcept{
+		return!a._denominator;
+	}
 	//friend trunc
 	[[nodiscard]]friend ubigint trunc(const ubigfloat& a)noexcept{
 		return a._numerator/a._denominator;
 	}
 	[[nodiscard]]explicit operator ubigint()noexcept{
 		return trunc(*this);
+	}
+	//friend split
+	[[nodiscard]]friend auto split(const ubigfloat& a)noexcept{
+		struct result_t{
+			ubigint integer;
+			ubigfloat fraction;
+		};
+		const auto result=divmod(a._numerator,a._denominator);
+		return result_t{result.quot,ubigfloat{result.mod,a._denominator}};
+	}
+	//friend trunc_with_sub
+	[[nodiscard]]friend ubigint trunc_with_sub(ubigfloat& a)noexcept{
+		const auto result=divmod(move(a._numerator),a._denominator);
+		a._numerator=move(result.mod);
+		return result.quot;
 	}
 	//friend to_size_t
 	[[nodiscard]]friend size_t to_size_t(const ubigfloat& a)noexcept{
@@ -18320,12 +18650,41 @@ public:
 	[[nodiscard]]friend bigfloat copy_as_negative(ubigfloat&& a,bool sign)noexcept{
 		return bigfloat{move(a), sign};
 	}
+	//friend get_numerator
+	[[nodiscard]]friend ubigint get_numerator(const bigfloat& a)noexcept{
+		return get_numerator(a._num);
+	}
+	[[nodiscard]]friend ubigint&& get_numerator(bigfloat&& a)noexcept{
+		return get_numerator(move(a._num));
+	}
+	//friend get_denominator
+	[[nodiscard]]friend ubigint get_denominator(const bigfloat& a)noexcept{
+		return get_denominator(a._num);
+	}
+	[[nodiscard]]friend ubigint&& get_denominator(bigfloat&& a)noexcept{
+		return get_denominator(move(a._num));
+	}
 	//friend trunc
 	[[nodiscard]]friend bigint trunc(const bigfloat& a)noexcept{
 		return copy_as_negative(trunc(a._num),a._is_negative);
 	}
 	[[nodiscard]]explicit operator bigint()noexcept{
 		return trunc(*this);
+	}
+	//friend split
+	[[nodiscard]]friend auto split(const bigfloat& a)noexcept{
+		struct result_t{
+			bigint integer;
+			bigfloat fraction;
+		};
+		auto result=split(a._num);
+		return result_t{copy_as_negative(result.integer,a._is_negative),
+						copy_as_negative(result.fraction,a._is_negative)};
+	}
+	//friend trunc_with_sub
+	[[nodiscard]]friend bigint trunc_with_sub(bigfloat& a)noexcept{
+		auto result=trunc_with_sub(a._num);
+		return copy_as_negative(result,a._is_negative);
 	}
 	//friend to_size_t
 	[[nodiscard]]friend size_t to_size_t(const bigfloat& a)noexcept{
