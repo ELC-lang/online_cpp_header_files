@@ -1739,7 +1739,6 @@ using ::std::countl_one;
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
-//TODO: 将magic_number分割为magic_number、math、bit三个文件
 namespace magic_number{
 	/*! 黄金分割比
 		数理逻辑不应通过强奸感性来定义审美.
@@ -1760,740 +1759,7 @@ namespace magic_number{
 	constexpr auto e =	2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746639193200305992181741359662904357290033429526059563073813232862794349076323382988075319525101901157383418793070215408914993488416750924476146066808226480016847741185374234544243710753907774499206955170276183860626133138458300075204493382656029760673711320070932870912744374704723069697720931014169283681902551510865746377211125238978442505695369677078544996996794686445490598793163688923009879312773617821542499922957635148220826989519366803318252886939849646510582093923982948879332036250944311730123819706841614039701983767932068328237646480429531180232878250981945581530175671736133206981125099618188159304169035159888851934580727386673858942287922849989208680582574927961048419844436346324496848756023362482704197862320900216099023530436994184914631409343173814364054625315209618369088870701676839642437814059271456354906130310720851038375051011574770417189861068739696552126715468895703503540212340784981933432106817012100562788023519303322474501585390473041995777709350366041699732972508868769664035557071622684471625607988265178713419512466520198918006308407507245458379639351364421067750539471789004518357551541252235905906872648786357525419112888773717663748602766063496035367947026923229718683277173932361920077745221262475186983349515101986426988784717193966497690708252174233656627259284406204302141137199227852699846988477023238238400556555178890876613601304770984386116870523105531491625172837327286760072481729876375698163354150746088386636406934704372066886512756882661497307886570156850169186474885416791545965072342877306998537139043002665307839877638503238182155355973235306860430106757608389086270498418885951380910304235957824951439885901131858358406674723702971497850841458530857813391562707603563907639473114554958322669457024941398316343323789759556808568362972538679132750555425244919435891284050452269538121791319145135009938463117740179715122837854601160359554028644059;//精度2000
 
 	constexpr auto god=72;/// 神已死,神万岁.
-
-	/*! 无符号位的对应类型：帮助类型 */
-	template<typename T>
-	struct to_unsigned_t_helper{
-		using type=decltype(lambda{
-			if constexpr(::std::is_unsigned_v<T>||::std::is_floating_point_v<T>)
-				return T();
-			else
-				return::std::make_unsigned_t<T>();
-		}());
-	};
-	/*! 无符号位的对应类型 */
-	template<typename T>
-	using to_unsigned_t = typename to_unsigned_t_helper<T>::type;
-	/*! 有符号位的对应类型：帮助类型 */
-	template<typename T>
-	struct to_signed_t_helper{
-		using type=decltype(lambda{
-			if constexpr(::std::is_signed_v<T>||::std::is_floating_point_v<T>)
-				return T();
-			else
-				return::std::make_signed_t<T>();
-		}());
-	};
-	/*! 有符号位的对应类型 */
-	template<typename T>
-	using to_signed_t = typename to_signed_t_helper<T>::type;
-	//isNaN
-	template<class T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]force_inline constexpr bool isNaN(const T v)noexcept{
-		if constexpr(::std::is_floating_point_v<T>)
-			return v!=v;
-		else
-			return false;
-	}
-	/*! 符号位查询 */
-	template<typename T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]force_inline constexpr bool is_negative(T x)noexcept{
-		if constexpr(::std::is_signed_v<T>){
-			if constexpr(::std::is_floating_point_v<T>)
-				if(isNaN(x))
-					return false;
-			return x<0;
-		}
-		else
-			return false;
-	}
-	/*! 符号位设置 */
-	template<typename T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]force_inline constexpr T copy_as_negative(auto x,bool negative=1)noexcept{
-		if constexpr(::std::is_signed_v<decltype(x)>){
-			if constexpr(::std::is_floating_point_v<decltype(x)>)
-				return(T)::std::copysign(x,negative?-1:1);
-			else
-				return(T)negative?T{}-x:x;
-		}
-		else
-			return x;
-	}
-	[[nodiscard]]force_inline constexpr auto copy_as_negative(auto x,bool negative=1)noexcept{
-		return copy_as_negative<to_signed_t<decltype(x)>>(x,negative);
-	}
-	[[nodiscard]]force_inline constexpr auto copy_as_not_negative(auto x)noexcept{
-		return copy_as_negative(x,false);
-	}
-	/*! 任意算数类型安全转型(ub避免.). */
-	template<typename T,typename U> requires ::std::is_arithmetic_v<U>
-	[[nodiscard]]force_inline constexpr T safe_arithmetic_cast(U x)noexcept{
-		if constexpr(::std::is_floating_point_v<U> && ::std::is_unsigned_v<T>)
-			return (T)(intmax_t)x;
-		else
-			return (T)x;
-	}
-	/*! 任意算数类型转size_t */
-	template<typename T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]force_inline constexpr size_t to_size_t(T x)noexcept{
-		return safe_arithmetic_cast<size_t>(x);
-	}
-	/*! 任意算数类型转uintmax_t */
-	template<typename T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]force_inline constexpr uintmax_t to_uintmax_t(T x)noexcept{
-		return safe_arithmetic_cast<uintmax_t>(x);
-	}
-	/*! 求余 */
-	template<typename T1,typename T2> requires ::std::is_arithmetic_v<T1> and ::std::is_arithmetic_v<T2>
-	[[nodiscard]]force_inline constexpr auto mod(T1 a,T2 b){
-		if constexpr(::std::is_floating_point_v<T1>||::std::is_floating_point_v<T2>)
-			return ::std::fmod(a,b);
-		else
-			return a%b;
-	}
-	//divmod
-	template<typename T1,typename T2> requires ::std::is_arithmetic_v<T1> and ::std::is_arithmetic_v<T2>
-	[[nodiscard]]force_inline constexpr auto divmod(T1 a,T2 b){
-		typedef decltype(a/b) quot_t;
-		typedef decltype(a%b) mod_t;
-		struct divmod_result{
-			quot_t quot;
-			mod_t mod;
-		};
-		if constexpr(::std::is_floating_point_v<T1>||::std::is_floating_point_v<T2>)
-			return divmod_result{::std::floor(a/b),::std::fmod(a,b)};
-		else
-			return divmod_result{a/b,a%b};
-	}
-	/*! 设置浮点舍入 */
-	template<typename T>
-	force_inline constexpr void set_rounding(int mode){
-		if constexpr(::std::is_floating_point_v<T>)
-			::std::fesetround(mode);
-	}
-	/*!获取浮点舍入 */
-	template<typename T>
-	[[nodiscard]]force_inline constexpr int get_rounding(){
-		if constexpr(::std::is_floating_point_v<T>)
-			return ::std::fegetround();
-		else
-			return 0;
-	}
-	/*! 设置并自动恢复浮点舍入 */
-	template<typename T>
-	struct rounding_auto_setter{
-		int old_rounding;
-		rounding_auto_setter(int new_rounding){
-			old_rounding=get_rounding<T>();
-			set_rounding<T>(new_rounding);
-		}
-		~rounding_auto_setter(){
-			set_rounding<T>(old_rounding);
-		}
-	};
-	/// 位操作：循环左移（无mod）
-	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
-	[[nodiscard]]force_inline constexpr auto rotl_nomod(const T v,const auto R)noexcept;
-	#define rot_base(opt,antiopt) static_cast<T>(static_cast<T>(v opt r) | static_cast<T>(v antiopt (d - r)))
-	/// 位操作：循环右移（无mod）
-	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
-	[[nodiscard]]force_inline constexpr auto rotr_nomod(const T v,const auto r)noexcept{
-		constexpr auto d = ::std::numeric_limits<T>::digits;
-		if constexpr(::std::is_unsigned_v<decltype(r)>){
-			if(r)
-				return rot_base(>>,<<);
-			else
-				return v;
-		}
-		else{
-			if(r>0)
-				return rot_base(>>,<<);
-			elseif(r==0)
-				return v;
-			else//r<0
-				return rotl_nomod(v,0-r);
-		}
-	}
-	/// 位操作：循环左移（无mod）
-	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
-	[[nodiscard]]force_inline constexpr auto rotl_nomod(const T v,const auto r)noexcept{
-		constexpr auto d = ::std::numeric_limits<T>::digits;
-		if constexpr(::std::is_unsigned_v<decltype(r)>){
-			if(r)
-				return rot_base(<<,>>);
-			else
-				return v;
-		}
-		else{
-			if(r>0)
-				return rot_base(<<,>>);
-			elseif(r==0)
-				return v;
-			else//r<0
-				return rotr_nomod(v,0-r);
-		}
-	}
-	#undef rot_base
-	/// 位操作：循环右移
-	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
-	[[nodiscard]]force_inline constexpr auto rotr(const T v,const auto R)noexcept{
-		constexpr auto d = ::std::numeric_limits<T>::digits;
-		const auto r = mod(R,d);
-		return rotr_nomod(v,r);
-	}
-	/// 位操作：循环左移
-	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
-	[[nodiscard]]force_inline constexpr auto rotl(const T v,const auto R)noexcept{
-		constexpr auto d = ::std::numeric_limits<T>::digits;
-		const auto r = mod(R,d);
-		return rotl_nomod(v,r);
-	}
-	template<class T> requires ::std::is_arithmetic_v<T>
-	class rot_iterator{
-		static constexpr auto rot_offset_npos = ::std::numeric_limits<T>::digits;//d
-		size_t _offset;
-	public:
-		force_inline constexpr rot_iterator(size_t offset)noexcept:_offset(offset%rot_offset_npos){}
-		force_inline constexpr rot_iterator&operator++()noexcept{
-			_offset++;
-			if(_offset==rot_offset_npos)
-				_offset=0;
-			return*this;
-		}
-		force_inline constexpr rot_iterator&operator--()noexcept{
-			if(_offset==0)
-				_offset=rot_offset_npos;
-			_offset--;
-			return*this;
-		}
-		force_inline constexpr rot_iterator operator++(int)noexcept{
-			rot_iterator tmp(*this);
-			operator++();
-			return tmp;
-		}
-		force_inline constexpr rot_iterator operator--(int)noexcept{
-			rot_iterator tmp(*this);
-			operator--();
-			return tmp;
-		}
-		[[nodiscard]]force_inline constexpr size_t value()const noexcept{
-			return _offset;
-		}
-	};
-	/// 位操作：循环左移（无mod）
-	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
-	[[nodiscard]]force_inline constexpr auto rotl_nomod(const T v,const rot_iterator<T>&r)noexcept{
-		return rotl_nomod(v,r.value());
-	}
-	/// 位操作：循环右移（无mod）
-	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
-	[[nodiscard]]force_inline constexpr auto rotr_nomod(const T v,const rot_iterator<T>&r)noexcept{
-		return rotr_nomod(v,r.value());
-	}
-	/// 位操作：循环左移
-	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
-	[[nodiscard]]force_inline constexpr auto rotl(const T v,const rot_iterator<T>&r)noexcept{
-		return rotl_nomod(v,r);
-	}
-	/// 位操作：循环右移
-	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
-	[[nodiscard]]force_inline constexpr auto rotr(const T v,const rot_iterator<T>&r)noexcept{
-		return rotr_nomod(v,r);
-	}
-	//abs
-	template<class T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]force_inline constexpr auto abs(const T v)noexcept{
-		if constexpr(::std::is_signed_v<T>){
-			//符号转无符号而不是num=-num避免INT_MAX这种情况下的溢出
-			typedef to_unsigned_t<T> UT;
-			return is_negative(v)?UT(-v):UT(v);
-		}
-		else
-			return v;
-	}
-	//feq
-	template<class T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]force_inline constexpr bool feq(const T a,const T b)noexcept{
-		return abs(a-b)<=::std::numeric_limits<T>::epsilon();
-	}
-	//sub
-	template<class T1,class T2> requires was_not_an_ill_form(declvalue(T1)-declvalue(T2))
-	[[nodiscard]]force_inline constexpr auto sub(const T1 a,const T2 b)noexcept{
-		if constexpr(::std::is_arithmetic_v<T1>&&::std::is_arithmetic_v<T2>){
-			if constexpr(::std::is_floating_point_v<T1>||::std::is_floating_point_v<T2>)
-				return a-b;
-			else{
-				using signedT = ::std::make_signed_t<::std::common_type_t<T1,T2,signed char>>;
-				return static_cast<signedT>(a)-static_cast<signedT>(b);
-			}
-		}
-		else
-			return a-b;
-	}
-	//exp
-	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
-	template<class T> requires ::std::is_floating_point_v<T>
-	[[nodiscard]]force_inline constexpr T exp(const T v)noexcept{
-		if in_consteval{
-			typedef decltype(::std::exp(v)) RT;
-			auto exp_impl = recursive_lambda(RT x,RT sum,RT n,size_t i,RT t)noexcept -> RT{
-				const auto epsilon=sum+t/n;
-				if(feq(sum,epsilon))
-					return sum;
-				else
-					return self_recursion(x,epsilon,n*i,i+1,t*x);
-			};
-			auto exp_impl_caller = get_recursive_lambda_caller(exp_impl);
-			return exp_impl_caller(RT{v},RT{1},RT{1},2,RT{v});
-		}
-		else
-			return ::std::exp(v);
-	}
-	//log
-	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
-	template<class T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]force_inline constexpr auto log(const T a)noexcept{
-		if in_consteval{
-			typedef decltype(::std::log(a)) RT;
-			auto log_impl = recursive_lambda(const RT x,const RT y)noexcept -> RT{
-				auto log_iter = lambda(RT x,RT y)noexcept{
-					const auto exp_y = exp(y);
-					return y + T{2}*(x-exp_y)/(x+exp_y);
-				};
-				return RT(feq(y,log_iter(x,y)) ? y : self_recursion(x,log_iter(x,y)));
-			};
-			auto log_impl_caller = get_recursive_lambda_caller(log_impl);
-			return log_impl_caller((RT)a,RT{0});
-		}
-		else
-			return ::std::log(a);
-	}
-	template<class T,class U> requires ::std::is_arithmetic_v<T> && ::std::is_arithmetic_v<U>
-	[[nodiscard]]force_inline constexpr auto log(const T a,const U b)noexcept{
-		return log(a)/log(b);
-	}
-	//pow
-	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
-	template<class T,class U> requires (::std::is_arithmetic_v<T> && ::std::is_arithmetic_v<U>)
-	[[nodiscard]]force_inline constexpr auto pow(const T a,const U b)noexcept{
-		if in_consteval{
-			typedef decltype(::std::pow(a,b)) RT;
-			return RT(exp(b*log(a)));
-		}
-		else
-			return ::std::pow(a,b);
-	}
-	//trunc
-	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
-	template<class T> requires ::std::is_floating_point_v<T>
-	[[nodiscard]]force_inline constexpr auto trunc(const T v)noexcept{
-		if in_consteval{
-			typedef decltype(::std::trunc(v)) RT;
-			return static_cast<RT>((intmax_t)v);
-		}
-		else
-			return ::std::trunc(v);
-	}
-	//ceil
-	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
-	template<class T> requires ::std::is_floating_point_v<T>
-	[[nodiscard]]force_inline constexpr auto ceil(const T v)noexcept{
-		if in_consteval{
-			typedef decltype(::std::ceil(v)) RT;
-			auto ceil_impl = lambda(T x, T y)noexcept{
-				return feq(x,y) ? y : y+T{1};
-			};
-			return v<0 ? -static_cast<T>(to_uintmax_t(-v)) : ceil_impl(v,static_cast<T>(to_uintmax_t(v)));
-		}
-		else
-			return ::std::ceil(v);
-	}
-	//floor
-	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
-	template<class T> requires ::std::is_floating_point_v<T>
-	[[nodiscard]]force_inline constexpr auto floor(const T v)noexcept{
-		if in_consteval{
-			typedef decltype(::std::floor(v)) RT;
-			auto floor_impl = lambda(T x, T y)noexcept{
-				return feq(x,y) ? y : y-T{1};
-			};
-			return v<0 ? -static_cast<T>(to_uintmax_t(-v+T{1})) : floor_impl(v,static_cast<T>(to_uintmax_t(v)));
-		}
-		else
-			return ::std::floor(v);
-	}
-	//sqrt
-	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
-	template<class T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]force_inline constexpr auto sqrt(const T v)noexcept{
-		if in_consteval{
-			typedef decltype(::std::sqrt(v)) RT;
-			auto sqrt_impl = recursive_lambda(const RT x,const RT curr,const RT prev)noexcept -> RT{
-				return feq(curr,prev) ? curr : self_recursion(x,(curr+x/curr)/RT{2},curr);
-			};
-			auto sqrt_impl_caller = get_recursive_lambda_caller(sqrt_impl);
-			if(v >= 0 && v < ::std::numeric_limits<RT>::infinity())
-				return sqrt_impl_caller((RT)v,(RT)v,(RT)0);
-			else
-				return ::std::numeric_limits<RT>::quiet_NaN();
-		}
-		else
-			return ::std::sqrt(v);
-	}
-
-	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
-	template<class T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
-		/*
-		应某人的要求补注释(都是主人的任务罢了.).
-		建议先看有预先检查的部分以便理解思路.
-		*/
-		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
-		/*
-		接下来:
-		设要判定的数n(6x±1的缩写).
-		测试数可以看为6i-1 6i 6i+1 6i+2 6i+3 6i+4的其中之一,同样以6为周期.
-		对于测试数的整个周期,其中:
-			如果n能被6i 6i+2 6i+4整除:则n要是偶数,但±1,排除.
-			如果n能被6i+3整除:则n要是3倍数,但±1,排除.
-		综上,循环中只要考虑6i±1的情况.
-		所以以5起始,前进6(自然选择号,前进4!),逐次判断0与+2.
-		虽然很想写成以6为起始逐次判断±1的对称格式但是这样会加重时空负担.(不甘心.....)
-		*/
-		for(T c=5;c<=b;c+=6)//遍历判断是否能被因数分解——不会有人看不懂吧?
-			if((!mod(a,c))||(!mod(a,(c+2))))
-				return false;
-		/*
-		最后,为什么是6?
-		就结论来说,此数值选择最常出现的两因数(除0或1外.)之积可以最大程度减少时间占用.
-		所以虽然更喜欢7/8/9之类的数不过使用6收益最大.
-		要不是这样早就写成7了.
-		*/
-		return true;
-	}
-	/*! 判断某数是否是素数 */
-	template<class T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]inline constexpr bool is_prime_num(T a)noexcept{
-		if constexpr(::std::is_floating_point_v<T>)
-			if(a != ceil(a))
-				return false;
-		auto b=abs(a);
-
-		if(b<4)
-			return true;//1和0也是prime,我不管.
-		/*
-		当x≥1,那么≥5的自然数如下:
-		6x-1 6x 6x+1 6x+2 6x+3 6x+4
-		6(x+1)-1 6(x+1) 6(x+1)+1 ... //这已经是下一周期了.
-
-		考虑单个周期:
-		6x+2 6x+3 6x+4 是 2(3x+1) 3(2x+1) 2(3x+2),排除.
-		6x,排除.
-		那么,只用考虑6x±1是否是prime.
-		*/
-		if(mod(mod(b,6)-1,4))
-			return false;
-		/*
-		因为no_pre_check判定没有考虑到≤5的数,所以本函数第一个if进行判定补全.
-		*/
-		return is_prime_num_no_pre_check(b);
-	}
-	/// 求小于或等于某数的素数
-	template<class T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]inline constexpr T get_prime_num_less_or_eq_than(T a)noexcept;
-	/// 求大于或等于某数的素数
-	template<class T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]inline constexpr T get_prime_num_big_or_eq_than(T a)noexcept{
-		if constexpr(::std::is_floating_point_v<T>){
-			a=ceil(a);
-		}
-		if constexpr(::std::is_signed_v<T> || ::std::is_floating_point_v<T>){
-			if(is_negative(a)){
-				auto tmp = get_prime_num_less_or_eq_than(abs(a));
-				return copy_as_negative(tmp);
-			}
-		}
-		if(a<4)return a;
-		//将a转换为6x-1的形式.
-		{
-			T b=mod(a,6);
-			if(b==1 && is_prime_num_no_pre_check(a))return a;
-			a+=b?5-b:1;
-		}
-		//循环判断.
-		for(;;a+=6)
-			if(is_prime_num_no_pre_check(a))return a;
-			elseif(is_prime_num_no_pre_check(a+2))return a+2;
-	}
-	/// 求小于或等于某数的素数
-	template<class T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]inline constexpr T get_prime_num_less_or_eq_than(T a)noexcept{
-		if constexpr(::std::is_floating_point_v<T>){
-			a=floor(a);
-		}
-		if constexpr(::std::is_signed_v<T> || ::std::is_floating_point_v<T>){
-			if(is_negative(a)){
-				auto tmp = get_prime_num_big_or_eq_than(abs(a));
-				return copy_as_negative(tmp);
-			}
-		}
-		if(a<4)return a;
-		//将a转换为6x-1的形式.
-		{
-			T b=mod(a,6);
-			if(b==1 && is_prime_num_no_pre_check(a))return a;
-			a-=b?b-1:5;
-		}
-		//循环判断.
-		for(;;a-=6)
-			if(is_prime_num_no_pre_check(a))return a;
-			elseif(is_prime_num_no_pre_check(a-2))return a-2;
-	}
-	/// 求大于某数的素数
-	template<class T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]inline constexpr auto get_prime_num_big_than(T a)noexcept{
-		return get_prime_num_big_or_eq_than(a+1);
-	}
-	push_and_disable_msvc_warning(26467);//gold_of_resize永远为正数
-	/// 已知当前array的size，求下一个合适的提前分配大小
-	[[nodiscard]]inline constexpr size_t get_next_gold_size_to_resize_for_array(size_t size)noexcept{
-		/*
-		每次扩容后的空间与原空间比大致为gold of resize可以最小化时空负担.
-		*/
-		return size_t(size*gold_of_resize);
-	}
-	/// 已知当前hash table的size，求下一个合适的桶大小
-	[[nodiscard]]inline constexpr size_t get_next_gold_size_to_resize_for_hash(size_t size)noexcept{
-		/*
-		素数大小的桶数可以使hash table中的每个桶尽可能活跃.
-		每次扩容后的空间与原空间比大致为gold of resize可以最小化时空负担.
-		*/
-		return size_t(get_prime_num_big_or_eq_than(size*gold_of_resize));
-	}
-	pop_msvc_warning();
-
-	/// 线性插值.
-	namespace linear_interpolation{
-		[[nodiscard]]inline constexpr auto get_k(auto y1,auto y2,auto δx)noexcept{
-			auto δy=sub(y2,y1);
-			auto k=δy/δx;
-			return k;
-		}
-		[[nodiscard]]inline constexpr auto get_k(auto y1,auto y2)noexcept{
-			return get_k(y1,y2,1.0);
-		}
-		[[nodiscard]]inline constexpr auto get_result(auto y1,auto k,auto δx)noexcept{
-			auto diff=k*δx;
-			return y1+diff;
-		}
-		[[nodiscard]]inline constexpr auto get_reverse_result(auto k,auto δx,auto y)noexcept{
-			auto diff=k*δx;
-			return y-diff;
-		}
-	}
-	//质因数分解
-	//由于array在之后定义所以泛型容器
-	//用法 get_prime_factorization(num).to<容器类型>(); 或 get_prime_factorization(num).unique().to<容器类型>();
-	constexpr struct get_prime_factorization_t{
-		template<class T>
-		class result_t{
-			T _m;
-		public:
-			template<class container_t>
-			static constexpr bool able=was_not_an_ill_form(declvalue(container_t&).push_back(declvalue(T)));
-
-			constexpr force_inline result_t(T m)noexcept:_m(m){}
-
-			template<class container_t> requires able<container_t>
-			[[nodiscard]]constexpr container_t to()const noexcept{
-				container_t aret;
-				//思路：获取小于等于m的所有素数，依次除以m，若能整除则将素数加入结果，否则跳过，直到m为1.
-				T i=T{2},m=abs(_m);
-				while(m!=1){
-					while(!(m%i)){
-						aret.push_back(i);
-						m/=i;
-					}
-					i=get_prime_num_big_than(i);
-				}
-				if constexpr(::std::is_signed_v<T> || ::std::is_floating_point_v<T>)
-					if(is_negative(_m))
-						aret.push_back(T{-1});
-				return aret;
-			}
-			//operator container_t()
-			template<class container_t>
-			[[nodiscard]]constexpr force_inline operator container_t()const noexcept{
-				return to<container_t>();
-			}
-			class unique_t{
-				T _m;
-			public:
-				constexpr force_inline unique_t(T m)noexcept:_m(m){}
-
-				template<class container_t> requires able<container_t>
-				[[nodiscard]]constexpr container_t to()const noexcept{
-					container_t aret;
-					//思路：获取小于等于m的所有素数，依次除以m，若能整除则将素数加入结果，否则跳过，直到m为1.
-					T i=T{2},m=abs(_m);
-					while(m!=1){
-						if(!(m%i)){
-							aret.push_back(i);
-							do m/=i;while(!(m%i));
-						}	
-						i=get_prime_num_big_than(i);
-					}
-					if constexpr(::std::is_signed_v<T> || ::std::is_floating_point_v<T>)
-						if(is_negative(_m))
-							aret.push_back(T{-1});
-					return aret;
-				}
-				//operator container_t()
-				template<class container_t>
-				[[nodiscard]]constexpr force_inline operator container_t()const noexcept{
-					return to<container_t>();
-				}
-			};
-			[[nodiscard]]constexpr force_inline auto unique()const noexcept{
-				return unique_t{_m};
-			}
-		};
-		template<class T> requires ::std::is_arithmetic_v<T>
-		[[nodiscard]]constexpr force_inline auto operator()(T m)const noexcept{
-			return result_t<T>{m};
-		}
-	}get_prime_factorization{};
-	//编译时质因数分解到质因数表
-	template<size_t number>
-	struct prime_factorization_table_t{
-		static constexpr size_t table_size=lambda{
-			size_t i=2,m=number;
-			size_t ret=0;
-			while(m!=1){
-				while(!(m%i)){
-					++ret;
-					m/=i;
-				}
-				i=get_prime_num_big_than(i);
-			}
-			return ret;
-		}();
-		size_t _table[table_size];
-		constexpr force_inline prime_factorization_table_t()noexcept{
-			size_t i=2,m=number;
-			size_t index=0;
-			while(m!=1){
-				while(!(m%i)){
-					_table[index++]=i;
-					m/=i;
-				}
-				i=get_prime_num_big_than(i);
-			}
-		}
-		[[nodiscard]]constexpr force_inline size_t operator[](size_t index)const noexcept{
-			return _table[index];
-		}
-		//begin and end for range for
-		[[nodiscard]]constexpr force_inline size_t* begin()noexcept{
-			return _table;
-		}
-		[[nodiscard]]constexpr force_inline size_t* end()noexcept{
-			return _table+table_size;
-		}
-		[[nodiscard]]constexpr force_inline const size_t* begin()const noexcept{
-			return _table;
-		}
-		[[nodiscard]]constexpr force_inline const size_t* end()const noexcept{
-			return _table+table_size;
-		}
-	};
-	//编译时的唯一质因数分解到质因数表
-	template<size_t number>
-	struct unique_prime_factorization_table_t{
-		static constexpr size_t table_size=lambda{
-			size_t i=2,m=number;
-			size_t ret=0;
-			while(m!=1){
-				if(!(m%i)){
-					++ret;
-					do m/=i;while(!(m%i));
-				}
-				i=get_prime_num_big_than(i);
-			}
-			return ret;
-		}();
-		size_t _table[table_size]={};
-		constexpr force_inline unique_prime_factorization_table_t()noexcept{
-			size_t i=2,m=number;
-			size_t index=0;
-			while(m!=1){
-				if(!(m%i)){
-					_table[index++]=i;
-					do m/=i;while(!(m%i));
-				}
-				i=get_prime_num_big_than(i);
-			}
-		}
-		[[nodiscard]]constexpr force_inline size_t operator[](size_t index)const noexcept{
-			return _table[index];
-		}
-		//begin and end for range for
-		[[nodiscard]]constexpr force_inline size_t* begin()noexcept{
-			return _table;
-		}
-		[[nodiscard]]constexpr force_inline size_t* end()noexcept{
-			return _table+table_size;
-		}
-		[[nodiscard]]constexpr force_inline const size_t* begin()const noexcept{
-			return _table;
-		}
-		[[nodiscard]]constexpr force_inline const size_t* end()const noexcept{
-			return _table+table_size;
-		}
-	};
 }
-using magic_number::to_unsigned_t;
-using magic_number::is_negative;
-using magic_number::copy_as_negative;
-using magic_number::copy_as_not_negative;
-using magic_number::to_size_t;
-using magic_number::mod;
-using magic_number::divmod;
-using magic_number::set_rounding;
-using magic_number::get_rounding;
-using magic_number::rounding_auto_setter;
-using magic_number::rotl;
-using magic_number::rotr;
-using magic_number::rotl_nomod;
-using magic_number::rotr_nomod;
-using magic_number::rot_iterator;
-using magic_number::feq;
-using magic_number::isNaN;
-using magic_number::abs;
-using magic_number::exp;
-using magic_number::log;
-using magic_number::pow;
-using magic_number::ceil;
-using magic_number::floor;
-using magic_number::sqrt;
-using magic_number::trunc;
-using magic_number::is_prime_num;
-using magic_number::get_prime_num_big_or_eq_than;
-using magic_number::get_prime_num_big_than;
-using magic_number::get_next_gold_size_to_resize_for_array;
-using magic_number::get_next_gold_size_to_resize_for_hash;
-using magic_number::get_prime_factorization;
-using magic_number::prime_factorization_table_t;
-using magic_number::unique_prime_factorization_table_t;
 
 //file_end
 
@@ -2958,6 +2224,886 @@ constexpr struct max_t{
 //file_end
 
 #line 23 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+//math.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace math{
+	/// 算术类型帮助类型
+	/// 任何后续定义的新算术类型都可以重载这些类型来实现数学库的泛型支持
+	template<typename T>
+	struct arithmetic_type_info_helper{
+		//bool：是否是算数类型
+		static constexpr bool is_arithmetic_type=::std::is_arithmetic_v<T>;
+		//bool：是否是基础类型
+		static constexpr bool is_basic_type=::std::is_arithmetic_v<T>;
+		//bool：是否是大数类型
+		static constexpr bool is_big_type=false;
+		//bool：是否是浮点类型
+		static constexpr bool is_float_type=::std::is_floating_point_v<T>;
+		//bool：是否是有符号类型
+		static constexpr bool is_signed=::std::is_signed_v<T>;
+		//bool：是否有NaN
+		static constexpr bool has_NaN=::std::numeric_limits<T>::has_quiet_NaN || ::std::numeric_limits<T>::has_signaling_NaN;
+		//bool：是否有inf
+		static constexpr bool has_inf=::std::numeric_limits<T>::has_infinity;
+		//对应的无符号和有符号类型
+		using unsigned_type=decltype(lambda{
+			if constexpr(::std::is_unsigned_v<T>||::std::is_floating_point_v<T>)
+				return T();
+			elseif constexpr(::std::is_signed_v<T>)
+				return::std::make_unsigned_t<T>();
+		}());
+		using signed_type=decltype(lambda{
+			if constexpr(::std::is_signed_v<T>||::std::is_floating_point_v<T>)
+				return T();
+			elseif constexpr(::std::is_unsigned_v<T>)
+				return::std::make_signed_t<T>();
+		}());
+	};
+	/*! 无符号位的对应类型 */
+	template<typename T>
+	using to_unsigned_t = typename arithmetic_type_info_helper<T>::unsigned_type;
+	/*! 有符号位的对应类型 */
+	template<typename T>
+	using to_signed_t = typename arithmetic_type_info_helper<T>::signed_type;
+
+	/// 概念名称空间
+	/// 基于标准库的概念，但是使用帮助类型来便于后续定义中的新算数类型重载
+	inline namespace concepts{
+		/// 算术类型概念
+		template<typename T>
+		constexpr bool is_arithmetic_type=arithmetic_type_info_helper<T>::is_arithmetic_type;
+		template<typename T>
+		concept arithmetic_type=is_arithmetic_type<T>;
+		
+		/// 基础类型概念
+		template<typename T>
+		constexpr bool is_basic_type=arithmetic_type_info_helper<T>::is_basic_type;
+		template<typename T>
+		concept basic_type=is_basic_type<T>;
+
+		/// 大数类型概念
+		template<typename T>
+		constexpr bool is_big_type=arithmetic_type_info_helper<T>::is_big_type;
+		template<typename T>
+		concept big_type=is_big_type<T>;
+
+		/// 浮点类型概念
+		template<typename T>
+		constexpr bool is_float_type=arithmetic_type_info_helper<T>::is_float_type;
+		template<typename T>
+		concept float_type=is_float_type<T>;
+
+		/// 整数类型概念
+		template<typename T>
+		constexpr bool is_integer_type=!is_float_type<T>;
+		template<typename T>
+		concept integer_type=is_integer_type<T>;
+
+		/// 有符号类型概念
+		template<typename T>
+		constexpr bool is_signed=arithmetic_type_info_helper<T>::is_signed;
+		template<typename T>
+		concept signed_type=is_signed<T>;
+
+		/// 无符号类型概念
+		template<typename T>
+		constexpr bool is_unsigned=!is_signed<T>;
+		template<typename T>
+		concept unsigned_type=is_unsigned<T>;
+
+		/// 有符号整数类型概念
+		template<typename T>
+		constexpr bool is_signed_integer_type=is_integer_type<T>&&is_signed<T>;
+		template<typename T>
+		concept signed_integer_type=is_signed_integer_type<T>;
+
+		/// 无符号整数类型概念
+		template<typename T>
+		constexpr bool is_unsigned_integer_type=is_integer_type<T>&&is_unsigned<T>;
+		template<typename T>
+		concept unsigned_integer_type=is_unsigned_integer_type<T>;
+
+		/// 有NaN的类型概念
+		template<typename T>
+		concept has_NaN=arithmetic_type_info_helper<T>::has_NaN;
+
+		/// 有inf的类型概念
+		template<typename T>
+		concept has_inf=arithmetic_type_info_helper<T>::has_inf;
+	}
+
+	//isNaN
+	template<arithmetic_type T>
+	[[nodiscard]]force_inline constexpr bool isNaN(const T v)noexcept{
+		if constexpr(has_NaN<T>)
+			return v!=v;
+		else
+			return false;
+	}
+	/*! 符号位查询 */
+	template<arithmetic_type T>
+	[[nodiscard]]force_inline constexpr bool is_negative(T x)noexcept{
+		if constexpr(is_signed<T>){
+			if constexpr(has_NaN<T>)
+				if(isNaN(x))
+					return false;
+			return x<T{};
+		}
+		else
+			return false;
+	}
+	/*! 符号位设置 */
+	template<arithmetic_type T>
+	[[nodiscard]]force_inline constexpr T copy_as_negative(auto x,bool negative=1)noexcept{
+		if constexpr(is_unsigned<T>)
+			template_error("copy_as_negative:unsigned type");
+		if constexpr(is_basic_type<decltype(x)>){
+			if constexpr(is_float_type<decltype(x)>)
+				return(T)::std::copysign(x,negative?-1:1);
+			else
+				return(T)negative?T{}-x:x;
+		}
+		else
+			return copy_as_negative<T>((T)x,negative);
+	}
+	[[nodiscard]]force_inline constexpr auto copy_as_negative(auto x,bool negative=1)noexcept{
+		return copy_as_negative<to_signed_t<decltype(x)>>(x,negative);
+	}
+	[[nodiscard]]force_inline constexpr auto copy_as_not_negative(auto x)noexcept{
+		return copy_as_negative(x,false);
+	}
+	/*! 任意算数类型安全转型(ub避免.). */
+	template<arithmetic_type T,arithmetic_type U>
+	[[nodiscard]]force_inline constexpr T safe_arithmetic_cast(U x)noexcept{
+		if constexpr(::std::is_floating_point_v<U> && ::std::is_unsigned_v<T>)
+			return (T)(intmax_t)x;
+		else
+			return (T)x;
+	}
+	/*! 任意算数类型转size_t */
+	template<arithmetic_type T>
+	[[nodiscard]]force_inline constexpr size_t to_size_t(T x)noexcept{
+		return safe_arithmetic_cast<size_t>(x);
+	}
+	/*! 任意算数类型转uintmax_t */
+	template<arithmetic_type T>
+	[[nodiscard]]force_inline constexpr uintmax_t to_uintmax_t(T x)noexcept{
+		return safe_arithmetic_cast<uintmax_t>(x);
+	}
+	/*! 求余 */
+	template<arithmetic_type T1,arithmetic_type T2>
+	[[nodiscard]]force_inline constexpr auto mod(T1 a,T2 b){
+		if constexpr(::std::is_floating_point_v<T1>||::std::is_floating_point_v<T2>)
+			return ::std::fmod(a,b);
+		else
+			return a%b;
+	}
+	//divmod
+	template<arithmetic_type T1,arithmetic_type T2> requires(!is_big_type<T1>&&!is_big_type<T2>)
+	[[nodiscard]]force_inline constexpr auto divmod(T1 a,T2 b){
+		typedef decltype(a/b) quot_t;
+		typedef decltype(a%b) mod_t;
+		struct divmod_result{
+			quot_t quot;
+			mod_t mod;
+		};
+		if constexpr(::std::is_floating_point_v<T1>||::std::is_floating_point_v<T2>)
+			return divmod_result{::std::floor(a/b),::std::fmod(a,b)};
+		else
+			return divmod_result{a/b,a%b};
+	}
+
+	/*! 设置浮点舍入 */
+	template<typename T>
+	force_inline constexpr void set_rounding(int mode){
+		if constexpr(::std::is_floating_point_v<T>)
+			::std::fesetround(mode);
+	}
+	/*!获取浮点舍入 */
+	template<typename T>
+	[[nodiscard]]force_inline constexpr int get_rounding(){
+		if constexpr(::std::is_floating_point_v<T>)
+			return ::std::fegetround();
+		else
+			return 0;
+	}
+	/*! 设置并自动恢复浮点舍入 */
+	template<typename T>
+	struct rounding_auto_setter{
+		int old_rounding;
+		rounding_auto_setter(int new_rounding){
+			old_rounding=get_rounding<T>();
+			set_rounding<T>(new_rounding);
+		}
+		~rounding_auto_setter(){
+			set_rounding<T>(old_rounding);
+		}
+	};
+
+	//abs
+	template<arithmetic_type T>
+	[[nodiscard]]force_inline constexpr auto abs(const T v)noexcept{
+		if constexpr(is_signed<T>){
+			//符号转无符号而不是num=-num避免INT_MAX这种情况下的溢出
+			typedef to_unsigned_t<T> UT;
+			return is_negative(v)?UT(-v):UT(v);
+		}
+		else
+			return v;
+	}
+	//is_close
+	template<arithmetic_type T>
+	[[nodiscard]]force_inline constexpr bool is_close(const T a,const T b)noexcept{
+		if constexpr(is_float_type<T> && is_basic_type<T>)
+			return abs(a-b)<=::std::numeric_limits<T>::epsilon();
+		else
+			return a==b;
+	}
+	//sub
+	template<arithmetic_type T1,arithmetic_type T2>
+	[[nodiscard]]force_inline constexpr auto sub(const T1 a,const T2 b)noexcept{
+		if constexpr(is_basic_type<T1>&&is_basic_type<T2>){
+			if constexpr(is_float_type<T1>||is_float_type<T2>)
+				return a-b;
+			else{
+				using signedT = ::std::make_signed_t<::std::common_type_t<T1,T2,signed char>>;
+				return static_cast<signedT>(a)-static_cast<signedT>(b);
+			}
+		}
+		else
+			return a-b;
+	}
+	//exp
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<float_type T>
+	[[nodiscard]]force_inline constexpr T exp(const T v)noexcept{
+		if(in_consteval||!is_basic_type<T>){
+			typedef decltype(lambda{
+				if constexpr(is_basic_type<T>)
+					return ::std::exp(T{});
+				else
+					return T{};
+			}()) RT;
+			auto exp_impl = recursive_lambda(RT x,RT sum,RT n,size_t i,RT t)noexcept -> RT{
+				const auto epsilon=sum+t/n;
+				if(is_close(sum,epsilon))
+					return sum;
+				else
+					return self_recursion(x,epsilon,n*i,i+1,t*x);
+			};
+			auto exp_impl_caller = get_recursive_lambda_caller(exp_impl);
+			return exp_impl_caller(RT{v},RT{1u},RT{1u},2,RT{v});
+		}
+		elseif constexpr(is_basic_type<T>)
+			return ::std::exp(v);
+	}
+	//log
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<arithmetic_type T>
+	[[nodiscard]]force_inline constexpr auto log(const T a)noexcept{
+		if(in_consteval||!is_basic_type<T>){
+			typedef decltype(lambda{
+				if constexpr(is_basic_type<T>)
+					return ::std::log(T{});
+				else
+					return T{};
+			}()) RT;
+			auto log_impl = recursive_lambda(const RT x,const RT y)noexcept -> RT{
+				auto log_iter = lambda(RT x,RT y)noexcept{
+					const auto exp_y = exp(y);
+					return y + T{2u}*(x-exp_y)/(x+exp_y);
+				};
+				return RT(is_close(y,log_iter(x,y)) ? y : self_recursion(x,log_iter(x,y)));
+			};
+			auto log_impl_caller = get_recursive_lambda_caller(log_impl);
+			return log_impl_caller((RT)a,RT{0u});
+		}
+		elseif constexpr(is_basic_type<T>)
+			return ::std::log(a);
+	}
+	template<arithmetic_type T,arithmetic_type U>
+	[[nodiscard]]force_inline constexpr auto log(const T a,const U b)noexcept{
+		return log(a)/log(b);
+	}
+	//pow
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<arithmetic_type T,arithmetic_type U>
+	[[nodiscard]]force_inline constexpr auto pow(const T a,const U b)noexcept{
+		if(in_consteval||!is_basic_type<T>){
+			typedef decltype(::std::pow(a,b)) RT;
+			return RT(exp(b*log(a)));
+		}
+		elseif constexpr(is_basic_type<T>)
+			return ::std::pow(a,b);
+	}
+	//trunc
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<float_type T> requires is_basic_type<T>
+	[[nodiscard]]force_inline constexpr auto trunc(const T v)noexcept{
+		if in_consteval{
+			typedef decltype(::std::trunc(v)) RT;
+			return static_cast<RT>((intmax_t)v);
+		}
+		else
+			return ::std::trunc(v);
+	}
+	//ceil
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<float_type T> requires is_basic_type<T>
+	[[nodiscard]]force_inline constexpr auto ceil(const T v)noexcept{
+		if in_consteval{
+			typedef decltype(::std::ceil(v)) RT;
+			auto ceil_impl = lambda(T x, T y)noexcept{
+				return is_close(x,y) ? y : y+T{1};
+			};
+			return v<0 ? -static_cast<T>(to_uintmax_t(-v)) : ceil_impl(v,static_cast<T>(to_uintmax_t(v)));
+		}
+		else
+			return ::std::ceil(v);
+	}
+	//floor
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<float_type T> requires is_basic_type<T>
+	[[nodiscard]]force_inline constexpr auto floor(const T v)noexcept{
+		if in_consteval{
+			typedef decltype(::std::floor(v)) RT;
+			auto floor_impl = lambda(T x, T y)noexcept{
+				return is_close(x,y) ? y : y-T{1};
+			};
+			return v<0 ? -static_cast<T>(to_uintmax_t(-v+T{1})) : floor_impl(v,static_cast<T>(to_uintmax_t(v)));
+		}
+		else
+			return ::std::floor(v);
+	}
+	//sqrt
+	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
+	template<arithmetic_type T>
+	[[nodiscard]]force_inline constexpr auto sqrt(const T v)noexcept{
+		if(in_consteval||!is_basic_type<T>){
+			typedef decltype(lambda(){
+				if constexpr(is_basic_type<T>)
+					return ::std::sqrt(T{});
+				else
+					return T{};
+			}()) RT;
+			auto sqrt_impl = recursive_lambda(const RT x,const RT curr,const RT prev)noexcept -> RT{
+				return is_close(curr,prev) ? curr : self_recursion(x,(curr+x/curr)/RT{2u},curr);
+			};
+			auto sqrt_impl_caller = get_recursive_lambda_caller(sqrt_impl);
+			if(v >= 0u && v < ::std::numeric_limits<RT>::infinity())
+				return sqrt_impl_caller((RT)v,(RT)v,(RT)0u);
+			else
+				return ::std::numeric_limits<RT>::quiet_NaN();
+		}
+		elseif constexpr(is_basic_type<T>)
+			return ::std::sqrt(v);
+	}
+
+	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
+	template<arithmetic_type T>
+	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
+		/*
+		应某人的要求补注释(都是主人的任务罢了.).
+		建议先看有预先检查的部分以便理解思路.
+		*/
+		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
+		/*
+		接下来:
+		设要判定的数n(6x±1的缩写).
+		测试数可以看为6i-1 6i 6i+1 6i+2 6i+3 6i+4的其中之一,同样以6为周期.
+		对于测试数的整个周期,其中:
+			如果n能被6i 6i+2 6i+4整除:则n要是偶数,但±1,排除.
+			如果n能被6i+3整除:则n要是3倍数,但±1,排除.
+		综上,循环中只要考虑6i±1的情况.
+		所以以5起始,前进6(自然选择号,前进4!),逐次判断0与+2.
+		虽然很想写成以6为起始逐次判断±1的对称格式但是这样会加重时空负担.(不甘心.....)
+		*/
+		for(T c=5u;c<=b;c+=6u)//遍历判断是否能被因数分解——不会有人看不懂吧?
+			if((!mod(a,c))||(!mod(a,(c+2u))))
+				return false;
+		/*
+		最后,为什么是6?
+		就结论来说,此数值选择最常出现的两因数(除0或1外.)之积可以最大程度减少时间占用.
+		所以虽然更喜欢7/8/9之类的数不过使用6收益最大.
+		要不是这样早就写成7了.
+		*/
+		return true;
+	}
+	/*! 判断某数是否是素数 */
+	template<arithmetic_type T>
+	[[nodiscard]]inline constexpr bool is_prime_num(T a)noexcept{
+		if constexpr(is_float_type<T>)
+			if(a != ceil(a))
+				return false;
+		auto b=abs(a);
+
+		if(b<4)
+			return true;//1和0也是prime,我不管.
+		/*
+		当x≥1,那么≥5的自然数如下:
+		6x-1 6x 6x+1 6x+2 6x+3 6x+4
+		6(x+1)-1 6(x+1) 6(x+1)+1 ... //这已经是下一周期了.
+
+		考虑单个周期:
+		6x+2 6x+3 6x+4 是 2(3x+1) 3(2x+1) 2(3x+2),排除.
+		6x,排除.
+		那么,只用考虑6x±1是否是prime.
+		*/
+		if(mod(mod(b,6)-1u,4u))
+			return false;
+		/*
+		因为no_pre_check判定没有考虑到≤5的数,所以本函数第一个if进行判定补全.
+		*/
+		return is_prime_num_no_pre_check(b);
+	}
+	/// 求小于或等于某数的素数
+	template<arithmetic_type T>
+	[[nodiscard]]inline constexpr T get_prime_num_less_or_eq_than(T a)noexcept;
+	/// 求大于或等于某数的素数
+	template<arithmetic_type T>
+	[[nodiscard]]inline constexpr T get_prime_num_big_or_eq_than(T a)noexcept{
+		if constexpr(is_float_type<T>)
+			a=ceil(a);
+		if constexpr(is_signed<T>)
+			if(is_negative(a)){
+				auto tmp = get_prime_num_less_or_eq_than(abs(a));
+				return copy_as_negative(tmp);
+			}
+		if(a<4u)return a;
+		//将a转换为6x-1的形式.
+		{
+			T b=mod(a,6u);
+			if(b==1u && is_prime_num_no_pre_check(a))return a;
+			a+=b?5u-b:1u;
+		}
+		//循环判断.
+		for(;;a+=6u)
+			if(is_prime_num_no_pre_check(a))return a;
+			elseif(is_prime_num_no_pre_check(a+2u))return a+2u;
+	}
+	/// 求小于或等于某数的素数
+	template<arithmetic_type T>
+	[[nodiscard]]inline constexpr T get_prime_num_less_or_eq_than(T a)noexcept{
+		if constexpr(is_float_type<T>)
+			a=floor(a);
+		if constexpr(is_signed<T>)
+			if(is_negative(a)){
+				auto tmp = get_prime_num_big_or_eq_than(abs(a));
+				return copy_as_negative(tmp);
+			}
+		if(a<4u)return a;
+		//将a转换为6x-1的形式.
+		{
+			T b=mod(a,6u);
+			if(b==1u && is_prime_num_no_pre_check(a))return a;
+			a-=b?b-1u:5u;
+		}
+		//循环判断.
+		for(;;a-=6u)
+			if(is_prime_num_no_pre_check(a))return a;
+			elseif(is_prime_num_no_pre_check(a-2u))return a-2u;
+	}
+	/// 求大于某数的素数
+	template<arithmetic_type T>
+	[[nodiscard]]inline constexpr auto get_prime_num_big_than(T a)noexcept{
+		return get_prime_num_big_or_eq_than(a+1u);
+	}
+	push_and_disable_msvc_warning(26467);//gold_of_resize永远为正数
+	/// 已知当前array的size，求下一个合适的提前分配大小
+	[[nodiscard]]inline constexpr size_t get_next_gold_size_to_resize_for_array(size_t size)noexcept{
+		/*
+		每次扩容后的空间与原空间比大致为gold of resize可以最小化时空负担.
+		*/
+		return size_t(size*magic_number::gold_of_resize);
+	}
+	/// 已知当前hash table的size，求下一个合适的桶大小
+	[[nodiscard]]inline constexpr size_t get_next_gold_size_to_resize_for_hash(size_t size)noexcept{
+		/*
+		素数大小的桶数可以使hash table中的每个桶尽可能活跃.
+		每次扩容后的空间与原空间比大致为gold of resize可以最小化时空负担.
+		*/
+		return size_t(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
+	}
+	pop_msvc_warning();
+
+	/// 线性插值.
+	namespace linear_interpolation{
+		[[nodiscard]]inline constexpr auto get_k(auto y1,auto y2,auto δx)noexcept{
+			auto δy=sub(y2,y1);
+			auto k=δy/δx;
+			return k;
+		}
+		[[nodiscard]]inline constexpr auto get_k(auto y1,auto y2)noexcept{
+			return get_k(y1,y2,1.0);
+		}
+		[[nodiscard]]inline constexpr auto get_result(auto y1,auto k,auto δx)noexcept{
+			auto diff=k*δx;
+			return y1+diff;
+		}
+		[[nodiscard]]inline constexpr auto get_reverse_result(auto k,auto δx,auto y)noexcept{
+			auto diff=k*δx;
+			return y-diff;
+		}
+	}
+	//质因数分解
+	//由于array在之后定义所以泛型容器
+	//用法 get_prime_factorization(num).to<容器类型>(); 或 get_prime_factorization(num).unique().to<容器类型>();
+	constexpr struct get_prime_factorization_t{
+		template<class T>
+		class result_t{
+			T _m;
+		public:
+			template<class container_t>
+			static constexpr bool able=was_not_an_ill_form(declvalue(container_t&).push_back(declvalue(T)));
+
+			constexpr force_inline result_t(T m)noexcept:_m(m){}
+
+			template<class container_t> requires able<container_t>
+			[[nodiscard]]constexpr container_t to()const noexcept{
+				container_t aret;
+				//思路：获取小于等于m的所有素数，依次除以m，若能整除则将素数加入结果，否则跳过，直到m为1.
+				T i=T{2},m=abs(_m);
+				while(m!=1){
+					while(!(m%i)){
+						aret.push_back(i);
+						m/=i;
+					}
+					i=get_prime_num_big_than(i);
+				}
+				if constexpr(::std::is_signed_v<T> || ::std::is_floating_point_v<T>)
+					if(is_negative(_m))
+						aret.push_back(T{-1});
+				return aret;
+			}
+			//operator container_t()
+			template<class container_t>
+			[[nodiscard]]constexpr force_inline operator container_t()const noexcept{
+				return to<container_t>();
+			}
+			class unique_t{
+				T _m;
+			public:
+				constexpr force_inline unique_t(T m)noexcept:_m(m){}
+
+				template<class container_t> requires able<container_t>
+				[[nodiscard]]constexpr container_t to()const noexcept{
+					container_t aret;
+					//思路：获取小于等于m的所有素数，依次除以m，若能整除则将素数加入结果，否则跳过，直到m为1.
+					T i=T{2},m=abs(_m);
+					while(m!=1){
+						if(!(m%i)){
+							aret.push_back(i);
+							do m/=i;while(!(m%i));
+						}	
+						i=get_prime_num_big_than(i);
+					}
+					if constexpr(::std::is_signed_v<T> || ::std::is_floating_point_v<T>)
+						if(is_negative(_m))
+							aret.push_back(T{-1});
+					return aret;
+				}
+				//operator container_t()
+				template<class container_t>
+				[[nodiscard]]constexpr force_inline operator container_t()const noexcept{
+					return to<container_t>();
+				}
+			};
+			[[nodiscard]]constexpr force_inline auto unique()const noexcept{
+				return unique_t{_m};
+			}
+		};
+		template<class T> requires ::std::is_arithmetic_v<T>
+		[[nodiscard]]constexpr force_inline auto operator()(T m)const noexcept{
+			return result_t<T>{m};
+		}
+	}get_prime_factorization{};
+	//编译时质因数分解到质因数表
+	template<size_t number>
+	struct prime_factorization_table_t{
+		static constexpr size_t table_size=lambda{
+			size_t i=2,m=number;
+			size_t ret=0;
+			while(m!=1){
+				while(!(m%i)){
+					++ret;
+					m/=i;
+				}
+				i=get_prime_num_big_than(i);
+			}
+			return ret;
+		}();
+		size_t _table[table_size];
+		constexpr force_inline prime_factorization_table_t()noexcept{
+			size_t i=2,m=number;
+			size_t index=0;
+			while(m!=1){
+				while(!(m%i)){
+					_table[index++]=i;
+					m/=i;
+				}
+				i=get_prime_num_big_than(i);
+			}
+		}
+		[[nodiscard]]constexpr force_inline size_t operator[](size_t index)const noexcept{
+			return _table[index];
+		}
+		//begin and end for range for
+		[[nodiscard]]constexpr force_inline size_t* begin()noexcept{
+			return _table;
+		}
+		[[nodiscard]]constexpr force_inline size_t* end()noexcept{
+			return _table+table_size;
+		}
+		[[nodiscard]]constexpr force_inline const size_t* begin()const noexcept{
+			return _table;
+		}
+		[[nodiscard]]constexpr force_inline const size_t* end()const noexcept{
+			return _table+table_size;
+		}
+	};
+	//编译时的唯一质因数分解到质因数表
+	template<size_t number>
+	struct unique_prime_factorization_table_t{
+		static constexpr size_t table_size=lambda{
+			size_t i=2,m=number;
+			size_t ret=0;
+			while(m!=1){
+				if(!(m%i)){
+					++ret;
+					do m/=i;while(!(m%i));
+				}
+				i=get_prime_num_big_than(i);
+			}
+			return ret;
+		}();
+		size_t _table[table_size]={};
+		constexpr force_inline unique_prime_factorization_table_t()noexcept{
+			size_t i=2,m=number;
+			size_t index=0;
+			while(m!=1){
+				if(!(m%i)){
+					_table[index++]=i;
+					do m/=i;while(!(m%i));
+				}
+				i=get_prime_num_big_than(i);
+			}
+		}
+		[[nodiscard]]constexpr force_inline size_t operator[](size_t index)const noexcept{
+			return _table[index];
+		}
+		//begin and end for range for
+		[[nodiscard]]constexpr force_inline size_t* begin()noexcept{
+			return _table;
+		}
+		[[nodiscard]]constexpr force_inline size_t* end()noexcept{
+			return _table+table_size;
+		}
+		[[nodiscard]]constexpr force_inline const size_t* begin()const noexcept{
+			return _table;
+		}
+		[[nodiscard]]constexpr force_inline const size_t* end()const noexcept{
+			return _table+table_size;
+		}
+	};
+	//求出最大公约数
+	template<integer_type T>
+	[[nodiscard]]inline auto gcd(T x, T y)noexcept{
+		size_t shift = 0;
+		while(y){
+			//都是偶数时，shift++并位移
+			const auto x_rzero=countr_zero(x);
+			const auto y_rzero=countr_zero(y);
+			shift+=min(x_rzero,y_rzero);
+			//一偶一奇时，只移动偶数 直到都是奇数
+			x>>=x_rzero;
+			y>>=y_rzero;
+			//都是奇数时，大数-=小数
+			if(x < y)swap(x, y);
+			x-=y;
+		}
+		// 返回 x 左移 shift 位的结果
+		return x << shift;
+	}
+}
+using namespace math::concepts;
+using math::to_unsigned_t;
+using math::is_negative;
+using math::copy_as_negative;
+using math::copy_as_not_negative;
+using math::to_size_t;
+using math::mod;
+using math::divmod;
+using math::set_rounding;
+using math::get_rounding;
+using math::rounding_auto_setter;
+using math::is_close;
+using math::isNaN;
+using math::abs;
+using math::exp;
+using math::log;
+using math::pow;
+using math::ceil;
+using math::floor;
+using math::sqrt;
+using math::trunc;
+using math::is_prime_num;
+using math::get_prime_num_big_or_eq_than;
+using math::get_prime_num_big_than;
+using math::get_next_gold_size_to_resize_for_array;
+using math::get_next_gold_size_to_resize_for_hash;
+using math::get_prime_factorization;
+using math::prime_factorization_table_t;
+using math::unique_prime_factorization_table_t;
+using math::gcd;
+
+//file_end
+
+#line 24 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/bit.hpp"
+//bit.hpp
+//at namespace elc::defs::base
+/*
+未完成的elc解释器base_defs文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace bit{
+	/// 位操作：循环左移（无mod）
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotl_nomod(const T v,const auto R)noexcept;
+	#define rot_base(opt,antiopt) static_cast<T>(static_cast<T>(v opt r) | static_cast<T>(v antiopt (d - r)))
+	/// 位操作：循环右移（无mod）
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotr_nomod(const T v,const auto r)noexcept{
+		constexpr auto d = ::std::numeric_limits<T>::digits;
+		if constexpr(::std::is_unsigned_v<decltype(r)>){
+			if(r)
+				return rot_base(>>,<<);
+			else
+				return v;
+		}
+		else{
+			if(r>0)
+				return rot_base(>>,<<);
+			elseif(r==0)
+				return v;
+			else//r<0
+				return rotl_nomod(v,0-r);
+		}
+	}
+	/// 位操作：循环左移（无mod）
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotl_nomod(const T v,const auto r)noexcept{
+		constexpr auto d = ::std::numeric_limits<T>::digits;
+		if constexpr(::std::is_unsigned_v<decltype(r)>){
+			if(r)
+				return rot_base(<<,>>);
+			else
+				return v;
+		}
+		else{
+			if(r>0)
+				return rot_base(<<,>>);
+			elseif(r==0)
+				return v;
+			else//r<0
+				return rotr_nomod(v,0-r);
+		}
+	}
+	#undef rot_base
+	/// 位操作：循环右移
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotr(const T v,const auto R)noexcept{
+		constexpr auto d = ::std::numeric_limits<T>::digits;
+		const auto r = mod(R,d);
+		return rotr_nomod(v,r);
+	}
+	/// 位操作：循环左移
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotl(const T v,const auto R)noexcept{
+		constexpr auto d = ::std::numeric_limits<T>::digits;
+		const auto r = mod(R,d);
+		return rotl_nomod(v,r);
+	}
+	template<class T> requires ::std::is_arithmetic_v<T>
+	class rot_iterator{
+		static constexpr auto rot_offset_npos = ::std::numeric_limits<T>::digits;//d
+		size_t _offset;
+	public:
+		force_inline constexpr rot_iterator(size_t offset)noexcept:_offset(offset%rot_offset_npos){}
+		force_inline constexpr rot_iterator&operator++()noexcept{
+			_offset++;
+			if(_offset==rot_offset_npos)
+				_offset=0;
+			return*this;
+		}
+		force_inline constexpr rot_iterator&operator--()noexcept{
+			if(_offset==0)
+				_offset=rot_offset_npos;
+			_offset--;
+			return*this;
+		}
+		force_inline constexpr rot_iterator operator++(int)noexcept{
+			rot_iterator tmp(*this);
+			operator++();
+			return tmp;
+		}
+		force_inline constexpr rot_iterator operator--(int)noexcept{
+			rot_iterator tmp(*this);
+			operator--();
+			return tmp;
+		}
+		[[nodiscard]]force_inline constexpr size_t value()const noexcept{
+			return _offset;
+		}
+	};
+	/// 位操作：循环左移（无mod）
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotl_nomod(const T v,const rot_iterator<T>&r)noexcept{
+		return rotl_nomod(v,r.value());
+	}
+	/// 位操作：循环右移（无mod）
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotr_nomod(const T v,const rot_iterator<T>&r)noexcept{
+		return rotr_nomod(v,r.value());
+	}
+	/// 位操作：循环左移
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotl(const T v,const rot_iterator<T>&r)noexcept{
+		return rotl_nomod(v,r);
+	}
+	/// 位操作：循环右移
+	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
+	template<class T> requires ::std::is_unsigned_v<T>
+	[[nodiscard]]force_inline constexpr auto rotr(const T v,const rot_iterator<T>&r)noexcept{
+		return rotr_nomod(v,r);
+	}
+}
+using bit::rotl;
+using bit::rotr;
+using bit::rotl_nomod;
+using bit::rotr_nomod;
+using bit::rot_iterator;
+
+//file_end
+
+#line 25 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/null_ptr.hpp"
 //null_ptr.hpp
 //at namespace elc::defs::base
@@ -3020,7 +3166,7 @@ typedef decltype(nullptr) nullptr_t;
 
 //file_end
 
-#line 24 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 26 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/compare.hpp"
 //compare.hpp
 //at namespace elc::defs::base
@@ -3371,7 +3517,7 @@ constexpr struct compare_t{
 
 //file_end
 
-#line 25 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 27 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/note.hpp"
 //note.hpp
 //at namespace elc::defs::base
@@ -3406,7 +3552,7 @@ namespace note=note_n;
 
 //file_end
 
-#line 26 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 28 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/array_like.hpp"
 //array_like.hpp
 //at namespace elc::defs::base
@@ -3565,7 +3711,7 @@ using array_like_n::array_end_by_zero_t;
 
 //file_end
 
-#line 27 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 29 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/data.hpp"
 //data.hpp
 //at namespace elc::defs::base
@@ -3706,7 +3852,7 @@ template<class T>
 
 //file_end
 
-#line 28 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/pointer.hpp"
 //pointer.hpp
 //at namespace elc::defs::base
@@ -3764,7 +3910,7 @@ template<class T>
 
 //file_end
 
-#line 29 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/hash.hpp"
 //hash.hpp
 //at namespace elc::defs::base
@@ -4043,7 +4189,7 @@ using hash_n::hash;
 
 //file_end
 
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/range.hpp"
 //range.hpp
 //at namespace elc::defs::base
@@ -4514,7 +4660,7 @@ using range_n::find_last_not_of;
 
 //file_end
 
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/string_view.hpp"
 //string_view.hpp
 //at namespace elc::defs::base
@@ -4699,7 +4845,7 @@ using string_view_n::string_view;
 
 //file_end
 
-#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/type_name.hpp"
 //type_name.hpp
 //at namespace elc::defs::base
@@ -4785,7 +4931,7 @@ template<typename T>
 
 //file_end
 
-#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/constexpr_str.hpp"
 //constexpr_str.hpp
 //at namespace elc::defs::base
@@ -4851,6 +4997,7 @@ namespace constexpr_str_n{
 					is_bitmark_for_unindex_workable=bitmark_for_unindex.mark(*this);
 			}
 		constexpr constexpr_str_t(const_string_ptr_t str):constexpr_str_t(str,array_end_by_zero_t::get_length_of(str)){}
+		consteval constexpr_str_t(const constexpr_str_t&str)=default;
 		[[nodiscard]]constexpr hash_t hash()const noexcept{return hash_result;}
 	};
 	using constexpr_str=constexpr_str_t<char_t>;
@@ -4983,7 +5130,7 @@ using range_n::find_last_not_of;
 
 //file_end
 
-#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/logical_bool.hpp"
 //logic.hpp
 //at namespace elc::defs::base
@@ -5041,7 +5188,7 @@ constexpr logical_bool neither{special_init,0,0},either{special_init,1,1},unknow
 
 //file_end
 
-#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 37 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/zero.hpp"
 //zero.hpp
 //at namespace elc::defs::base
@@ -5078,7 +5225,7 @@ inline constexpr bool is_all_byte_zero(T&&a)noexcept{
 
 //file_end
 
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 38 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/count_able.hpp"
 //count_able.hpp
 //at namespace elc::defs::base
@@ -5108,7 +5255,7 @@ template<class T>
 
 //file_end
 
-#line 37 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 39 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/invoke.hpp"
 //invoke.hpp
 //at namespace elc::defs::base
@@ -5181,7 +5328,7 @@ constexpr invoke_t<T>invoke{};
 
 //file_end
 
-#line 38 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/maybe_fail_reference.hpp"
 //maybe_fail_reference.hpp
 //at namespace elc::defs::base
@@ -5206,7 +5353,7 @@ public:
 
 //file_end
 
-#line 39 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 41 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/rand.hpp"
 //rand.hpp
@@ -5514,7 +5661,7 @@ using rand_n::rand_seed;
 
 //file_end
 
-#line 41 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 43 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
 
 //file_end
 
@@ -12008,6 +12155,8 @@ namespace iterator_n{
 			if constexpr(compare.able<base_t_rw,other_base_t_w>)
 				return compare(_m,a._m);
 		}
+		base_t_rw& get_base()noexcept{ return _m; }
+		const base_t_rw& get_base()const noexcept{ return _m; }
 	};
 	template<typename value_t,typename base_t_w>
 	inline void swap(same_base_t<value_t,base_t_w>&a,same_base_t<value_t,base_t_w>&b)noexcept_as(a.swap_with(b))
@@ -16718,6 +16867,112 @@ inline void test_end(){
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/_decl.hpp"
+//_decl.hpp
+//at namespace elc::defs::big_number_types
+/*
+未完成的elc解释器base文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+
+class bigint;
+class ubigint;
+class bigfloat;
+class ubigfloat;
+
+//注入math::arithmetic_type_info_helper
+BREAK_NAMESPACE;
+
+namespace base::math{
+	using namespace big_number_types;
+	template<>struct arithmetic_type_info_helper<bigint>{
+		//bool：是否是算数类型
+		static constexpr bool is_arithmetic_type = true;
+		//bool：是否是基础类型
+		static constexpr bool is_basic_type = false;
+		//bool：是否是大数类型
+		static constexpr bool is_big_type = true;
+		//bool：是否是浮点类型
+		static constexpr bool is_float_type = false;
+		//bool：是否是有符号类型
+		static constexpr bool is_signed = true;
+		//bool：是否有NaN
+		static constexpr bool has_NaN = false;
+		//bool：是否有inf
+		static constexpr bool has_inf = false;
+		//对应的无符号和有符号类型
+		using unsigned_type = ubigint;
+		using signed_type = bigint;
+	};
+	
+	template<>struct arithmetic_type_info_helper<ubigint>{
+		//bool：是否是算数类型
+		static constexpr bool is_arithmetic_type = true;
+		//bool：是否是基础类型
+		static constexpr bool is_basic_type = false;
+		//bool：是否是大数类型
+		static constexpr bool is_big_type = true;
+		//bool：是否是浮点类型
+		static constexpr bool is_float_type = false;
+		//bool：是否是有符号类型
+		static constexpr bool is_signed = false;
+		//bool：是否有NaN
+		static constexpr bool has_NaN = false;
+		//bool：是否有inf
+		static constexpr bool has_inf = false;
+		//对应的无符号和有符号类型
+		using unsigned_type = ubigint;
+		using signed_type = bigint;
+	};
+
+	template<>struct arithmetic_type_info_helper<bigfloat>{
+		//bool：是否是算数类型
+		static constexpr bool is_arithmetic_type = true;
+		//bool：是否是基础类型
+		static constexpr bool is_basic_type = false;
+		//bool：是否是大数类型
+		static constexpr bool is_big_type = true;
+		//bool：是否是浮点类型
+		static constexpr bool is_float_type = true;
+		//bool：是否是有符号类型
+		static constexpr bool is_signed = true;
+		//bool：是否有NaN
+		static constexpr bool has_NaN = true;
+		//bool：是否有inf
+		static constexpr bool has_inf = false;
+		//对应的无符号和有符号类型
+		using unsigned_type = ubigfloat;
+		using signed_type = bigfloat;
+	};
+
+	template<>struct arithmetic_type_info_helper<ubigfloat>{
+		//bool：是否是算数类型
+		static constexpr bool is_arithmetic_type = true;
+		//bool：是否是基础类型
+		static constexpr bool is_basic_type = false;
+		//bool：是否是大数类型
+		static constexpr bool is_big_type = true;
+		//bool：是否是浮点类型
+		static constexpr bool is_float_type = true;
+		//bool：是否是有符号类型
+		static constexpr bool is_signed = false;
+		//bool：是否有NaN
+		static constexpr bool has_NaN = true;
+		//bool：是否有inf
+		static constexpr bool has_inf = false;
+		//对应的无符号和有符号类型
+		using unsigned_type = ubigfloat;
+		using signed_type = bigfloat;
+	};
+}
+
+INTER_NAMESPACE(big_number_types);
+
+//file_end
+
+#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/ubigint.hpp"
 //ubigint.hpp
 //at namespace elc::defs::big_number_types
@@ -16880,6 +17135,14 @@ public:
 			return other==0?strong_ordering::equivalent:strong_ordering::less;
 		}
 	}
+	//调试用，返回一个可以输出到流的内部结构查看器
+	[[nodiscard]]auto get_data_viewr()const noexcept{
+		return lambda_with_catch(this)(auto&stream)noexcept->auto&{
+			for(auto& i: _data)
+				stream << i << U' ';
+			return stream;
+		};
+	}
 private:
 	//operator+-*/%s
 	typedef unsigned_specific_size_t<BIT_POSSIBILITY*sizeof(base_type)> calc_type;
@@ -16972,7 +17235,7 @@ private:
 		return tmp;
 	}
 	static void muti_with_base(base_type*buf,data_view_type a,base_type b)noexcept{
-		auto i=0;
+		size_t i=0;
 		calc_type num=0;
 		while(i!=a.size()){
 			num+=calc_type(a[i])*calc_type(b);
@@ -17012,7 +17275,7 @@ private:
 		}();
 		const calc_type divisor=calc_type(b.back());
 		calc_type left=dividend/(divisor+1);
-		calc_type right=dividend/divisor;
+		calc_type right=min(calc_type(dividend/divisor),(calc_type)max(type_info<base_type>));
 		base_type last_work_able=0;
 		//left<=a/b<=right
 		tryto=get_shrinked_data_view_of_data(tryto.data(),tryto.size());
@@ -17461,28 +17724,10 @@ public:
 		return !is_odd(x);
 	}
 };
-//求出最大公约数
-[[nodiscard]]inline ubigint gcd(ubigint x, ubigint y)noexcept{
-	size_t shift = 0;
-	while(y){
-		//都是偶数时，shift++并位移
-		const auto x_rzero=countr_zero(x);
-		const auto y_rzero=countr_zero(y);
-		shift+=min(x_rzero,y_rzero);
-		//一偶一奇时，只移动偶数 直到都是奇数
-		x>>=x_rzero;
-		y>>=y_rzero;
-		//都是奇数时，大数-=小数
-		if(x < y)swap(x, y);
-		x-=y;
-	}
-	// 返回 x 左移 shift 位的结果
-	return x << shift;
-}
 
 //file_end
 
-#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/_body.hpp"
+#line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/bigint.hpp"
 //bigint.hpp
 //at namespace elc::defs::big_number_types
@@ -17966,7 +18211,7 @@ public:
 
 //file_end
 
-#line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/_body.hpp"
+#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/ubigfloat.hpp"
 //ubigfloat.hpp
 //at namespace elc::defs::big_number_types
@@ -18014,7 +18259,7 @@ public:
 				constexpr size_t max_numerator = 1u<<7;
 				while(numerator<max_numerator){
 					denominator = to_size_t(numerator/fraction_part);
-					if(feq(T(numerator)/denominator,fraction_part)){//近似相等即可
+					if(is_close(T(numerator)/denominator,fraction_part)){//近似相等即可
 						const auto numerator_backup=numerator;
 						//补正整数部分
 						numerator += to_size_t(integer_part*denominator);
@@ -18022,7 +18267,7 @@ public:
 						_numerator = numerator;
 						_denominator = denominator;
 						//校验
-						if(convert_to<T>()==num)//保证无损所以不用feq
+						if(convert_to<T>()==num)//保证无损所以不用is_close
 							return;
 						//回滚
 						_numerator = numerator_backup;
@@ -18046,6 +18291,7 @@ public:
 					_denominator<<=abs(exponent);
 			}
 		}
+		simplify();
 	}
 public:
 	template<typename T> requires ::std::is_arithmetic_v<T>
@@ -18138,6 +18384,10 @@ private:
 		_denominator(denominator)
 	{}
 public:
+	//friend build_ubigfloat_from_numerator_and_denominator
+	friend ubigfloat build_ubigfloat_from_numerator_and_denominator(const ubigint& numerator,const ubigint& denominator)noexcept{
+		return ubigfloat{numerator,denominator};
+	}
 	//friend abs
 	[[nodiscard]]friend ubigfloat abs(const ubigfloat& a)noexcept{
 		return a;
@@ -18150,18 +18400,24 @@ public:
 		return false;
 	}
 	//friend get_numerator
-	[[nodiscard]]friend ubigint get_numerator(const ubigfloat& a)noexcept{
+	[[nodiscard]]friend const ubigint& get_numerator(const ubigfloat& a)noexcept{
 		return a._numerator;
 	}
 	[[nodiscard]]friend ubigint&& get_numerator(ubigfloat&& a)noexcept{
 		return move(a._numerator);
 	}
+	[[nodiscard]]friend ubigint& get_numerator_as_ref(ubigfloat& a)noexcept{
+		return a._numerator;
+	}
 	//friend get_denominator
-	[[nodiscard]]friend ubigint get_denominator(const ubigfloat& a)noexcept{
+	[[nodiscard]]friend const ubigint& get_denominator(const ubigfloat& a)noexcept{
 		return a._denominator;
 	}
 	[[nodiscard]]friend ubigint&& get_denominator(ubigfloat&& a)noexcept{
 		return move(a._denominator);
+	}
+	[[nodiscard]]friend ubigint& get_denominator_as_ref(ubigfloat& a)noexcept{
+		return a._denominator;
 	}
 	//friend isNaN
 	[[nodiscard]]friend constexpr bool isNaN(const ubigfloat&)noexcept{
@@ -18509,7 +18765,7 @@ public:
 
 //file_end
 
-#line 11 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/_body.hpp"
+#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/_body.hpp"
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/bigfloat.hpp"
 //bigfloat.hpp
 //at namespace elc::defs::big_number_types
@@ -18560,7 +18816,7 @@ public:
 		if constexpr(::std::is_unsigned_v<T>)
 			return _num.convert_to<T>();
 		else{
-			using magic_number::copy_as_negative;//貌似msvc在这里有bug
+			using math::copy_as_negative;//貌似msvc在这里有bug
 			return copy_as_negative(_num.convert_to<to_unsigned_t<T>>(),_is_negative);
 		}
 	}
@@ -19120,7 +19376,7 @@ public:
 
 //file_end
 
-#line 12 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/_body.hpp"
+#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/_body.hpp"
 
 #if defined(ELC_TEST_ON)
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/_test.hpp"
@@ -19142,7 +19398,7 @@ inline void test_end(){
 
 //file_end
 
-	#line 15 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/_body.hpp"
+	#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/big_number_types/_body.hpp"
 #endif
 
 //file_end
@@ -21177,18 +21433,17 @@ protected:\
 
 	namespace stream_n{
 		//arithmetic output only for text_ostream<char_t>
-		template<typename T,class stream_T> requires(::std::is_arithmetic_v<remove_cvref<T>> &&
-													 type_info<stream_T>.base_on<text_ostream<char_t>> &&
-													 type_info<remove_cvref<T>> != type_info<char_t> &&
-													 type_info<remove_cvref<T>> != type_info<bool>)
+		template<arithmetic_type T,class stream_T> requires(type_info<stream_T>.base_on<text_ostream<char_t>> &&
+															type_info<remove_cvref<T>> != type_info<char_t> &&
+															type_info<remove_cvref<T>> != type_info<bool>)
 		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
 			return stream << to_string(forward<T>(data));
 		}
 
 		template<typename T,class stream_T> requires(!::std::is_arithmetic_v<remove_cvref<T>> &&
 													 to_arithmetic.able<remove_cvref<T>> &&
-													 type_info<stream_T>.base_on<text_ostream<char_t>>) decltype(auto)
-		operator<<(stream_T&& stream, T&& data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>> && to_arithmetic.nothrow<T>) {
+													 type_info<stream_T>.base_on<text_ostream<char_t>>)
+		decltype(auto)operator<<(stream_T&& stream, T&& data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>> && to_arithmetic.nothrow<T>) {
 			return stream << to_arithmetic(forward<T>(data));
 		}
 
@@ -21379,7 +21634,7 @@ protected:\
 
 //file_end
 
-	#line 60 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
+	#line 59 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 }
 #endif
 
@@ -25003,20 +25258,20 @@ protected:
 		//floating arec.
 	private:
 		static constexpr bool floating_arec_result_able=was_not_an_ill_form(
-			magic_number::linear_interpolation::get_result(declvalue(size_t),
-				 magic_number::linear_interpolation::get_k(declvalue(char_T),declvalue(char_T)),
+			math::linear_interpolation::get_result(declvalue(size_t),
+				 math::linear_interpolation::get_k(declvalue(char_T),declvalue(char_T)),
 														   declvalue(float_t))
 		);
 		static auto floating_arec_result_type_helper()noexcept{
 			if constexpr(floating_arec_result_able)
-				return magic_number::linear_interpolation::get_result(size_t{},
-					 magic_number::linear_interpolation::get_k(char_T{},char_T{}),
+				return math::linear_interpolation::get_result(size_t{},
+					 math::linear_interpolation::get_k(char_T{},char_T{}),
 															   float_t{});
 		}
 		typedef decltype(floating_arec_result_type_helper()) floating_arec_result_type;
 		static constexpr bool floating_arec_set_able=was_not_an_ill_form(
-			magic_number::linear_interpolation::get_reverse_result(
-				 magic_number::linear_interpolation::get_k(declvalue(char_T),declvalue(char_T)),
+			math::linear_interpolation::get_reverse_result(
+				 math::linear_interpolation::get_k(declvalue(char_T),declvalue(char_T)),
 														   declvalue(float_t),declvalue(char_T))
 		);
 	public:
@@ -25041,18 +25296,18 @@ protected:
 				char_T y1=_to->arec(_index_x1);
 				char_T y2=_to->arec(_index_x2);
 				auto δx=_index-_index_x1;
-				return magic_number::linear_interpolation::get_result(y1,
-							magic_number::linear_interpolation::get_k(y1,y2),
+				return math::linear_interpolation::get_result(y1,
+							math::linear_interpolation::get_k(y1,y2),
 														   			  δx);
 			}
 			floating_arec_t&& operator=(floating_arec_result_type a)&&noexcept requires set_able{
 				char_T y1=_to->arec(_index_x1);
 				char_T y2=_to->arec(_index_x2);
-				auto k=magic_number::linear_interpolation::get_k(y1,y2);
+				auto k=math::linear_interpolation::get_k(y1,y2);
 				auto δx1=_index-_index_x1;
 				auto δx2=_index-_index_x2;
-				y1=(char_T)magic_number::linear_interpolation::get_reverse_result(k,δx1,a);
-				y2=(char_T)magic_number::linear_interpolation::get_reverse_result(k,δx2,a);
+				y1=(char_T)math::linear_interpolation::get_reverse_result(k,δx1,a);
+				y2=(char_T)math::linear_interpolation::get_reverse_result(k,δx2,a);
 				_to->arec_set(_index_x1,y1);
 				_to->arec_set(_index_x2,y2);
 				return move(*this);
@@ -25161,6 +25416,13 @@ protected:
 		[[nodiscard]]reverse_const_iterator rend()const noexcept{ return get_reverse_iterator_at(-1); }
 		[[nodiscard]]reverse_const_iterator rcend()const noexcept{ return rend(); }
 
+		//自迭代器构造string
+		string_t(const_iterator begin,const_iterator end)noexcept{
+			const auto& beg = begin.get_base();
+			const auto& ed	= end.get_base();
+			if(beg._to!=ed._to)return;
+			_ncso_construct_mptr(beg._to->substr(beg._index, ed._index - beg._index)._m);
+		}
 		//
 
 		void push_back(const string_t& str)&noexcept{
@@ -25179,6 +25441,16 @@ protected:
 		void push_back(char_T ch)&noexcept{ push_back(string_view_t{&ch,1}); }
 		void push_back(const arec_t&& ch)&noexcept{ push_back(move(ch).operator char_T()); }
 		void push_back(const_string_ptr_t str)&noexcept{ push_back(string_view_t(str)); }
+		//
+		void push_back(char_T ch,size_t count)&noexcept{
+			if(count==0)return;
+			_cso_check();
+			string_t str{ch,count};
+			_m=_m->apply_str_to_end(str._m);
+		}
+		void push_back(const arec_t&& ch,size_t count)&noexcept{
+			push_back(move(ch).operator char_T(),count);
+		}
 
 		void push_front(const string_t& str)&noexcept{
 			full_copy_cso_check(*this);
@@ -25196,6 +25468,16 @@ protected:
 		void push_front(char_T ch)&noexcept{ push_front(string_view_t{&ch,1}); }
 		void push_front(const arec_t&& ch)&noexcept{ push_front(move(ch).operator char_T()); }
 		void push_front(const_string_ptr_t str)&noexcept{ push_front(string_view_t(str)); }
+		//
+		void push_front(char_T ch,size_t count)&noexcept{
+			if(count==0)return;
+			_cso_check();
+			string_t str{ch,count};
+			_m=_m->apply_str_to_begin(str._m);
+		}
+		void push_front(const arec_t&& ch,size_t count)&noexcept{
+			push_front(move(ch).operator char_T(),count);
+		}
 
 		void remove_back(size_t size=1)noexcept{ _cso_check();_m=_m->do_remove_back(size); }
 		void remove_front(size_t size=1)noexcept{ _cso_check();_m=_m->do_remove_front(size); }
@@ -28308,518 +28590,930 @@ protected:\
 	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
 
 	namespace numerical_representation_n{
-		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/defs.hpp"
-//defs.hpp
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/representations/_body.hpp"
+//_body.hpp
+//at namespace elc::defs::numerical_representation_n
 /*
 未完成的elc解释器numerical_representation文件
 由steve02081504与Alex0125设计、编写
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
+/*!
+基类，记录数字的表示方式以便客制化to_string
+*/
+struct base_numerical_representation_t{
+	virtual ~base_numerical_representation_t()noexcept=default;
+	[[nodiscard]]virtual size_t get_radix()const noexcept=0;
+	[[nodiscard]]virtual char_t get_fractional_sign()const noexcept=0;
+	[[nodiscard]]virtual char_t get_positive_sign()const noexcept=0;
+	[[nodiscard]]virtual char_t get_negative_sign()const noexcept=0;
+	[[nodiscard]]virtual string_view get_nan()const noexcept=0;
+	[[nodiscard]]virtual string_view get_signaling_nan()const noexcept=0;
+	[[nodiscard]]virtual string_view get_quiet_nan()const noexcept=0;
+	[[nodiscard]]virtual string_view get_inf()const noexcept=0;
+	[[nodiscard]]virtual char_t get_fractional_separator()const noexcept=0;
+	[[nodiscard]]virtual char_t get_exponent_separator()const noexcept=0;
+	[[nodiscard]]virtual char_t get_unknown_data_start_sign()const noexcept=0;
+	[[nodiscard]]virtual char_t get_unknown_data_split_sign()const noexcept=0;
+	[[nodiscard]]virtual char_t get_unknown_data_end_sign()const noexcept=0;
+	[[nodiscard]]virtual char_t get_char(size_t index)const noexcept=0;
+	[[nodiscard]]virtual size_t get_index(char_t c)const noexcept=0;
+	[[nodiscard]]virtual bool is_valid_char(char_t ch)const noexcept=0;
+	[[nodiscard]]bool is_finite(const bigfloat&num)const noexcept{
+		return is_finite_denominator_part(get_denominator(num));
+	}
+	[[nodiscard]]bool is_finite(const ubigfloat&num)const noexcept{
+		return is_finite_denominator_part(get_denominator(num));
+	}
+protected:
+	//bigfloat的分母部分的质因数只有radix的质因数组成时才是有限小数
+	[[nodiscard]]virtual bool is_finite_denominator_part(ubigint)const noexcept=0;
+public:
+	//根据分母部分获取弥补分母到radix的幂的乘数并返回，将分母部分置零并递增exp值
+	[[nodiscard]]virtual ubigint get_denominator_complement(ubigint&denominator,ptrdiff_t&exp)const noexcept=0;
+};
+template<class T>
+concept numerical_representation = ::std::is_base_of_v<base_numerical_representation_t,T>;//type_info<T>.is_base_on<base_numerical_representation_t>;
 
-/*!
-客制化to_string用途类
-*/
-struct base_numerical_representation_t{};
-/*!
-记录数字的表示方式以便客制化to_string
-*/
-class numerical_representation_t:public base_numerical_representation_t{
-	size_t _radix=10;
-	string _radix_table=es"0123456789"_constexpr_str;
+/// @brief constexpr数字表示方式的默认内容，用于快速定义constexpr数字表示方式
+class comn_constexpr_numerical_representation_t:public base_numerical_representation_t{
 	char_t _fractional_sign=ec('.');
 	char_t _positive_sign=ec('+');
 	char_t _negative_sign=ec('-');
-	string _nan=es"NaN"_constexpr_str;
-	string _signaling_nan=es"signaling_NaN"_constexpr_str;
-	string _quiet_nan=es"quiet_NaN"_constexpr_str;
-	string _inf=es"Inf"_constexpr_str;
-	char_t _unknown_data_start_sign=ec('[');
-	char_t _unknown_data_split_sign=ec(',');
-	char_t _unknown_data_end_sign=ec(']');
+	
+	const constexpr_str _nan=es"NaN"_constexpr_str;
+	const constexpr_str _signaling_nan=es"signaling_NaN"_constexpr_str;
+	const constexpr_str _quiet_nan=es"quiet_NaN"_constexpr_str;
+	const constexpr_str _inf=es"Infinity"_constexpr_str;
+
+	char_t _fractional_separator=ec('/');
+	char_t _exponent_separator=ec('e');
+	char_t _unknown_data_start_sign=ec('['), _unknown_data_split_sign=ec(','), _unknown_data_end_sign=ec(']');
 public:
-	numerical_representation_t()noexcept=default;
-	numerical_representation_t(const numerical_representation_t&)noexcept=default;
-	numerical_representation_t(numerical_representation_t&&)noexcept=default;
-	numerical_representation_t(size_t radix,string radix_table,
-							   char_t fractional_sign,
-							   char_t positive_sign,char_t negative_sign,
-							   string nan,string signaling_nan,string quiet_nan,
-							   string inf,
-							   char_t unknown_data_start_sign,char_t unknown_data_split_sign,char_t unknown_data_end_sign
-							  )noexcept:
-		_radix(radix),_radix_table(radix_table),
-		_fractional_sign(fractional_sign),
-		_positive_sign(positive_sign),_negative_sign(negative_sign),
-		_nan(nan),_signaling_nan(signaling_nan),_quiet_nan(quiet_nan),
-		_inf(inf),
-		_unknown_data_start_sign(unknown_data_start_sign),_unknown_data_split_sign(unknown_data_split_sign),_unknown_data_end_sign(unknown_data_end_sign)
-	{}
-	numerical_representation_t(size_t radix,string radix_table)noexcept:
-		_radix(radix),
-		_radix_table(radix_table)
-	{}
-public:
-	void set_radix(size_t radix)noexcept{
-		_radix=radix;
-	}
-	void set_radix_table(string radix_table)noexcept{
-		_radix_table=radix_table;
-		_radix=radix_table.size();
-	}
-	void set_fractional_sign(char_t point)noexcept{
-		_fractional_sign=point;
-	}
-	void set_positive_sign(char_t positive_sign)noexcept{
-		_positive_sign=positive_sign;
-	}
-	void set_negative_sign(char_t negative_sign)noexcept{
-		_negative_sign=negative_sign;
-	}
-	void set_nan(string nan)noexcept{
-		_nan=nan;
-	}
-	void set_inf(string inf)noexcept{
-		_inf=inf;
-	}
-	[[nodiscard]]constexpr size_t radix()const noexcept{
-		return _radix;
-	}
-	[[nodiscard]]string radix_table()const noexcept{
-		return _radix_table;
-	}
-	[[nodiscard]]constexpr char_t fractional_sign()const noexcept{
+	constexpr comn_constexpr_numerical_representation_t()noexcept=default;
+	consteval comn_constexpr_numerical_representation_t(
+		char_t fractional_sign,char_t positive_sign,char_t negative_sign,
+		const constexpr_str& nan,
+		const constexpr_str& signaling_nan,
+		const constexpr_str& quiet_nan,
+		const constexpr_str& inf,
+		char_t fractional_separator,
+		char_t exponent_separator,
+		char_t unknown_data_start_sign, char_t unknown_data_split_sign, char_t unknown_data_end_sign)noexcept:
+		_fractional_sign(fractional_sign),_positive_sign(positive_sign),_negative_sign(negative_sign),
+		_nan(nan),_signaling_nan(signaling_nan),_quiet_nan(quiet_nan),_inf(inf),
+		_fractional_separator(fractional_separator),
+		_exponent_separator(exponent_separator),
+		_unknown_data_start_sign(unknown_data_start_sign),_unknown_data_split_sign(unknown_data_split_sign),_unknown_data_end_sign(unknown_data_end_sign){}
+	constexpr comn_constexpr_numerical_representation_t(char_t exponent_separator)noexcept:
+		_exponent_separator(exponent_separator){}
+	
+	[[nodiscard]]constexpr virtual char_t get_fractional_sign()const noexcept override{
 		return _fractional_sign;
 	}
-	[[nodiscard]]constexpr char_t positive_sign()const noexcept{
+	[[nodiscard]]constexpr virtual char_t get_positive_sign()const noexcept override{
 		return _positive_sign;
 	}
-	[[nodiscard]]constexpr char_t negative_sign()const noexcept{
+	[[nodiscard]]constexpr virtual char_t get_negative_sign()const noexcept override{
 		return _negative_sign;
 	}
-	[[nodiscard]]string nan()const noexcept{
+	[[nodiscard]]constexpr virtual string_view get_nan()const noexcept override{
 		return _nan;
 	}
-	[[nodiscard]]string inf()const noexcept{
+	[[nodiscard]]constexpr virtual string_view get_signaling_nan()const noexcept override{
+		return _signaling_nan;
+	}
+	[[nodiscard]]constexpr virtual string_view get_quiet_nan()const noexcept override{
+		return _quiet_nan;
+	}
+	[[nodiscard]]constexpr virtual string_view get_inf()const noexcept override{
 		return _inf;
 	}
-private:
-	//信息尾部分
-	inline size_t get_info_tail_size_per_byte()const noexcept{
-		constexpr auto info_threshold_base = pow(BIT_POSSIBILITY, bitnum_of(byte));
-		const auto	   info_threshold	   = to_size_t(ceil(log(info_threshold_base, _radix)));
-		return info_threshold;
+	[[nodiscard]]constexpr virtual char_t get_fractional_separator()const noexcept override{
+		return _fractional_separator;
 	}
-	template<typename T>
-	inline size_t get_info_tail_size()const noexcept{
-		return get_info_tail_size_per_byte()*sizeof(T)+_radix;
+	[[nodiscard]]constexpr virtual char_t get_exponent_separator()const noexcept override{
+		return _exponent_separator;
 	}
-	template<typename T>
-	inline string get_info_tail(T x)const noexcept{
-		const auto info_tail_size_per_byte = get_info_tail_size_per_byte();
-		string aret;
-		data_view<const T> view{&x};
-		for(const byte c: view){
-			auto s= to_string_rough((unsigned char)c);
-			aret+=string{info_tail_size_per_byte-s.size(),_radix_table[0]}+s;
+	[[nodiscard]]constexpr virtual char_t get_unknown_data_start_sign()const noexcept override{
+		return _unknown_data_start_sign;
+	}
+	[[nodiscard]]constexpr virtual char_t get_unknown_data_split_sign()const noexcept override{
+		return _unknown_data_split_sign;
+	}
+	[[nodiscard]]constexpr virtual char_t get_unknown_data_end_sign()const noexcept override{
+		return _unknown_data_end_sign;
+	}
+};
+
+/// @brief 一个简单的数字表示方式，只有一个字符表示0，其他数字可以直接用_zero+index表示
+/// 由于需要编译时构建质因数分解表，所以radix必须是模板参数
+/// 顺带将zero也作为模板参数让看起来更好看
+/// @tparam zero 0的字符
+/// @tparam radix 基数
+template<char_t zero,size_t radix>
+class constexpr_continuous_numerical_representation_t final:public comn_constexpr_numerical_representation_t{
+	unique_prime_factorization_table_t<radix> _prime_factorization_table;
+public:
+	consteval constexpr_continuous_numerical_representation_t(
+		char_t fractional_sign,char_t positive_sign,char_t negative_sign,
+		const constexpr_str& nan,
+		const constexpr_str& signaling_nan,
+		const constexpr_str& quiet_nan,
+		const constexpr_str& inf,
+		char_t fractional_separator,
+		char_t exponent_separator,
+		char_t unknown_data_start_sign, char_t unknown_data_split_sign, char_t unknown_data_end_sign)noexcept:
+		comn_constexpr_numerical_representation_t(
+			fractional_sign,positive_sign,negative_sign,
+			nan,signaling_nan,quiet_nan,inf,
+			fractional_separator,
+			exponent_separator,
+			unknown_data_start_sign,unknown_data_split_sign,unknown_data_end_sign
+		){}
+	constexpr constexpr_continuous_numerical_representation_t()noexcept{};
+	constexpr constexpr_continuous_numerical_representation_t(char_t exponent_separator)noexcept:
+		comn_constexpr_numerical_representation_t(exponent_separator){}
+
+	[[nodiscard]]constexpr virtual size_t get_radix()const noexcept override{
+		return radix;
+	}
+	[[nodiscard]]constexpr virtual char_t get_char(size_t index)const noexcept override{
+		return char_t(zero+index);
+	}
+	[[nodiscard]]constexpr virtual size_t get_index(char_t c)const noexcept override{
+		return c-zero;
+	}
+	[[nodiscard]]constexpr virtual bool is_valid_char(char_t ch)const noexcept override{
+		return ch>=zero&&ch<zero+radix;
+	}
+protected:
+	//bigfloat的分母部分的质因数只有radix的质因数组成时才是有限小数
+	[[nodiscard]]constexpr virtual bool is_finite_denominator_part(ubigint num)const noexcept override{
+		for(const auto i:_prime_factorization_table){
+			auto result=divmod(num,i);
+			while(!result.mod){
+				num=move(result.quot);
+				result=divmod(num,i);
+			}
+			if(num==1u)
+				return true;
 		}
-		return aret+_radix_table;
+		return false;
 	}
-	template<typename T>
-	inline T get_from_info_tail(string str)const noexcept{
-		const auto info_tail_size_per_byte = get_info_tail_size_per_byte();
-		str.remove_back(_radix);
-		T	aret{};
-		data_view<T> view{&aret};
-		for(byte&c: view){
-			auto s=str.substr(0,info_tail_size_per_byte);
-			c=(byte)from_string_get<unsigned char>(s);
-			str=str.substr(info_tail_size_per_byte);
+public:
+	[[nodiscard]]constexpr virtual ubigint get_denominator_complement(ubigint&denominator,ptrdiff_t&exp)const noexcept override{
+		ubigint aret=1u;
+		for(const auto i:_prime_factorization_table){
+			const auto i_complement=radix/i;
+			auto result=divmod(denominator,i);
+			while(result.quot && !result.mod){
+				denominator=move(result.quot);
+				aret*=i_complement;
+				result=divmod(denominator,i);
+				exp--;
+			}
 		}
 		return aret;
 	}
-	template<typename T>
-	inline string to_string_num_base(T num)const noexcept{
-		//Information threshold相关声明
-		//小数情况下，这限制了在当前radix下mantissa的最大长度，避免如radix=3而num=0.25时的无限循环
-		//而不管整数还是小数的情况下，这都会被用作计算预分配空间大小
-		constexpr auto info_threshold_base = pow(BIT_POSSIBILITY,bitnum_of(T));
-		push_and_disable_msvc_warning(26496);//非浮点数情况下info_threshold或许该被声明为常量
-		auto		   info_threshold =	to_size_t(ceil(log(info_threshold_base,_radix)));
-		pop_msvc_warning();
-		if constexpr(type_info<T> == type_info<bool>)
-			return to_string_num_base(union_cast<unsigned_specific_size_t<sizeof(bool)>>(num));
-		elseif constexpr(::std::is_floating_point_v<T>){
-			string aret;
-			suppress_msvc_warning(26494)//未初始化警告diss
-			size_t order_of_magnitude;
-			if(num>1)
-				order_of_magnitude = to_size_t(floor(log(num,_radix)+1));
-			else {
-				order_of_magnitude = 0;
-				aret=_radix_table[0];
-				aret+=_fractional_sign;
-			}
-			num/=(T)pow(_radix,order_of_magnitude);
-			if(num>=1){
-				aret=_radix_table[to_size_t(num)];
-				num=0;
-			}
-			//浮点数精度浮动，所以需要确定何时开始使用Info threshold
-			bool is_mantissa_begined = false;
-			aret.pre_alloc_after_end(info_threshold+1);
-			while(num){
-				//mantissa push部分
-				num*=_radix;
-				T first_char_index;
-				num=::std::modf(num,&first_char_index);
-				aret+=_radix_table[to_size_t(first_char_index)];
-				//Information threshold制御部分
-				if(to_size_t(first_char_index))
-					is_mantissa_begined = true;
-				if(is_mantissa_begined){
-					if(info_threshold)
-						info_threshold--;
-				}
-				//小数点计数部分
-				if(order_of_magnitude){
-					if(!--order_of_magnitude)
-						aret+=_fractional_sign;
-				}
-				//结束判断
-				if(!info_threshold && !order_of_magnitude)
-					break;
-			}
-			if(order_of_magnitude)
-				aret.append(order_of_magnitude,_radix_table[0]);
-			elseif(aret.ends_with(_fractional_sign))
-				aret.remove_back();
-			return aret;
-		}
-		else{
-			string aret;
-			aret.pre_alloc_before_begin(info_threshold);
-			do{//do while，在num为0时也有返值
-				const auto first_char_index = mod(num,_radix);
-				num /= (T)_radix;
-				aret.push_front(_radix_table[(size_t)first_char_index]);
-			}while(num>=T{1});
-			return aret;
-		}
+};
+push_and_disable_msvc_warning(26426);
+distinctive inline constexpr constexpr_continuous_numerical_representation_t<ec('0'),3> trinary{};
+distinctive inline constexpr constexpr_continuous_numerical_representation_t<ec('0'),2> binary{};
+distinctive inline constexpr constexpr_continuous_numerical_representation_t<ec('0'),8> octal{};
+distinctive inline constexpr constexpr_continuous_numerical_representation_t<ec('0'),10> decimal{};
+distinctive inline constexpr constexpr_continuous_numerical_representation_t<ec('ꀀ'),1165> valanlottish{
+	/*fractional_sign*/ec('꒛'),/*positive_sign*/ec('꒜'),/*negative_sign*/ec('꒝'),
+	/*nan*/es"꒘"_constexpr_str,
+	/*signaling_nan*/es"꒗"_constexpr_str,
+	/*quiet_nan*/es"꒖"_constexpr_str,
+	/*inf*/es"꒾"_constexpr_str,
+	/*fractional_separator*/ec('꒼'),
+	/*exponent_separator*/ec('꒫'),
+	/*unknown_data_start_sign*/ec('꒸'),/*unknown_data_split_sign*/ec('꓄'),/*unknown_data_end_sign*/ec('꒹')
+};
+//16和72进制的码表不是连续的，所以不能用constexpr_continuous_numerical_representation_t
+pop_msvc_warning();
+
+/// @brief 一个简单的数字表示方式，以constexpr_str存储进制内容
+/// 由于需要编译时构建质因数分解表，所以radix必须是模板参数，导致radix_table是模板参数
+/// @tparam radix_table_p 进制表的指针
+template<const constexpr_str*radix_table_p>
+class constexpr_str_numerical_representation_t final:public comn_constexpr_numerical_representation_t{
+	static constexpr size_t radix=radix_table_p->size();
+	static constexpr const constexpr_str& radix_table=*radix_table_p;
+
+	unique_prime_factorization_table_t<radix> _prime_factorization_table;
+public:
+	consteval constexpr_str_numerical_representation_t(
+		char_t fractional_sign,char_t positive_sign,char_t negative_sign,
+		const constexpr_str& nan,
+		const constexpr_str& signaling_nan,
+		const constexpr_str& quiet_nan,
+		const constexpr_str& inf,
+		char_t fractional_separator,
+		char_t exponent_separator,
+		char_t unknown_data_start_sign, char_t unknown_data_split_sign, char_t unknown_data_end_sign)noexcept:
+		comn_constexpr_numerical_representation_t(
+			fractional_sign,positive_sign,negative_sign,
+			nan,signaling_nan,quiet_nan,inf,
+			fractional_separator,
+			exponent_separator,
+			unknown_data_start_sign,unknown_data_split_sign,unknown_data_end_sign
+		){}
+	constexpr constexpr_str_numerical_representation_t()noexcept{};
+	constexpr constexpr_str_numerical_representation_t(char_t exponent_separator)noexcept:
+		comn_constexpr_numerical_representation_t(exponent_separator){}
+
+	[[nodiscard]]constexpr virtual size_t get_radix()const noexcept override{
+		return radix_table.size();
 	}
-	template<typename T>
-	inline bool to_string_special_value_check(T num,string&str,bool is_negative)const noexcept{
-		if constexpr(::std::numeric_limits<T>::has_signaling_NaN || ::std::numeric_limits<T>::has_quiet_NaN){
+	[[nodiscard]]constexpr virtual char_t get_char(size_t index)const noexcept override{
+		return radix_table[index];
+	}
+	[[nodiscard]]constexpr virtual size_t get_index(char_t ch)const noexcept override{
+		return radix_table.find(ch);
+	}
+	[[nodiscard]]constexpr virtual bool is_valid_char(char_t ch)const noexcept override{
+		return radix_table.find(ch)!=constexpr_str::npos;
+	}
+protected:
+	//bigfloat的分母部分的质因数只有radix的质因数组成时才是有限小数
+	[[nodiscard]]constexpr virtual bool is_finite_denominator_part(ubigint num)const noexcept override{
+		for(const auto i:_prime_factorization_table){
+			auto result=divmod(num,i);
+			while(!result.mod){
+				num=move(result.quot);
+				result=divmod(num,i);
+			}
+			if(num==1u)
+				return true;
+		}
+		return false;
+	}
+public:
+	[[nodiscard]]constexpr virtual ubigint get_denominator_complement(ubigint&denominator,ptrdiff_t&exp)const noexcept override{
+		ubigint aret=1u;
+		for(const auto i:_prime_factorization_table){
+			const auto i_complement=radix/i;
+			auto result=divmod(denominator,i);
+			while(result.quot && !result.mod){
+				denominator=move(result.quot);
+				aret*=i_complement;
+				result=divmod(denominator,i);
+				exp--;
+			}
+		}
+		return aret;
+	}
+};
+push_and_disable_msvc_warning(26426);
+//在上方已经定义了trinary,binary,octal,decimal
+//这里定义hexadecimal和hexadecimal_upper
+distinctive inline constexpr constexpr_str_numerical_representation_t<&es"0123456789abcdef"_constexpr_str> hexadecimal{ec('V')};
+distinctive inline constexpr constexpr_str_numerical_representation_t<&es"0123456789ABCDEF"_constexpr_str> hexadecimal_upper{ec('v')};
+pop_msvc_warning();
+
+/// @brief 一个简单的数字表示方式，以string存储进制内容
+/// @note 用于在编译期无法确定进制内容的情况，拥有已知最大的开销
+class comn_numerical_representation_t final:public base_numerical_representation_t{
+	string _radix_table;
+	char_t _fractional_sign;
+	char_t _positive_sign;
+	char_t _negative_sign;
+	string _nan, _signaling_nan, _quiet_nan;
+	string _inf;
+	char_t _fractional_separator;
+	char_t _exponent_separator;
+	char_t _unknown_data_start_sign, _unknown_data_split_sign, _unknown_data_end_sign;
+	array_t<size_t> _unique_prime_factorization_table;
+public:
+	comn_numerical_representation_t(
+		string radix_table=es"0123456789"_constexpr_str,
+		char_t fractional_sign=ec('.'),char_t positive_sign=ec('+'),char_t negative_sign=ec('-'),
+		string nan=es"NaN"_constexpr_str,
+		string signaling_nan=es"signaling_NaN"_constexpr_str,
+		string quiet_nan=es"quiet_NaN"_constexpr_str,
+		string inf=es"Infinity"_constexpr_str,
+		char_t fractional_separator=ec('.'),
+		char_t exponent_separator=ec('e'),
+		char_t unknown_data_start_sign=ec('['), char_t unknown_data_split_sign=ec(','), char_t unknown_data_end_sign=ec(']'))noexcept:
+		_radix_table(move(radix_table)),
+		_fractional_sign(fractional_sign),_positive_sign(positive_sign),_negative_sign(negative_sign),
+		_nan(move(nan)),_signaling_nan(move(signaling_nan)),_quiet_nan(move(quiet_nan)),_inf(move(inf)),
+		_fractional_separator(fractional_separator),
+		_exponent_separator(exponent_separator),
+		_unknown_data_start_sign(unknown_data_start_sign),_unknown_data_split_sign(unknown_data_split_sign),_unknown_data_end_sign(unknown_data_end_sign){
+		//计算质因数：get_prime_factorization(num).unique().to<容器类型>(); 
+		_unique_prime_factorization_table=get_prime_factorization(_radix_table.size()).unique().to<array_t<size_t>>();
+	}
+	[[nodiscard]]virtual size_t get_radix()const noexcept override{
+		return _radix_table.size();
+	}
+	[[nodiscard]]constexpr virtual char_t get_fractional_sign()const noexcept override{
+		return _fractional_sign;
+	}
+	[[nodiscard]]constexpr virtual char_t get_positive_sign()const noexcept override{
+		return _positive_sign;
+	}
+	[[nodiscard]]constexpr virtual char_t get_negative_sign()const noexcept override{
+		return _negative_sign;
+	}
+	[[nodiscard]]virtual string_view get_nan()const noexcept override{
+		return _nan;
+	}
+	[[nodiscard]]virtual string_view get_signaling_nan()const noexcept override{
+		return _signaling_nan;
+	}
+	[[nodiscard]]virtual string_view get_quiet_nan()const noexcept override{
+		return _quiet_nan;
+	}
+	[[nodiscard]]virtual string_view get_inf()const noexcept override{
+		return _inf;
+	}
+	[[nodiscard]]constexpr virtual char_t get_fractional_separator()const noexcept override{
+		return _fractional_separator;
+	}
+	[[nodiscard]]constexpr virtual char_t get_exponent_separator()const noexcept override{
+		return _exponent_separator;
+	}
+	[[nodiscard]]constexpr virtual char_t get_unknown_data_start_sign()const noexcept override{
+		return _unknown_data_start_sign;
+	}
+	[[nodiscard]]constexpr virtual char_t get_unknown_data_split_sign()const noexcept override{
+		return _unknown_data_split_sign;
+	}
+	[[nodiscard]]constexpr virtual char_t get_unknown_data_end_sign()const noexcept override{
+		return _unknown_data_end_sign;
+	}
+	[[nodiscard]]virtual char_t get_char(size_t index)const noexcept override{
+		return _radix_table[index];
+	}
+	[[nodiscard]]virtual size_t get_index(char_t ch)const noexcept override{
+		return _radix_table.find(ch);
+	}
+	[[nodiscard]]virtual bool is_valid_char(char_t ch)const noexcept override{
+		return _radix_table.find(ch)!=string::npos;
+	}
+protected:
+	[[nodiscard]]virtual bool is_finite_denominator_part(ubigint num)const noexcept override{
+		for(const auto& i:_unique_prime_factorization_table){
+			auto result=divmod(num,i);
+			while(!result.mod){
+				num=move(result.quot);
+				result=divmod(num,i);
+			}
+			if(num==1u)
+				return true;
+		}
+		return false;
+	}
+public:
+	[[nodiscard]]virtual ubigint get_denominator_complement(ubigint&denominator,ptrdiff_t&exp)const noexcept override{
+		ubigint aret=1u;
+		const auto radix = get_radix();
+		for(const auto& i: _unique_prime_factorization_table) {
+			const auto i_complement=radix/i;
+			auto result=divmod(denominator,i);
+			while(result.quot && !result.mod){
+				denominator=move(result.quot);
+				aret *=i_complement;
+				result=divmod(denominator,i);
+				exp--;
+			}
+		}
+		return aret;
+	}
+};
+
+//file_end
+
+		#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/to_string/_body.hpp"
+//_body.hpp
+//at namespace elc::defs::numerical_representation_n
+/*
+未完成的elc解释器numerical_representation文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace to_string_n{
+	struct convert_state_t{
+		//转换状态
+		//用于记录转换过程中的状态
+		/// 是否成功
+		bool success=1;
+		/// 有限小数？
+		bool is_finite=1;
+		/// 纯整数？
+		bool is_integer=1;
+	};
+	template<numerical_representation representation_t>
+	class string_convert_impl{
+		//以任意的给定进制类型转换为字符串
+		const representation_t& _repres;
+	public:
+		constexpr string_convert_impl(const representation_t&repres)noexcept:_repres(repres){}
+	private:
+		[[nodiscard]]string to_string_base(ubigfloat num)const noexcept{
+			string aret;
+			//判断是否是有限小数
+			num.simplify();
+			const bool is_finite=_repres.is_finite(num);
+			//若无限小数，以分数形式输出
+			if(!is_finite)[[unlikely]]{
+				auto&numpart=get_numerator_as_ref(num);
+				auto&denopart=get_denominator_as_ref(num);
+				auto fractional_separator=_repres.get_fractional_separator();
+				aret=to_string(move(numpart))+fractional_separator+to_string(move(denopart));
+			}
+			//有限小数
+			else[[likely]]{
+				ptrdiff_t exp=0;
+				auto& numerator=get_numerator_as_ref(num);
+				auto& denominator=get_denominator_as_ref(num);
+				const auto radix=_repres.get_radix();
+				//化简为numerator*radix^exp
+				{
+					auto result=divmod(numerator,radix);
+					while(result.quot&&!(result.mod)){
+						numerator=move(result.quot);
+						++exp;
+						result=divmod(numerator,radix);
+					}
+					result=divmod(denominator,radix);
+					while(result.quot&&!(result.mod)){
+						denominator=move(result.quot);
+						--exp;
+						result=divmod(denominator,radix);
+					}
+					numerator*=_repres.get_denominator_complement(denominator,exp);
+					//现在denominator是1
+					#if defined(_DEBUG)
+						if(denominator!=1u)
+							__debugbreak();
+					#endif
+				}
+				//先获取numerator和exp的字符串表示
+				aret=to_string(move(numerator));
+				auto expstr=to_string(exp);
+				/*两种情况：
+					若exp是负数，在exp的绝对值大于aret.size+expstr.size()+1时使用科学计数法有意义
+					若exp正数，在exp大于expstr.size()+1时使用科学计数法有意义
+				*/
+				if(exp<0){
+					if(size_t(-exp)>aret.size()+expstr.size()+1){
+						aret+=_repres.get_exponent_separator();
+						aret+=expstr;
+					}
+					else{
+						//否则，插入小数点
+						//首先计算需要的前置0的个数
+						const ptrdiff_t need_zero=(-exp)-aret.size()+1;
+						if(need_zero>0)
+							aret.push_front(_repres.get_char(0),need_zero);
+						//插入小数点
+						const auto dot_pos=aret.size()+exp;
+						aret.insert(dot_pos,_repres.get_fractional_sign());
+					}
+				}
+				elseif(exp>0){
+					if(size_t(exp)>expstr.size()+1){
+						aret+=_repres.get_exponent_separator();
+						aret+=expstr;
+					}
+					else//否则，补0
+						aret.push_back(_repres.get_char(0),exp);
+				}
+			}
+			return aret;
+		}
+		[[nodiscard]]string to_string_unsigneded(ubigfloat num)const noexcept{
+			//首先，特殊值检查
+			if(isNaN(num))
+				return _repres.get_nan();
+			if(isinf(num))
+				return _repres.get_inf();
+			return to_string_base(move(num));
+		}
+	public:
+		[[nodiscard]]string to_string(const bigfloat&num)const noexcept{
+			if(is_negative(num))
+				return _repres.get_negative_sign()+to_string_unsigneded(abs(num));
+			else
+				return to_string_unsigneded(abs(num));
+		}
+		[[nodiscard]]string to_string(bigfloat&&num)const noexcept{
+			if(is_negative(num))
+				return _repres.get_negative_sign()+to_string_unsigneded(abs(move(num)));
+			else
+				return to_string_unsigneded(abs(move(num)));
+		}
+		[[nodiscard]]string to_string(const ubigfloat&num)const noexcept{
+			return to_string_unsigneded(num);
+		}
+		[[nodiscard]]string to_string(ubigfloat&&num)const noexcept{
+			return to_string_unsigneded(move(num));
+		}
+		template<integer_type T>//适用于任何c++整数类型以及elc的bigint和ubigint
+		[[nodiscard]]string to_string(T num)const noexcept{
+			if constexpr(type_info<T> == type_info<bool>)
+				return to_string(union_cast<unsigned_specific_size_t<sizeof(bool)>>(num));
+			elseif constexpr(is_signed<T>){
+				if(is_negative(num))
+					return _repres.get_negative_sign()+to_string(abs(num));
+				else
+					return to_string(abs(num));
+			}
+			else{
+				string aret;
+				const auto radix=_repres.get_radix();
+				push_and_disable_msvc_warning(4244);
+				do{//do-while是为了保证至少有一位"0"
+					auto res=divmod(num,radix);
+					const auto index=to_size_t(move(res.mod));
+					const auto ch=_repres.get_char(index);
+					#if defined(_DEBUG)
+						if(!_repres.is_valid_char(ch))
+							__debugbreak();
+					#endif
+					aret.push_front(ch);
+					num=move(res.quot);
+				}while(num);
+				pop_msvc_warning();
+				return aret;
+			}
+		}
+	private:
+		template<class T> requires ::std::is_floating_point_v<T>
+		[[nodiscard]]string to_string_unsigneded(T num)const noexcept{
+			return to_string_base(move(num));
+		}
+	public:
+		template<class T> requires ::std::is_floating_point_v<T>
+		[[nodiscard]]string to_string(T num)const noexcept{
+			//首先，特殊值检查
 			if(isNaN(num)){
 				if constexpr(::std::numeric_limits<T>::has_signaling_NaN){
 					constexpr auto signaling_NaN = ::std::numeric_limits<T>::signaling_NaN();
 					if(full_equal_in_byte(signaling_NaN,num)){
-						str=_signaling_nan;
-						return true;
+						return _repres.get_signaling_nan();
 					}
 					auto negative_signaling_NaN = copy_as_negative(signaling_NaN);
 					if(full_equal_in_byte(negative_signaling_NaN,num)){
-						str=_negative_sign+_signaling_nan;
-						return true;
+						return string()+_repres.get_negative_sign()+_repres.get_signaling_nan();
 					}
 				}
 				if constexpr(::std::numeric_limits<T>::has_quiet_NaN){
 					constexpr auto quiet_NaN = ::std::numeric_limits<T>::quiet_NaN();
 					if(full_equal_in_byte(quiet_NaN,num)){
-						str=_quiet_nan;
-						return true;
+						return _repres.get_quiet_nan();
 					}
 					auto negative_quiet_NaN = copy_as_negative(quiet_NaN);
 					if(full_equal_in_byte(negative_quiet_NaN,num)){
-						str=_negative_sign+_quiet_nan;
-						return true;
+						return string()+_repres.get_negative_sign()+_repres.get_quiet_nan();
 					}
 				}
-				str=_nan+_unknown_data_start_sign;
+				string aret=_repres.get_nan();
+				aret+=_repres.get_unknown_data_start_sign();
+				const auto radix = _repres.get_radix();
+				const auto unknown_data_split_sign = _repres.get_unknown_data_split_sign();
+				const bool needs_split_sign = radix < number_of_possible_values_per<char>;
 				data_view<T> view{&num};
 				for(const byte c: view){
-					str += to_string_rough((unsigned char)c);
-					str += _unknown_data_split_sign;
+					aret += to_string((unsigned char)c);
+					if(needs_split_sign)
+						aret += unknown_data_split_sign;
 				}
-				str.back() = _unknown_data_end_sign;
-				return true;
+				if(needs_split_sign)
+					aret.back()=_repres.get_unknown_data_end_sign();
+				else
+					aret+=_repres.get_unknown_data_end_sign();
+				return aret;
 			}
+			if constexpr(::std::numeric_limits<T>::has_infinity){
+				constexpr auto infinity = ::std::numeric_limits<T>::infinity();
+				if(full_equal_in_byte(infinity,num)){
+					return _repres.get_inf();
+				}
+				auto negative_infinity = copy_as_negative(infinity);
+				if(full_equal_in_byte(negative_infinity,num)){
+					return string()+_repres.get_negative_sign()+_repres.get_inf();
+				}
+			}
+			if(is_negative(num))
+				return _repres.get_negative_sign()+to_string_unsigneded(-num);
+			else
+				return to_string_unsigneded(num);
 		}
-		if constexpr(::std::numeric_limits<T>::has_infinity){
-			if(::std::isinf(num)){
-				if constexpr(!::std::is_unsigned_v<T>)
-					if(is_negative){
-						str=_negative_sign+_inf;
-						return true;
+	private:
+		//to_string定义完了，开始定义from_string_get
+		template<class T> requires(type_info<T> == type_info<ubigfloat>)
+		[[nodiscard]]ubigfloat from_string_get_base(const string&str,convert_state_t&state)const noexcept{
+			state={};
+			ubigint base;
+			const auto radix=_repres.get_radix();
+			const auto end=str.end();
+			auto i=str.begin();
+			for(;i!=end;++i){
+				char_t ch=*i;
+				if(ch==_repres.get_fractional_sign()){//小数：123.456
+					state.is_integer=false;
+					++i;
+					ubigint radix_power=1u;
+					for(;i!=end;++i){
+						radix_power*=radix;
+						base*=radix;
+						ch=*i;
+						if(ch==_repres.get_exponent_separator()){//科学计数法：123.456e789
+							++i;
+							auto expstr=string{i,end};
+							auto exp=from_string_get<ptrdiff_t>(expstr,state);
+							if(!state.success)
+								return {};
+							ubigfloat aret{move(base)};
+							aret/=radix_power;
+							while(exp<0){
+								aret/=radix;
+								++exp;
+							}
+							while(exp>0){
+								aret*=radix;
+								--exp;
+							}
+							return aret;
+						}
+						if(_repres.is_valid_char(ch))
+							base+=_repres.get_index(ch);
+						else{//error
+							state.success=false;
+							return {};
+						}
 					}
-				str=_inf;
-				return true;
-			}
-		}
-		return false;
-	}
-	template<typename T> requires ::std::is_arithmetic_v<T>
-	inline string to_string_rough_no_special_value_check(T num)const noexcept{
-		string aret;
-		const bool is_negative=magic_number::is_negative(num);
-		if constexpr(!::std::is_unsigned_v<T>)
-			if(is_negative)
-				aret=_negative_sign;
-		aret+=to_string_num_base(abs(num));
-		return aret;
-	}
-public:
-	template<typename T> requires ::std::is_arithmetic_v<T>
-	inline string to_string_rough(T num)const noexcept{
-		string aret;
-		const bool is_negative=magic_number::is_negative(num);
-		if(to_string_special_value_check(num,aret,is_negative))
-			return aret;
-		return to_string_rough_no_special_value_check(num);
-	}
-private:
-	template<typename T>
-	inline T from_string_get_num_base(string str)const noexcept{
-		if constexpr(::std::is_floating_point_v<T>){
-			size_t order_of_magnitude = str.size();
-			T aret{};
-			size_t i=str.size();
-			while(i){
-				i--;
-				const size_t index=_radix_table.find(str[i]);
-				if(index==string::npos){
-					if(str[i] == _fractional_sign){
-						order_of_magnitude=i;
-						continue;
+					ubigfloat aret{move(base)};
+					aret/=radix_power;
+					return aret;
+				}
+				elseif(ch==_repres.get_fractional_separator()){//分数：123/456
+					state.is_integer=false;
+					state.is_finite=false;
+					++i;
+					ubigint denopart;
+					for(;i!=end;++i){
+						denopart*=radix;
+						ch=*i;
+						if(_repres.is_valid_char(ch))
+							denopart+=_repres.get_index(ch);
+						else{//error
+							state.success=false;
+							return {};
+						}
 					}
-					return T();
+					ubigfloat aret{move(base)};
+					aret/=denopart;
+					return aret;
 				}
-				aret+=(T)index;
-				aret/=_radix;
+				elseif(ch==_repres.get_exponent_separator()){//科学计数法：123e456
+					++i;
+					auto expstr=string(i,end);
+					auto exp=from_string_get<ptrdiff_t>(expstr,state);
+					if(!state.success)
+						return {};
+					ubigfloat aret{move(base)};
+					while(exp<0){
+						aret/=radix;
+						++exp;
+					}
+					while(exp>0){
+						aret*=radix;
+						--exp;
+					}
+					return aret;
+				}
+				base*=radix;
+				if(_repres.is_valid_char(ch))
+					base+=_repres.get_index(ch);
+				else{//error
+					state.success=false;
+					return {};
+				}
 			}
-			aret*=(T)pow(_radix, order_of_magnitude);
-			return aret;
+			return base;//这里直接他妈的返回了一个整数
 		}
-		else {
-			T aret{};
-			for(size_t i = 0; i < str.size(); i++){
-				const size_t index = _radix_table.find(str[i]);
-				if(index == string::npos)
-					return T();
-				aret *= (T)_radix;
-				aret += (T)index;
+		//ubigfloat
+		template<class T> requires(type_info<T> == type_info<ubigfloat>)
+		[[nodiscard]]ubigfloat from_string_get_unsigneded(const string&str,convert_state_t&state)const noexcept{
+			//首先判断特殊值
+			if(str==_repres.get_nan()){
+				state={};
+				return ::std::numeric_limits<double>::quiet_NaN();
 			}
-			return aret;
+			elseif(str==_repres.get_inf()){
+				state={};
+				return ::std::numeric_limits<double>::infinity();
+			}
+			else
+				return from_string_get_base<ubigfloat>(str,state);
 		}
-	}
-	template<typename T>
-	inline bool from_string_special_value_check(string str,T& num,bool is_negative)const noexcept{
-		if constexpr(::std::numeric_limits<T>::has_signaling_NaN || ::std::numeric_limits<T>::has_quiet_NaN){
-			if constexpr(::std::numeric_limits<T>::has_signaling_NaN)
-				if(str==_signaling_nan){
-					num= copy_as_negative(::std::numeric_limits<T>::signaling_NaN(),is_negative);
-					return true;
-				}
-			if constexpr(::std::numeric_limits<T>::has_quiet_NaN)
-				if(str==_quiet_nan){
-					num= copy_as_negative(::std::numeric_limits<T>::quiet_NaN(),is_negative);
-					return true;
-				}
-			if(str.starts_with(_nan+_unknown_data_start_sign)){
-				str.remove_front(_nan.size()+1);
-				str.remove_back();
-				data_block<T> block;
-				size_t		  write_index = 0;
-				floop{
-					const size_t dot_pos = str.find(_unknown_data_split_sign);
-					auto byte_str		 = str.substr(0, dot_pos);
-					block[write_index++] = (byte)from_string_get<unsigned char>(byte_str);
-					if(dot_pos == string::npos)
-						break;
-					str					 = str.substr(dot_pos+1);
-				}
-				num= data_cast<T>(block);
-				return true;
-			}
-			elseif(str == _nan){
+	public:
+		template<class T> requires(type_info<T> == type_info<ubigfloat>)
+		[[nodiscard]]ubigfloat from_string_get(const string&str,convert_state_t&state)const noexcept{
+			return from_string_get_unsigneded<ubigfloat>(str,state);
+		}
+		//floats
+	private:
+		template<class T> requires ::std::is_floating_point_v<T>
+		[[nodiscard]]T from_string_get_unsigneded(string str,convert_state_t&state)const noexcept{
+			//首先判断特殊值
+			if constexpr(::std::numeric_limits<T>::has_signaling_NaN || ::std::numeric_limits<T>::has_quiet_NaN){
+				if constexpr(::std::numeric_limits<T>::has_signaling_NaN)
+					if(str==_repres.get_signaling_nan()){
+						state={};
+						return ::std::numeric_limits<T>::signaling_NaN();
+					}
 				if constexpr(::std::numeric_limits<T>::has_quiet_NaN)
-					num= copy_as_negative(::std::numeric_limits<T>::quiet_NaN(),is_negative);
-				else
-					num= copy_as_negative(::std::numeric_limits<T>::signaling_NaN(),is_negative);
-				return true;
+					if(str==_repres.get_quiet_nan()){
+						state={};
+						return ::std::numeric_limits<T>::quiet_NaN();
+					}
+				if(str.starts_with(_repres.get_nan())){
+					str.remove_front(_repres.get_nan().size());
+					if(str && str.back()==_repres.get_unknown_data_start_sign()){
+						state={};
+						str.remove_front();
+						str.remove_back();
+						data_block<T> block;
+						size_t		  write_index = 0;
+						
+						const auto radix = _repres.get_radix();
+						const auto unknown_data_split_sign = _repres.get_unknown_data_split_sign();
+						const bool needs_split_sign = radix < number_of_possible_values_per<char>;
+						while(state.success){
+							if(needs_split_sign){
+								const size_t dot_pos = str.find(unknown_data_split_sign);
+								auto byte_str		 = str.substr(0, dot_pos);
+								block[write_index++] = (byte)from_string_get_unsigneded<unsigned char>(byte_str,state);
+								if(dot_pos == string::npos)
+									break;
+								str					 = str.substr(dot_pos+1);
+							}
+							else
+								block[write_index++] = (byte)from_string_get_unsigneded<unsigned char>(str.pop_front(),state);
+						}
+						return state.success?data_cast<T>(block):T{};
+					}
+					else{
+						state={};
+						return ::std::numeric_limits<T>::quiet_NaN();
+					}
+				}
 			}
-		}
-		if constexpr(::std::numeric_limits<T>::has_infinity){
-			if(str==_inf){
-				if(is_negative)
-					return copy_as_negative(::std::numeric_limits<T>::infinity());
-				else
+			if constexpr(::std::numeric_limits<T>::has_infinity)
+				if(str==_repres.get_inf()){
+					state={};
 					return ::std::numeric_limits<T>::infinity();
-				return true;
+				}
+			//由于基本类型的浮点数转换实现有损，所以这里直接转换为ubigfloat再转换为T
+			return from_string_get_base<ubigfloat>(move(str),state).convert_to<T>();
+		}
+	public:
+		template<class T> requires(::std::is_floating_point_v<T> && ::std::is_unsigned_v<T>)
+		[[nodiscard]]T from_string_get(const string&str,convert_state_t&state)const noexcept{
+			return from_string_get_unsigneded<T>(str,state);
+		}
+		//integers
+	private:
+		template<unsigned_integer_type T>
+		[[nodiscard]]T from_string_get_unsigneded(const string&str,convert_state_t&state)const noexcept{
+			if constexpr(type_info<T> == type_info<bool>)
+				return union_cast<bool>(from_string_get<unsigned_specific_size_t<sizeof(bool)>>(str,state));
+			else{
+				push_and_disable_msvc_warning(4267);
+				T aret={};
+				const auto radix=_repres.get_radix();
+				const auto end=str.end();
+				for(auto i=str.begin();i!=end;++i){
+					aret*=radix;
+					const char_t ch=*i;
+					if(_repres.is_valid_char(ch))
+						aret+=_repres.get_index(ch);
+					else{//error
+						state.success=false;
+						return {};
+					}
+				}
+				return aret;
+				pop_msvc_warning();
 			}
 		}
-		return false;
-	}
-public:
-	template<typename T> requires ::std::is_arithmetic_v<T>
-	inline T from_string_get(string str)const noexcept{
-		//信息尾检查
-		if constexpr(::std::is_floating_point_v<T>){
-			const auto info_tail_size=get_info_tail_size<T>();
-			if(str.size()>info_tail_size && str.ends_with(_radix_table)){
-				const auto tail_pos=str.size()-info_tail_size;
-				auto info_tail=str.substr(tail_pos);
-				auto str_with_out_tail=str.substr(0,tail_pos);
-				if(str_with_out_tail.back()==_fractional_sign)
-					str_with_out_tail.remove_back();
-				auto num=get_from_info_tail<T>(info_tail);
-				if(to_string_rough(num).starts_with(str_with_out_tail))
-					return num;
+	public:
+		template<unsigned_integer_type T>
+		[[nodiscard]]T from_string_get(const string&str,convert_state_t&state)const noexcept{
+			return from_string_get_unsigneded<T>(str,state);
+		}
+	private:
+		//特殊：从单个字符中获取数值
+		template<unsigned_type T>
+		[[nodiscard]]T from_string_get_unsigneded(const char_t&ch,convert_state_t&state)const noexcept{
+			if(_repres.is_valid_char(ch)){
+				state={};
+				return(T)_repres.get_index(ch);
+			}
+			else{
+				state.success=false;
+				return {};
 			}
 		}
-		T num{};
-		suppress_msvc_warning(26496);
-		bool is_negative=false;
-		if constexpr(!::std::is_unsigned_v<T>)
-			if(str[0]==_negative_sign){
+	public:
+		template<unsigned_type T>
+		[[nodiscard]]T from_string_get(const char_t&ch,convert_state_t&state)const noexcept{
+			return from_string_get_unsigneded<T>(ch,state);
+		}
+		template<signed_type T>
+		[[nodiscard]]T from_string_get(const char_t&ch,convert_state_t&state)const noexcept{
+			typedef to_unsigned_t<T> UT;
+			return(T)from_string_get_unsigneded<UT>(ch,state);
+		}
+		template<signed_type T>
+		[[nodiscard]]T from_string_get(string str,convert_state_t&state)const noexcept{
+			//处理可能的正负符号开头
+			bool is_negative=false;
+			if(str[0]==_repres.get_negative_sign()){
 				is_negative=true;
 				str.remove_front();
 			}
-		if(str[0]==_positive_sign)
-			str.remove_front();
-		if(from_string_special_value_check(str,num,is_negative))
-			return num;
-		typedef to_unsigned_t<T> UT;
-		UT unum=from_string_get_num_base<UT>(str);
-		return copy_as_negative<T>(unum,is_negative);
-	}
-	push_and_disable_msvc_warning(4102);//在非浮点数的情况下add_negative_sign_and_return标签可能未引用
-	template<typename T> requires ::std::is_arithmetic_v<T>
-	inline string to_string(T num)const noexcept{
-		string aret;
-		const bool is_negative=magic_number::is_negative(num);
-		if(to_string_special_value_check(num,aret,is_negative))
-			return aret;
-		auto unum=abs(num);
-		aret=to_string_num_base(unum);
-		if constexpr(::std::is_floating_point_v<T>) {
-			size_t dot_pos = aret.find(_fractional_sign);
-			//检查是否可反向转换
-			if(!full_equal_in_byte(from_string_get_num_base<T>(aret),unum)) {
-				//获取并追加信息尾
-				string info_tail = get_info_tail(num);
-				if(dot_pos == string::npos) {
-					if(aret.ends_with(_radix_table[0],info_tail.size()))
-						aret.remove_back(info_tail.size());
-					else
-						aret.push_back(_fractional_sign);
-				}
-				aret += info_tail;
-				push_and_disable_msvc_warning(26438 26448);
-				goto add_negative_sign_and_return;
-				pop_msvc_warning();
-			}
-			//进位器
-			auto rounding_up_char = lambda_with_catch(&) (string::arec_t char_arc)noexcept{
-				const char_t up_char = move(char_arc);
-				size_t up_pos  = _radix_table.find(up_char);
-				up_pos++;
-				if(up_pos == _radix)
-					up_pos = 0;
-				move(char_arc) = _radix_table[up_pos];
-				return up_pos == 0;
-			};
-			auto rounding_up = lambda_with_catch(&) (string&str)noexcept{
-				size_t i = str.size();
-				while(i){
-					if(rounding_up_char(str[i])){
-						if(i--){
-							if(str[i] == _fractional_sign)
-								i--;
-						}
-						else
-							str.push_front(_radix_table[1]);
-						continue;
-					}
-					else
-						break;
-				}
-			};
-			{
-				//二分法查找最合适的切割位点.
-				size_t left_pos	 = 0;
-				size_t right_pos = aret.size();
-				string better_aret,better_aret_last;
-				const bool has_fractional = dot_pos != string::npos;
-				do {
-					size_t step_pos = (left_pos + right_pos) / 2;
-					better_aret		= aret.substr(0, step_pos);
-					if(step_pos==dot_pos)
-						step_pos++;
-					//判断是否需要进位.(当被截断内容在radix_table的后半部分.)
-					const char_t cut_char = aret[step_pos];
-					const size_t cut_num	= _radix_table.find(cut_char);
-					if(cut_num >= _radix / 2)
-						rounding_up(better_aret);
-					//判断当前切割位点有效性.
-					if(full_equal_in_byte(from_string_get_num_base<T>(better_aret),unum)){
-						if(has_fractional && better_aret.back()==_radix_table[0]){
-							const auto end_pos = max(better_aret.find_last_not_of(_radix_table[0])+1, dot_pos);
-							better_aret.resize(end_pos);
-							if(better_aret.back() == _fractional_sign)
-								better_aret.remove_back();
-						}
-						right_pos		 = min(better_aret.size(), step_pos);
-						better_aret_last = better_aret;
-					}
-					elseif(left_pos != step_pos)
-						left_pos = step_pos;
-					else
-						left_pos++;
-				} while(left_pos < right_pos);
-				if(better_aret_last){
-					aret = better_aret_last;
-					if(aret.ends_with(_fractional_sign))
-						aret.remove_back();
-				}
-			}
+			elseif(str[0]==_repres.get_positive_sign())
+				str.remove_front();
+			typedef to_unsigned_t<T> UT;
+			return copy_as_negative(from_string_get_unsigneded<UT>(move(str),state),is_negative);
 		}
-	add_negative_sign_and_return:
-		if constexpr(!::std::is_unsigned_v<T>)
-			if(is_negative)
-				aret.push_front(_negative_sign);
-		return aret;
-	}
-	pop_msvc_warning();
-};
-push_and_disable_msvc_warning(26426);
-distinctive inline numerical_representation_t trinary{3,es"012"_constexpr_str};
-distinctive inline numerical_representation_t binary{2,es"01"_constexpr_str};
-distinctive inline numerical_representation_t octal{8,es"01234567"_constexpr_str};
-distinctive inline numerical_representation_t decimal{10,es"0123456789"_constexpr_str};
-distinctive inline numerical_representation_t hexadecimal{16,es"0123456789abcdef"_constexpr_str};
-distinctive inline numerical_representation_t hexadecimal_upper{16,es"0123456789ABCDEF"_constexpr_str};
-pop_msvc_warning();
-
-//字符串转换为数值
-template<typename T> requires ::std::is_arithmetic_v<T>
-inline T from_string_get(const string&str,const numerical_representation_t&radix=decimal)noexcept{
-	return radix.from_string_get<T>(str);
+		template<arithmetic_type T>
+		[[nodiscard]]T from_string_get(const string&str)const noexcept{
+			convert_state_t state;
+			return from_string_get<T>(str,state);
+		}
+	};
+	/// @brief to_string
+	constexpr struct to_string_t{
+		template<arithmetic_type T,numerical_representation Repres>
+		[[nodiscard]]string operator()(const T&val,const Repres&repres)const noexcept{
+			const string_convert_impl<Repres> impl{repres};
+			return impl.to_string(val);
+		}
+		template<arithmetic_type T>
+		[[nodiscard]]string operator()(const T&val)const noexcept{
+			return (*this)(val,decimal);
+		}
+	}to_string{};
+	/// @brief from_string_get
+	template<arithmetic_type T>
+	struct from_string_get_t{
+		typedef convert_state_t state_t;
+		template<numerical_representation Repres>
+		[[nodiscard]]T operator()(const string&str,const Repres&repres,convert_state_t&state)const noexcept{
+			const string_convert_impl<Repres> impl{repres};
+			return impl.from_string_get<T>(str,state);
+		}
+		template<numerical_representation Repres>
+		[[nodiscard]]T operator()(const string&str,const Repres&repres)const noexcept{
+			convert_state_t state;
+			return (*this)(str,repres,state);
+		}
+		[[nodiscard]]T operator()(const string&str,convert_state_t&state)const noexcept{
+			return (*this)(str,decimal,state);
+		}
+		[[nodiscard]]T operator()(const string&str)const noexcept{
+			return (*this)(str,decimal);
+		}
+		//单个字符
+		template<numerical_representation Repres>
+		[[nodiscard]]T operator()(const char_t&ch,const Repres&repres,convert_state_t&state)const noexcept{
+			const string_convert_impl<Repres> impl{repres};
+			return impl.from_string_get<T>(ch,state);
+		}
+		template<numerical_representation Repres>
+		[[nodiscard]]T operator()(const char_t&ch,const Repres&repres)const noexcept{
+			convert_state_t state;
+			return (*this)(ch,repres,state);
+		}
+		[[nodiscard]]T operator()(const char_t&ch,convert_state_t&state)const noexcept{
+			return (*this)(ch,decimal,state);
+		}
+		[[nodiscard]]T operator()(const char_t&ch)const noexcept{
+			return (*this)(ch,decimal);
+		}
+	};
+	template<arithmetic_type T>
+	constexpr from_string_get_t<T>from_string_get{};
 }
-//数值转换为字符串（小数部分粗略处理）
-template<typename T> requires ::std::is_arithmetic_v<T>
-inline string to_string_rough(T num,const numerical_representation_t&radix=decimal)noexcept{
-	return radix.to_string_rough(num);
-}
-//数值转换为字符串
-template<typename T> requires ::std::is_arithmetic_v<T>
-inline string to_string(T num,const numerical_representation_t&radix=decimal)noexcept{
-	return radix.to_string(num);
-}
+using to_string_n::to_string;
+using to_string_n::from_string_get;
 
 //file_end
 
-		#line 16 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
+		#line 17 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
 	}
 	#if defined(ELC_TEST_ON)
 	namespace numerical_representation_part_test{
@@ -28841,7 +29535,7 @@ inline void test_end(){
 
 //file_end
 
-		#line 20 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
+		#line 21 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
 	}
 	#endif
 
@@ -29004,7 +29698,7 @@ inline void test_end(){
 
 //file_end
 
-	#line 24 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
+	#line 25 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
 }
 namespace elc{
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_export.hpp"
@@ -29018,13 +29712,12 @@ namespace elc{
 */
 #define export using defs::numerical_representation_n::
 export to_string;
-export to_string_rough;
 export from_string_get;
 #undef export
 
 //file_end
 
-	#line 27 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
+	#line 28 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
 }
 #if defined(ELC_BASE_STREAM)
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
@@ -29323,18 +30016,17 @@ protected:\
 
 	namespace stream_n{
 		//arithmetic output only for text_ostream<char_t>
-		template<typename T,class stream_T> requires(::std::is_arithmetic_v<remove_cvref<T>> &&
-													 type_info<stream_T>.base_on<text_ostream<char_t>> &&
-													 type_info<remove_cvref<T>> != type_info<char_t> &&
-													 type_info<remove_cvref<T>> != type_info<bool>)
+		template<arithmetic_type T,class stream_T> requires(type_info<stream_T>.base_on<text_ostream<char_t>> &&
+															type_info<remove_cvref<T>> != type_info<char_t> &&
+															type_info<remove_cvref<T>> != type_info<bool>)
 		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>>){
 			return stream << to_string(forward<T>(data));
 		}
 
 		template<typename T,class stream_T> requires(!::std::is_arithmetic_v<remove_cvref<T>> &&
 													 to_arithmetic.able<remove_cvref<T>> &&
-													 type_info<stream_T>.base_on<text_ostream<char_t>>) decltype(auto)
-		operator<<(stream_T&& stream, T&& data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>> && to_arithmetic.nothrow<T>) {
+													 type_info<stream_T>.base_on<text_ostream<char_t>>)
+		decltype(auto)operator<<(stream_T&& stream, T&& data)noexcept(type_info<stream_T>.base_on<noexcept_text_ostream<char_t>> && to_arithmetic.nothrow<T>) {
 			return stream << to_arithmetic(forward<T>(data));
 		}
 
@@ -29525,13 +30217,13 @@ protected:\
 
 //file_end
 
-	#line 60 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
+	#line 59 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 }
 #endif
 
 //file_end
 
-	#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
+	#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
 #endif
 
 //file_end
