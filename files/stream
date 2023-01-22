@@ -18953,11 +18953,32 @@ protected:\
 	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 
 	namespace stream_n{
+		using namespace numerical_representation_n;
+
+		const auto&default_numerical_representation=decimal;
+		const auto&default_bool_representation=common_bool_representation;
+
+		template<text_ostream stream_T>
+		decltype(auto)get_numerical_representation_of(stream_T&&stream)noexcept{
+			if constexpr was_not_an_ill_form(stream.get_numerical_representation())
+				return stream.get_numerical_representation();
+			else
+				return default_numerical_representation;
+		}
+
+		template<text_ostream stream_T>
+		decltype(auto)get_bool_representation_of(stream_T&&stream)noexcept{
+			if constexpr was_not_an_ill_form(stream.get_bool_representation())
+				return stream.get_bool_representation();
+			else
+				return default_bool_representation;
+		}
+
 		//arithmetic output only for text_ostream
 		template<arithmetic_type T,text_ostream stream_T> requires(type_info<remove_cvref<T>> != type_info<char_t> &&
 																   type_info<remove_cvref<T>> != type_info<bool>)
 		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(noexcept_text_ostream<stream_T>){
-			return stream << to_string(forward<T>(data));
+			return stream << to_string(forward<T>(data),get_numerical_representation_of(stream));
 		}
 
 		template<typename T,text_ostream stream_T> requires(!::std::is_arithmetic_v<remove_cvref<T>> &&
@@ -18968,12 +18989,13 @@ protected:\
 
 		template<typename T,text_ostream stream_T> requires(type_info<remove_cvref<T>> == type_info<bool>)
 		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(noexcept_text_ostream<stream_T>){
+			const auto&representation=get_bool_representation_of(stream);
 			if(data==true)
-				stream << es"true"_constexpr_str;
+				stream << representation.get_true();
 			elseif(data==false)
-				stream << es"false"_constexpr_str;
+				stream << representation.get_false();
 			else
-				stream << es"others("_constexpr_str << union_cast<unsigned_specific_size_t<sizeof(bool)>>(data) << ec(')');
+				stream << representation.get_other_prefix() << union_cast<unsigned_specific_size_t<sizeof(bool)>>(data) << representation.get_other_suffix();
 			return stream;
 		}
 
@@ -19152,7 +19174,7 @@ protected:\
 
 //file_end
 
-	#line 56 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
+	#line 78 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 }
 #endif
 
@@ -29229,6 +29251,15 @@ protected:\
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/representations/comn.hpp"
+//_body.hpp
+//at namespace elc::defs::numerical_representation_n
+/*
+未完成的elc解释器numerical_representation文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
 /*!
 基类，记录数字的表示方式以便客制化to_string
 */
@@ -29616,6 +29647,53 @@ public:
 		return aret;
 	}
 };
+
+//file_end
+
+#line 9 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/representations/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/representations/bool.hpp"
+//bool.hpp
+//at namespace elc::defs::numerical_representation_n
+/*
+未完成的elc解释器numerical_representation文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+/*!
+基类，记录bool的表示方式以便客制化to_string
+*/
+struct base_bool_representation_t{
+	virtual ~base_bool_representation_t()noexcept=default;
+	virtual string_view get_true()const noexcept=0;
+	virtual string_view get_false()const noexcept=0;
+	virtual string_view get_other_prefix()const noexcept=0;
+	virtual string_view get_other_suffix()const noexcept=0;
+};
+template<class T>
+concept bool_representation=is_base_of<base_bool_representation_t,T>;
+/*!
+默认的bool表示方式
+*/
+struct common_bool_representation_t:base_bool_representation_t{
+	string_view get_true()const noexcept override{
+		return es"true"_constexpr_str;
+	}
+	string_view get_false()const noexcept override{
+		return es"false"_constexpr_str;
+	}
+	string_view get_other_prefix()const noexcept override{
+		return es"other("_constexpr_str;
+	}
+	string_view get_other_suffix()const noexcept override{
+		return es")"_constexpr_str;
+	}
+};
+constexpr common_bool_representation_t common_bool_representation{};
+
+//file_end
+
+#line 10 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/representations/_body.hpp"
 
 //file_end
 
@@ -30158,7 +30236,7 @@ struct specified_numerical_representation_ostream_wrapper: virtual text_ostream_
 	const representation_T& representation;
 	stream_T& stream;
 
-	constexpr specified_numerical_representation_ostream_wrapper(const representation_T& representation,stream_T& stream)noexcept:representation(representation),stream(stream){}
+	specified_numerical_representation_ostream_wrapper(const representation_T& representation,stream_T& stream)noexcept:representation(representation),stream(stream){}
 
 	virtual int_t seek(seek_type dir,int_t off)noexcept_as(stream.seek(seek_type::cur,0)) override{return stream.seek(dir,off);}
 	virtual int_t tell()noexcept_as(stream.tell()) override{return stream.tell();}
@@ -30169,24 +30247,14 @@ struct specified_numerical_representation_ostream_wrapper: virtual text_ostream_
 	virtual void write(const char_t*data,size_t size)noexcept_as(stream.write(data,size)) override{
 		stream.write(data,size);
 	}
-	//operator<<
-	template<typename T>requires(was_not_an_ill_form(stream<<declvalue(T)) && !arithmetic_type<T>)
-	decltype(auto) operator<<(T&&a)noexcept_as(stream<<declvalue(T)){
-		if constexpr(type_info<decltype(stream<<declvalue(T))>!=type_info<stream_T&>)
-			return stream<<forward<T>(a);
-		else{
-			stream<<forward<T>(a);
-			return*this;
-		}
-	}
-	template<arithmetic_type T>requires was_not_an_ill_form(stream<<declvalue(string))
-	decltype(auto) operator<<(T&&a)noexcept_as(stream<<declvalue(string)){
-		stream<<to_string(forward<T>(a),representation);
-		return*this;
-	}
+
+	//获取包装的流
+	stream_T& get_wrapped_stream()noexcept{return stream;}
+	//获取数字表示方式
+	const representation_T& get_numerical_representation()const noexcept{return representation;}
 };
 template<numerical_representation representation_T,class stream_T> requires(type_info<stream_T>.base_on<text_ostream_t<char_t>>)
-auto operator<<(stream_T&stream,const representation_T& representation)noexcept_as(specified_numerical_representation_ostream_wrapper<representation_T,stream_T>(representation,stream)){
+inline auto operator<<(stream_T&stream,const representation_T& representation)noexcept_as(specified_numerical_representation_ostream_wrapper<representation_T,stream_T>(representation,stream)){
 	return specified_numerical_representation_ostream_wrapper<representation_T,stream_T>{representation,stream};
 }
 
@@ -30195,7 +30263,7 @@ struct specified_numerical_representation_istream_wrapper:virtual text_istream_t
 	const representation_T& representation;
 	stream_T& stream;
 
-	constexpr specified_numerical_representation_istream_wrapper(const representation_T& representation,stream_T& stream)noexcept:representation(representation),stream(stream){}
+	specified_numerical_representation_istream_wrapper(const representation_T& representation,stream_T& stream)noexcept:representation(representation),stream(stream){}
 
 	virtual int_t seek(seek_type dir,int_t off)noexcept_as(stream.seek(seek_type::cur,0)) override{return stream.seek(dir,off);}
 	virtual int_t tell()noexcept_as(stream.tell()) override{return stream.tell();}
@@ -30206,26 +30274,14 @@ struct specified_numerical_representation_istream_wrapper:virtual text_istream_t
 	virtual void read(char_t*data,size_t size)noexcept_as(stream.read(data,size)) override{
 		stream.read(data,size);
 	}
-	//operator>>
-	template<typename T>requires(was_not_an_ill_form(stream>>declvalue(T)) && !arithmetic_type<T>)
-	decltype(auto) operator>>(T&&a)noexcept_as(stream>>declvalue(T)){
-		if constexpr(type_info<decltype(stream>>declvalue(T))>!=type_info<stream_T&>)
-			return stream>>forward<T>(a);
-		else{
-			stream>>forward<T>(a);
-			return*this;
-		}
-	}
-	template<arithmetic_type T>requires was_not_an_ill_form(stream>>declvalue(string))
-	decltype(auto) operator>>(T&a)noexcept_as(stream>>declvalue(string)){
-		string s;
-		stream>>s;
-		a=from_string_get<T>(move(s),representation);
-		return*this;
-	}
+	
+	//获取包装的流
+	stream_T& get_wrapped_stream()noexcept{return stream;}
+	//获取数字表示方式
+	const representation_T& get_numerical_representation()const noexcept{return representation;}
 };
 template<numerical_representation representation_T,class stream_T> requires(type_info<stream_T>.base_on<text_istream_t<char_t>>)
-auto operator>>(stream_T&stream,const representation_T& representation)noexcept_as(specified_numerical_representation_istream_wrapper<representation_T,stream_T>(representation,stream)){
+inline auto operator>>(stream_T&stream,const representation_T& representation)noexcept_as(specified_numerical_representation_istream_wrapper<representation_T,stream_T>(representation,stream)){
 	return specified_numerical_representation_istream_wrapper<representation_T,stream_T>{representation,stream};
 }
 
@@ -30752,11 +30808,32 @@ protected:\
 	#line 13 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 
 	namespace stream_n{
+		using namespace numerical_representation_n;
+
+		const auto&default_numerical_representation=decimal;
+		const auto&default_bool_representation=common_bool_representation;
+
+		template<text_ostream stream_T>
+		decltype(auto)get_numerical_representation_of(stream_T&&stream)noexcept{
+			if constexpr was_not_an_ill_form(stream.get_numerical_representation())
+				return stream.get_numerical_representation();
+			else
+				return default_numerical_representation;
+		}
+
+		template<text_ostream stream_T>
+		decltype(auto)get_bool_representation_of(stream_T&&stream)noexcept{
+			if constexpr was_not_an_ill_form(stream.get_bool_representation())
+				return stream.get_bool_representation();
+			else
+				return default_bool_representation;
+		}
+
 		//arithmetic output only for text_ostream
 		template<arithmetic_type T,text_ostream stream_T> requires(type_info<remove_cvref<T>> != type_info<char_t> &&
 																   type_info<remove_cvref<T>> != type_info<bool>)
 		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(noexcept_text_ostream<stream_T>){
-			return stream << to_string(forward<T>(data));
+			return stream << to_string(forward<T>(data),get_numerical_representation_of(stream));
 		}
 
 		template<typename T,text_ostream stream_T> requires(!::std::is_arithmetic_v<remove_cvref<T>> &&
@@ -30767,12 +30844,13 @@ protected:\
 
 		template<typename T,text_ostream stream_T> requires(type_info<remove_cvref<T>> == type_info<bool>)
 		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(noexcept_text_ostream<stream_T>){
+			const auto&representation=get_bool_representation_of(stream);
 			if(data==true)
-				stream << es"true"_constexpr_str;
+				stream << representation.get_true();
 			elseif(data==false)
-				stream << es"false"_constexpr_str;
+				stream << representation.get_false();
 			else
-				stream << es"others("_constexpr_str << union_cast<unsigned_specific_size_t<sizeof(bool)>>(data) << ec(')');
+				stream << representation.get_other_prefix() << union_cast<unsigned_specific_size_t<sizeof(bool)>>(data) << representation.get_other_suffix();
 			return stream;
 		}
 
@@ -30951,7 +31029,7 @@ protected:\
 
 //file_end
 
-	#line 56 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
+	#line 78 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 }
 #endif
 
