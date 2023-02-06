@@ -26932,6 +26932,26 @@ public:
 	[[nodiscard]]friend bool is_even(const ubigint& x)noexcept{
 		return !is_odd(x);
 	}
+	//friend pow
+	[[nodiscard]]friend ubigint pow(ubigint x,ubigint y)noexcept{
+		ubigint aret=1u;
+		while(y){
+			if(is_odd(y))aret*=x;
+			x*=x;
+			y>>=1u;
+		}
+		return aret;
+	}
+	template<typename T> requires(::std::integral<T> && ::std::is_unsigned_v<T>)
+	[[nodiscard]]friend ubigint pow(ubigint x,T y)noexcept{
+		ubigint aret=1u;
+		while(y){
+			if(y&1u)aret*=x;
+			x*=x;
+			y>>=1u;
+		}
+		return aret;
+	}
 };
 
 //file_end
@@ -27416,6 +27436,14 @@ public:
 		--*this;
 		return tmp;
 	}
+	//friend is_odd
+	friend bool is_odd(const bigint& n)noexcept{
+		return is_odd(n._num);
+	}
+	//friend is_even
+	friend bool is_even(const bigint& n)noexcept{
+		return is_even(n._num);
+	}
 };
 
 //file_end
@@ -27593,8 +27621,8 @@ private:
 		_denominator(denominator)
 	{}
 public:
-	//friend build_ubigfloat_from_numerator_and_denominator
-	friend ubigfloat build_ubigfloat_from_numerator_and_denominator(const ubigint& numerator,const ubigint& denominator)noexcept{
+	//build_from_numerator_and_denominator
+	static ubigfloat build_from_numerator_and_denominator(const ubigint& numerator,const ubigint& denominator)noexcept{
 		return ubigfloat{numerator,denominator};
 	}
 	//friend abs
@@ -27921,7 +27949,35 @@ public:
 		_numerator/=g;
 		_denominator/=g;
 	}
+	//friend pow
+	friend [[nodiscard]] ubigfloat pow(ubigfloat base,ubigint exp)noexcept{
+		ubigfloat result=1u;
+		while(exp){
+			if(is_odd(exp))
+				result*=base;
+			base*=base;
+			exp>>=1u;
+		}
+		return result;
+	}
+	friend [[nodiscard]] ubigfloat pow(ubigfloat base,bigint exp)noexcept{
+		ubigfloat aret;
+		if(is_negative(exp))
+			aret={base._denominator,base._numerator};
+		else
+			aret=base;
+		ubigint uexp=abs(move(exp));
+		return pow(move(aret),move(uexp));
+	}
 };
+//pow of bigint
+[[nodiscard]]inline ubigfloat pow(ubigint base,bigint exp)noexcept{
+	return pow(ubigfloat(move(base)),move(exp));
+}
+template<typename T> requires(::std::is_integral_v<T> && ::std::is_unsigned_v<T>)
+[[nodiscard]]inline ubigfloat pow(T base,bigint exp)noexcept{
+	return pow(ubigint(base),move(exp));
+}
 //operator +-*= of ubigint and ubigfloat
 [[nodiscard]]inline ubigfloat operator+(const ubigint& lhs,const ubigfloat& rhs)noexcept{
 	return rhs + lhs;
@@ -27998,6 +28054,8 @@ public:
 	bigfloat(bigfloat&& other)noexcept=default;
 	bigfloat& operator=(const bigfloat& other)&noexcept=default;
 	bigfloat& operator=(bigfloat&& other)&noexcept=default;
+	bigfloat(const ubigfloat& number)noexcept:_num(number){}
+	bigfloat(ubigfloat&& number)noexcept:_num(move(number)){}
 	bigfloat(const bigint& other)noexcept:_num(abs(other)),_is_negative(is_negative(other)){}
 	bigfloat(bigint&& other)noexcept:_num(abs(move(other))),_is_negative(is_negative(other)){}
 	bigfloat(const ubigint& other)noexcept:_num(other){}
@@ -28580,6 +28638,17 @@ public:
 	//化简
 	void simplify()noexcept{
 		_num.simplify();
+	}
+	//friend pow
+	friend [[nodiscard]] bigfloat pow(bigfloat base,ubigint exp)noexcept{
+		bool sign=is_negative(base)&&is_odd(exp);
+		auto uret=pow(abs(base),exp);
+		return {move(uret),sign};
+	}
+	friend [[nodiscard]] bigfloat pow(bigfloat base,bigint exp)noexcept{
+		bool sign=is_negative(base)&&is_odd(exp);
+		auto uret=pow(abs(base),abs(exp));
+		return {move(uret),sign};
 	}
 };
 
@@ -29557,7 +29626,7 @@ namespace to_string_n{
 				auto& denominator=get_denominator_as_ref(num);
 				const auto radix=_repres.get_radix();
 				if(!numerator)
-					return to_string(move(numerator));
+					return _repres.get_char(0);
 				//化简为numerator*radix^exp
 				{
 					auto result=divmod(denominator,radix);
@@ -29596,20 +29665,15 @@ namespace to_string_n{
 				//先获取numerator和exp的字符串表示
 				aret=to_string(move(numerator));
 				auto expstr=to_string(exp);
-				/*两种情况：
-					若exp是负数，在exp的绝对值大于aret.size+expstr.size()+1时使用科学计数法有意义
-					若exp正数，在exp大于expstr.size()+1时使用科学计数法有意义
-				*/
 				if(exp<0){
-					if(size_t(-exp)>aret.size()+expstr.size()+1){
+					//首先计算需要的前置0的个数
+					const size_t need_zero=max((-exp)-aret.size()+1,size_t{});
+					if(need_zero>expstr.size()){//选取最短表达
 						aret+=_repres.get_exponent_separator();
 						aret+=expstr;
 					}
 					else{
-						//否则，插入小数点
-						//首先计算需要的前置0的个数
-						const ptrdiff_t need_zero=(-exp)-aret.size()+1;
-						if(need_zero>0)
+						if(need_zero)
 							aret.push_front(_repres.get_char(0),need_zero);
 						//插入小数点
 						const auto dot_pos=aret.size()+exp;
@@ -29754,94 +29818,57 @@ namespace to_string_n{
 	private:
 		//to_string定义完了，开始定义from_string_get
 		template<class T> requires(type_info<T> == type_info<ubigfloat>)
-		[[nodiscard]]ubigfloat from_string_get_base(const string&str,convert_state_t&state)const noexcept{
+		[[nodiscard]]ubigfloat from_string_get_base(string str,convert_state_t&state)const noexcept{
 			state={};
-			ubigint base;
-			const auto radix=_repres.get_radix();
-			const auto end=str.end();
-			auto i=str.begin();
-			for(;i!=end;++i){
-				char_t ch=*i;
-				if(ch==_repres.get_fractional_sign()){//小数：123.456
-					state.is_integer=false;
-					++i;
-					ubigint radix_power=1u;
-					for(;i!=end;++i){
-						radix_power*=radix;
-						base*=radix;
-						ch=*i;
-						if(ch==_repres.get_exponent_separator()){//科学计数法：123.456e789
-							++i;
-							auto exp=from_string_get<ptrdiff_t>(string{i,end},state);
-							if(!state.success)
-								return {};
-							ubigfloat aret{move(base)};
-							aret/=radix_power;
-							while(exp<0){
-								aret/=radix;
-								++exp;
-							}
-							while(exp>0){
-								aret*=radix;
-								--exp;
-							}
-							return aret;
-						}
-						if(_repres.is_valid_char(ch))
-							base+=_repres.get_index(ch);
-						else{//error
-							state.success=false;
-							return {};
-						}
-					}
-					ubigfloat aret{move(base)};
-					aret/=radix_power;
-					return aret;
-				}
-				elseif(ch==_repres.get_fractional_separator()){//分数：123/456
-					state.is_integer=false;
-					state.is_finite=false;
-					++i;
-					ubigint denopart;
-					for(;i!=end;++i){
-						denopart*=radix;
-						ch=*i;
-						if(_repres.is_valid_char(ch))
-							denopart+=_repres.get_index(ch);
-						else{//error
-							state.success=false;
-							return {};
-						}
-					}
-					ubigfloat aret{move(base)};
-					aret/=denopart;
-					return aret;
-				}
-				elseif(ch==_repres.get_exponent_separator()){//科学计数法：123e456
-					++i;
-					auto exp=from_string_get<ptrdiff_t>(string{i,end},state);
-					if(!state.success)
+			{
+				auto exponent_pos = str.find_last_of(_repres.get_exponent_separator());
+				if(exponent_pos != string::npos){
+					auto expstr = str.substr(exponent_pos+1);
+					str = str.substr(0,exponent_pos);
+					auto exp = from_string_get<bigint>(expstr,state);
+					if(not state.success)
 						return {};
-					ubigfloat aret{move(base)};
-					while(exp<0){
-						aret/=radix;
-						++exp;
-					}
-					while(exp>0){
-						aret*=radix;
-						--exp;
-					}
-					return aret;
-				}
-				base*=radix;
-				if(_repres.is_valid_char(ch))
-					base+=_repres.get_index(ch);
-				else{//error
-					state.success=false;
-					return {};
+					auto base = from_string_get_base<T>(str,state);
+					if(not state.success)
+						return {};
+					return base*pow(_repres.get_radix(),exp);
 				}
 			}
-			return base;//这里直接他妈的返回了一个整数
+			{
+				auto fractional_pos = str.find_first_of(_repres.get_fractional_separator());//分数
+				if(fractional_pos != string::npos){
+					auto numeratorstr = str.substr(0,fractional_pos);
+					str = str.substr(fractional_pos+1);
+					auto& denominatorstr = str;
+					auto numerator = from_string_get_base<T>(numeratorstr,state);
+					if(not state.success)
+						return {};
+					auto denominator = from_string_get_base<T>(denominatorstr,state);
+					if(not state.success)
+						return {};
+					return numerator/denominator;
+				}
+			}
+			{
+				auto fractional_pos = str.find_first_of(_repres.get_fractional_sign());//小数
+				if(fractional_pos != string::npos){
+					auto integerstr = str.substr(0,fractional_pos);
+					str = str.substr(fractional_pos+1);
+					auto& fractionalstr = str;
+					auto integer = from_string_get<ubigint>(integerstr,state);
+					if(not state.success)
+						return {};
+					auto fractional = from_string_get<ubigint>(fractionalstr,state);
+					if(not state.success)
+						return {};
+					auto saclen = pow(ubigint{_repres.get_radix()},fractionalstr.size());
+					auto numerator = integer*saclen+fractional;
+					auto denominator = saclen;
+					return ubigfloat::build_from_numerator_and_denominator(numerator, denominator);
+				}
+			}
+			//纯纯的整数
+			return from_string_get<ubigint>(str,state);
 		}
 		//ubigfloat
 		template<class T> requires(type_info<T> == type_info<ubigfloat>)
