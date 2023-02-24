@@ -268,13 +268,13 @@ namespace elc::defs{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -1250,7 +1250,7 @@ TYPE_MAPPER(uint_fast64_t)
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -1434,13 +1434,13 @@ namespace elc::defs{ //在elc::defs中定义内容
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -3256,7 +3256,7 @@ namespace null_ptr_n{
 	enable_adl(the_get_null_ptr);
 	template<typename T>
 	[[nodiscard]]constexpr auto get_null_ptr()noexcept{
-		suppress_msvc_warning(26462)//貌似msvc在这里有bug
+		push_and_disable_msvc_warning(26462);//貌似msvc在这里有bug
 		constexpr auto null_as_T = static_cast<T*>(nullptr);
 		if constexpr(was_not_an_ill_form(the_get_null_ptr(null_as_T)))
 			return the_get_null_ptr(null_as_T);
@@ -3266,6 +3266,7 @@ namespace null_ptr_n{
 		}
 		else
 			return null_as_T;
+		pop_msvc_warning();
 	}
 
 
@@ -3852,7 +3853,7 @@ using array_like_n::array_end_by_zero_t;
 	每个T的可能性大小
 */
 template<class T> requires ::std::is_integral_v<T>
-constexpr size_t number_of_possible_values_per=uintmax_t(max(type_info<::std::make_unsigned_t<T>>))+1;
+constexpr auto number_of_possible_values_per=uintmax_t(max(type_info<::std::make_unsigned_t<T>>))+1;
 
 /*!
 	功能: byte* 类型数据转换为 T&，不进行任何检查
@@ -4219,8 +4220,9 @@ namespace hash_n{
 				//关於此,咱确信咱发现一种美妙的证法来保证这个优化不影响结果,但可惜凋可怜的脑容量不足以让他看懂.
 				constexpr size_t bit_range_max=bitnum_of(hash_base_t);
 				constexpr hash_base_t void_hash{nothing};
-				suppress_msvc_warning(26475)//强制转换警告diss.
+				push_and_disable_msvc_warning(26475)//强制转换警告diss.
 				constexpr hash_base_t npos_hash{hash_base_t(-1)};
+				pop_msvc_warning();
 				constexpr size_t bitnumof_void=bit_range_max*BIT_POSSIBILITY;
 
 				size=size%bitnumof_void;
@@ -4458,10 +4460,11 @@ namespace range_n{
 			}
 		}
 	};
-	suppress_msvc_warning(26475)//强制转换警告diss
+	push_and_disable_msvc_warning(26475);//强制转换警告diss
 	//  npos
 	/// 用以指定不存在的位置
 	static constexpr size_t npos = size_t(-1);
+	pop_msvc_warning();
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr T* in_range(const remove_cvref<T>&pattern,const array_like_view_t<T>&range){
@@ -5514,7 +5517,7 @@ public:
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -5819,13 +5822,13 @@ elc依赖的基础函数.
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -6345,7 +6348,7 @@ namespace overhead_n{
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -6650,13 +6653,13 @@ elc依赖的基础函数.
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -9368,7 +9371,7 @@ inline constexpr bool ispunct(char_t c)noexcept{
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -9575,13 +9578,13 @@ inline constexpr bool ispunct(char_t c)noexcept{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -9957,7 +9960,7 @@ protected:\
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -10224,13 +10227,13 @@ elc使用的字符串.
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -10524,7 +10527,7 @@ namespace elc::defs::locale::str{
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -10710,13 +10713,13 @@ namespace elc::defs{ //在elc::defs中定义内容
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -14834,9 +14837,10 @@ namespace function_n{
 			catch(void*){}
 			return note::fail;
 		}
-		suppress_msvc_warning(26440)//nothrow警告diss
+		push_and_disable_msvc_warning(26440);//nothrow警告diss
 		void operator=(const this_t&a){_m=a._m;}
 		Ret_t call(Args_t&&...rest)const{return _m->call(forward<Args_t>(rest)...);}
+		pop_msvc_warning();
 	};
 
 	template<class T,bool promise_nothrow_at_destruct>
@@ -14972,8 +14976,9 @@ namespace function_n{
 		}
 
 		Ret_t operator()(Args_t...args)const noexcept(nothrow){
-			suppress_msvc_warning(26447)
+			push_and_disable_msvc_warning(26447);
 			return base_t::call(forward<Args_t>(args)...);
+			pop_msvc_warning();
 		}
 
 	private:
@@ -15259,14 +15264,14 @@ namespace function_n{
 			return bool(_m);
 		}
 
+		push_and_disable_msvc_warning(26447);
 		Ret_t operator()(Args_t...args)noexcept{
-			suppress_msvc_warning(26447)
 			return base_t::call(forward<Args_t>(args)...);
 		}
 		Ret_t operator()(Args_t...args)const noexcept{
-			suppress_msvc_warning(26447)
 			return base_t::call(forward<Args_t>(args)...);
 		}
+		pop_msvc_warning();
 
 	private:
 		//以下是突然想加的功能(没什么用<迷惑行为大赏>).
@@ -15479,8 +15484,9 @@ public:
 	}
 	base_stack_t(const this_t&a)noexcept_as(declvalue(this_t).copy()):base_stack_t(a.copy()){}
 	~base_stack_t()noexcept(unget.nothrow<data_t>){
-		suppress_msvc_warning(26494)//未初始化警告diss
+		push_and_disable_msvc_warning(26494);//未初始化警告diss
 		data_t*tmp;
+		pop_msvc_warning();
 		while(_m!=null_ptr){
 			tmp=_m;
 			_m=_m->_next;
@@ -15790,7 +15796,7 @@ namespace hash_table_n{
 		template<typename U>
 		[[nodiscard]]maybe_fail_reference<T>find(U&&a)noexcept(find_nothrow<U>){
 			auto&bucket=find_bucket(hash(a));
-			suppress_msvc_warning(26496)//?
+			push_and_disable_msvc_warning(26496)//?
 			auto reference=bucket.find(a);
 			if constexpr(is_unstable_hash<T>)
 				if(reference.fail()){
@@ -15802,6 +15808,7 @@ namespace hash_table_n{
 							break;
 					}
 				}
+			pop_msvc_warning();
 			return reference;
 		}
 		[[nodiscard]]bool in_table(const T&a)noexcept_as(declvalue(this_t).find(a).not_fail()){
@@ -16730,7 +16737,7 @@ inline void test_end(){
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -17044,13 +17051,13 @@ namespace elc::defs{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -17370,7 +17377,7 @@ inline void test_end(){
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -17689,13 +17696,13 @@ namespace elc::defs{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -18455,7 +18462,7 @@ inline void test_end(){
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -18693,13 +18700,13 @@ namespace elc::defs{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -18970,7 +18977,7 @@ protected:\
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -19173,13 +19180,13 @@ namespace elc::defs{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -19495,7 +19502,7 @@ protected:\
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -19707,13 +19714,13 @@ namespace elc::defs{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -21053,7 +21060,7 @@ inline void test_end(){
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -21281,13 +21288,13 @@ namespace elc::defs{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -21562,7 +21569,7 @@ protected:\
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -21912,13 +21919,13 @@ namespace elc::defs{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -22334,7 +22341,7 @@ protected:
 	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form(size_t begin)noexcept=0;
 private:
 	[[nodiscard]]bool base_equal_with(ptr_t with)noexcept(equal.nothrow<char_T>){
-		suppress_msvc_warning(26494)//未初始化警告diss
+		push_and_disable_msvc_warning(26494);//未初始化警告diss
 		bool aret;
 		{
 			//同结构比较优化比较方式
@@ -22344,6 +22351,7 @@ private:
 			else
 				aret=default_equal_method(with);
 		}
+		pop_msvc_warning();
 		//如果equal，则eq处理
 		if(aret)
 			equivalent_optimization(this,with);
@@ -22459,7 +22467,7 @@ public:
 	}
 private:
 	[[nodiscard]]compare_type base_compare_with(ptr_t with)noexcept(compare.nothrow<char_T>){
-		suppress_msvc_warning(26494)//未初始化警告diss
+		push_and_disable_msvc_warning(26494);//未初始化警告diss
 		compare_type aret;
 		{
 			//同结构比较优化比较方式
@@ -22469,6 +22477,7 @@ private:
 			else
 				aret=default_compare_method(with);
 		}
+		pop_msvc_warning();
 		//如果equal，则eq处理
 		if(aret==0)
 			equivalent_optimization(this,with);
@@ -23482,8 +23491,9 @@ public:
 	}
 protected:
 	virtual hash_t get_hash_detail(ptr_t&)noexcept(hash_nothrow)override final{
-		suppress_msvc_warning(26494)//未初始化警告diss
+		push_and_disable_msvc_warning(26494);//未初始化警告diss
 		hash_t result;
+		pop_msvc_warning();
 		if(_used_size){
 			const char_T* head_begin=_m.end()-_used_size;
 			result=hash(head_begin,_used_size);
@@ -24094,8 +24104,9 @@ public:
 	}
 protected:
 	virtual hash_t get_hash_detail(ptr_t&)noexcept(hash_nothrow)override final{
-		suppress_msvc_warning(26494)//未初始化警告diss
+		push_and_disable_msvc_warning(26494);//未初始化警告diss
 		hash_t result;
+		pop_msvc_warning();
 		if(_before_size){
 			result=_before->get_hash(_before);
 			if(_after_size)
@@ -25923,12 +25934,13 @@ protected:
 		typename stream_t::iostate		 state = stream_t::goodbit;
 
 		size_t size = str.size();
-		suppress_msvc_warning(26494);//未初始化警告diss
+		push_and_disable_msvc_warning(26494);//未初始化警告diss
 		size_t pad;
 		if(os.width() <= 0 || static_cast<size_t>(os.width()) <= size)
 			pad = 0;
 		else
 			pad = static_cast<size_t>(os.width()) - size;
+		pop_msvc_warning();
 
 		const typename stream_t::sentry isok(os);
 
@@ -26015,7 +26027,7 @@ using string_n::string;
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -26284,13 +26296,13 @@ namespace elc{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -26566,7 +26578,7 @@ protected:\
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -26754,13 +26766,13 @@ namespace elc::defs{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -27134,7 +27146,7 @@ inline void test_end(){
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -27354,13 +27366,13 @@ namespace elc::defs{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -27631,7 +27643,7 @@ protected:\
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -27834,13 +27846,13 @@ namespace elc::defs{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -28115,7 +28127,7 @@ protected:\
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
@@ -28327,13 +28339,13 @@ namespace elc::defs{
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
 #endif
 #if defined(_MSC_VER)
-	#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__))
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
 	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
 	#define push_msvc_warning() __pragma(warning(push))
 	#define pop_msvc_warning() __pragma(warning(pop))
 	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
 #else
-	#define suppress_msvc_warning(...)
+	//#define suppress_msvc_warning(...)
 	#define disable_msvc_warning(...)
 	#define push_msvc_warning()
 	#define pop_msvc_warning()
@@ -28680,7 +28692,7 @@ inline void test_end{
 #if defined(_MSC_VER)
 	#pragma warning(pop)
 #endif
-#undef suppress_msvc_warning
+//#undef suppress_msvc_warning
 #undef disable_msvc_warning
 #undef push_msvc_warning
 #undef pop_msvc_warning
