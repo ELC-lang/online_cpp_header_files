@@ -3849,9 +3849,9 @@ template<class T>
 	用法: union_cast<U>(T&) -> U&
 */
 template<class U,class T>
-[[nodiscard]]force_inline constexpr U&union_cast(T&t)noexcept{return*reinterpret_cast<U*>(&t);}
+[[nodiscard]]force_inline constexpr U&union_cast(T&&t)noexcept{return*reinterpret_cast<U*>(&t);}
 template<class U,class T>
-[[nodiscard]]force_inline constexpr U&launder_union_cast(T&t)noexcept{return*::std::launder(union_cast<U>(t));}
+[[nodiscard]]force_inline constexpr U&launder_union_cast(T&&t)noexcept{return*::std::launder(union_cast<U>(t));}
 
 /*!
 	功能: data_block辅助变量模板，接受数个类型并表现为其中的最大对齐值
@@ -6195,7 +6195,9 @@ namespace overhead_n{
 		size被保证不为0
 		*/
 		[[nodiscard]]inline byte*aligned_alloc(size_t align,size_t size)noexcept{
+			push_and_disable_msvc_warning(26494);//未初始化警告diss
 			void* aret;//返回值放这里
+			pop_msvc_warning();
 
 			#if SYSTEM_TYPE == windows
 				if constexpr(use_debug_alloc_lib)
@@ -6234,7 +6236,9 @@ namespace overhead_n{
 			#if defined(ELC_TEST_COUNT_MEMORY_ALLOC)
 				const auto osize=get_size_of_alloc(ptr,align);
 			#endif
+			push_and_disable_msvc_warning(26494);//未初始化警告diss
 			void* aret;//返回值放这里
+			pop_msvc_warning();
 
 			#if SYSTEM_TYPE == windows
 				if constexpr(use_debug_alloc_lib)
@@ -6446,7 +6450,7 @@ namespace overhead_n{
 
 //file_end
 
-		#line 196 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
+		#line 200 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
 	}
 	//
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
@@ -6466,7 +6470,7 @@ namespace overhead_n{
 
 //file_end
 
-	#line 199 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
+	#line 203 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
 #endif
 
 //file_end
@@ -8674,6 +8678,9 @@ typedef string_view_t<char32_t>string_view_u32_t;
 inline constexpr size_t utf16_to_utf8_code_size  = 2;
 inline constexpr size_t utf32_to_utf8_code_size  = 4;
 inline constexpr size_t utf32_to_utf16_code_size = 2;
+
+template<class char_T>
+inline constexpr size_t to_u32_code_size=sizeof(char32_t)/sizeof(char_T);
 
 using range_n::npos;
 inline namespace convert_impl{

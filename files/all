@@ -3850,9 +3850,9 @@ template<class T>
 	用法: union_cast<U>(T&) -> U&
 */
 template<class U,class T>
-[[nodiscard]]force_inline constexpr U&union_cast(T&t)noexcept{return*reinterpret_cast<U*>(&t);}
+[[nodiscard]]force_inline constexpr U&union_cast(T&&t)noexcept{return*reinterpret_cast<U*>(&t);}
 template<class U,class T>
-[[nodiscard]]force_inline constexpr U&launder_union_cast(T&t)noexcept{return*::std::launder(union_cast<U>(t));}
+[[nodiscard]]force_inline constexpr U&launder_union_cast(T&&t)noexcept{return*::std::launder(union_cast<U>(t));}
 
 /*!
 	功能: data_block辅助变量模板，接受数个类型并表现为其中的最大对齐值
@@ -6196,7 +6196,9 @@ namespace overhead_n{
 		size被保证不为0
 		*/
 		[[nodiscard]]inline byte*aligned_alloc(size_t align,size_t size)noexcept{
+			push_and_disable_msvc_warning(26494);//未初始化警告diss
 			void* aret;//返回值放这里
+			pop_msvc_warning();
 
 			#if SYSTEM_TYPE == windows
 				if constexpr(use_debug_alloc_lib)
@@ -6235,7 +6237,9 @@ namespace overhead_n{
 			#if defined(ELC_TEST_COUNT_MEMORY_ALLOC)
 				const auto osize=get_size_of_alloc(ptr,align);
 			#endif
+			push_and_disable_msvc_warning(26494);//未初始化警告diss
 			void* aret;//返回值放这里
+			pop_msvc_warning();
 
 			#if SYSTEM_TYPE == windows
 				if constexpr(use_debug_alloc_lib)
@@ -6447,7 +6451,7 @@ namespace overhead_n{
 
 //file_end
 
-		#line 196 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
+		#line 200 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
 	}
 	//
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
@@ -6467,7 +6471,7 @@ namespace overhead_n{
 
 //file_end
 
-	#line 199 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
+	#line 203 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
 #endif
 
 //file_end
@@ -8675,6 +8679,9 @@ typedef string_view_t<char32_t>string_view_u32_t;
 inline constexpr size_t utf16_to_utf8_code_size  = 2;
 inline constexpr size_t utf32_to_utf8_code_size  = 4;
 inline constexpr size_t utf32_to_utf16_code_size = 2;
+
+template<class char_T>
+inline constexpr size_t to_u32_code_size=sizeof(char32_t)/sizeof(char_T);
 
 using range_n::npos;
 inline namespace convert_impl{
@@ -17963,18 +17970,27 @@ no_vtable_struct base_stream_t:abstract_base<base_stream_t>{
 	virtual ~base_stream_t()=default;
 	virtual int_t seek(seek_type,int_t)=0;
 	virtual int_t tell(){return this->seek(cur,0);}
-	virtual void seek_to(int_t)=0;
+	virtual bool seek_to(int_t)=0;
 	virtual void sync()=0;
 	virtual void flush()=0;
 	virtual void close()=0;
 };
-no_vtable_struct base_istream_t:abstract_base<base_istream_t>,virtual base_stream_t{};
+no_vtable_struct base_not_unreadable_istream_t:abstract_base<base_not_unreadable_istream_t>,virtual base_stream_t{
+	virtual bool is_end()=0;
+	virtual bool waitting_for_data()=0;
+	virtual explicit operator bool(){
+		return !this->is_end();
+	}
+};
+no_vtable_struct base_istream_t:abstract_base<base_istream_t>,virtual base_not_unreadable_istream_t{};
 no_vtable_struct base_ostream_t:abstract_base<base_ostream_t>,virtual base_stream_t{};
 no_vtable_struct base_iostream_t:abstract_base<base_iostream_t>,virtual base_ostream_t,virtual base_istream_t{};
 
 //concept: any class that base on base_stream_t
 template<class T>
 concept stream_class=is_base_of<base_stream_t,T>;
+template<class T>
+concept not_unreadable_istream_class=is_base_of<base_not_unreadable_istream_t,T>;
 template<class T>
 concept istream_class=is_base_of<base_istream_t,T>;
 template<class T>
@@ -17986,12 +18002,19 @@ concept iostream_class=is_base_of<base_iostream_t,T>;
 no_vtable_struct noexcept_stream_t:abstract_base<noexcept_stream_t>,virtual base_stream_t{
 	virtual int_t seek(seek_type,int_t)noexcept override=0;
 	virtual int_t tell()noexcept override{return this->seek(cur,0);}
-	virtual void seek_to(int_t)noexcept override=0;
+	virtual bool seek_to(int_t)noexcept override=0;
 	virtual void sync()noexcept override=0;
 	virtual void flush()noexcept override=0;
 	virtual void close()noexcept override=0;
 };
-no_vtable_struct noexcept_istream_t:abstract_base<noexcept_istream_t>,virtual base_istream_t,virtual noexcept_stream_t{};
+no_vtable_struct noexcept_not_unreadable_istream_t:abstract_base<noexcept_not_unreadable_istream_t>,virtual base_not_unreadable_istream_t{
+	virtual bool is_end()noexcept override=0;
+	virtual bool waitting_for_data()noexcept override=0;
+	virtual explicit operator bool()noexcept override{
+		return !this->is_end();
+	}
+};
+no_vtable_struct noexcept_istream_t:abstract_base<noexcept_istream_t>,virtual base_istream_t,virtual noexcept_stream_t,virtual noexcept_not_unreadable_istream_t{};
 no_vtable_struct noexcept_ostream_t:abstract_base<noexcept_ostream_t>,virtual base_ostream_t,virtual noexcept_stream_t{};
 no_vtable_struct noexcept_iostream_t:abstract_base<noexcept_iostream_t>,virtual base_iostream_t,virtual noexcept_ostream_t,virtual noexcept_istream_t{};
 static_assert(noexcept(((noexcept_iostream_t*)(nullptr))->~noexcept_iostream_t()));
@@ -18000,6 +18023,8 @@ static_assert(noexcept(((noexcept_iostream_t*)(nullptr))->sync()));
 //concept: any class that base on noexcept_stream_t
 template<class T>
 concept noexcept_stream_class=is_base_of<noexcept_stream_t,T>;
+template<class T>
+concept noexcept_not_unreadable_istream_class=is_base_of<noexcept_not_unreadable_istream_t,T>;
 template<class T>
 concept noexcept_istream_class=is_base_of<noexcept_istream_t,T>;
 template<class T>
@@ -18011,10 +18036,28 @@ concept noexcept_iostream_class=is_base_of<noexcept_iostream_t,T>;
 template<class char_T>
 no_vtable_struct text_stream_t:abstract_base<text_stream_t<char_T>>,virtual base_stream_t{
 	typedef char_T char_type;
+	typedef char_type data_type;
 };
 template<class char_T>
-no_vtable_struct text_istream_t:abstract_base<text_istream_t<char_T>>,virtual base_istream_t,virtual text_stream_t<char_T>{
+no_vtable_struct text_not_unreadable_istream_t:abstract_base<text_not_unreadable_istream_t<char_T>>,virtual base_not_unreadable_istream_t,virtual text_stream_t<char_T>{
 	virtual size_t read(char_T*buf,size_t size)=0;
+};
+template<class char_T>
+no_vtable_struct text_istream_t:abstract_base<text_istream_t<char_T>>,virtual base_istream_t,virtual text_not_unreadable_istream_t<char_T>{
+	virtual void unread(const char_T*buf,size_t size)=0;
+	virtual char_T peek(){
+		char_T buf;
+		const size_t size=this->read(&buf,1);
+		if(size==0)return 0;
+		this->unread(&buf,1);
+		return buf;
+	}
+	virtual char_T get(){
+		char_T buf;
+		const size_t size=this->read(&buf,1);
+		if(size==0)return 0;
+		return buf;
+	}
 };
 template<class char_T>
 no_vtable_struct text_ostream_t:abstract_base<text_ostream_t<char_T>>,virtual base_ostream_t,virtual text_stream_t<char_T>{
@@ -18027,6 +18070,8 @@ no_vtable_struct text_iostream_t:abstract_base<text_iostream_t<char_T>>,virtual 
 template<class T>
 concept text_stream_class=is_base_of<text_stream_t<typename remove_cvref<T>::char_type>,T>;
 template<class T>
+concept text_not_unreadable_istream_class=is_base_of<text_not_unreadable_istream_t<typename remove_cvref<T>::char_type>,T>;
+template<class T>
 concept text_istream_class=is_base_of<text_istream_t<typename remove_cvref<T>::char_type>,T>;
 template<class T>
 concept text_ostream_class=is_base_of<text_ostream_t<typename remove_cvref<T>::char_type>,T>;
@@ -18034,6 +18079,8 @@ template<class T>
 concept text_iostream_class=is_base_of<text_iostream_t<typename remove_cvref<T>::char_type>,T>;
 template<class T>
 concept text_stream=is_base_of<text_stream_t<char_t>,T>;
+template<class T>
+concept text_not_unreadable_istream=is_base_of<text_not_unreadable_istream_t<char_t>,T>;
 template<class T>
 concept text_istream=is_base_of<text_istream_t<char_t>,T>;
 template<class T>
@@ -18043,11 +18090,30 @@ concept text_iostream=is_base_of<text_iostream_t<char_t>,T>;
 
 //noexcept_
 template<class char_T>
-no_vtable_struct noexcept_text_istream_t:abstract_base<noexcept_text_istream_t<char_T>>,virtual noexcept_istream_t,virtual text_istream_t<char_T>{
+no_vtable_struct noexcept_text_stream_t:abstract_base<noexcept_text_stream_t<char_T>>,virtual text_stream_t<char_T>,virtual noexcept_stream_t{};
+template<class char_T>
+no_vtable_struct noexcept_not_unreadable_text_istream_t:abstract_base<noexcept_not_unreadable_text_istream_t<char_T>>,virtual noexcept_text_stream_t<char_T>,virtual noexcept_not_unreadable_istream_t,virtual text_not_unreadable_istream_t<char_T>{
 	virtual size_t read(char_T*buf,size_t size)noexcept override=0;
 };
 template<class char_T>
-no_vtable_struct noexcept_text_ostream_t:abstract_base<noexcept_text_ostream_t<char_T>>,virtual noexcept_ostream_t,virtual text_ostream_t<char_T>{
+no_vtable_struct noexcept_text_istream_t:abstract_base<noexcept_text_istream_t<char_T>>,virtual noexcept_istream_t,virtual noexcept_not_unreadable_text_istream_t<char_T>,virtual text_istream_t<char_T>{
+	virtual void unread(const char_T*buf,size_t size)noexcept override=0;
+	virtual char_T peek()noexcept override{
+		char_T buf;
+		const size_t size=this->read(&buf,1);
+		if(size==0)return 0;
+		this->unread(&buf,1);
+		return buf;
+	}
+	virtual char_T get()noexcept override{
+		char_T buf;
+		const size_t size=this->read(&buf,1);
+		if(size==0)return 0;
+		return buf;
+	}
+};
+template<class char_T>
+no_vtable_struct noexcept_text_ostream_t:abstract_base<noexcept_text_ostream_t<char_T>>,virtual noexcept_text_stream_t<char_T>,virtual noexcept_ostream_t,virtual text_ostream_t<char_T>{
 	virtual void write(const char_T*buf,size_t size)noexcept override=0;
 };
 template<class char_T>
@@ -18057,11 +18123,17 @@ no_vtable_struct noexcept_text_iostream_t:abstract_base<noexcept_text_iostream_t
 
 //concept: any class that base on noexcept_text_stream<char_t>
 template<class T>
+concept noexcept_text_stream_class=is_base_of<noexcept_text_stream_t<typename remove_cvref<T>::char_type>,T>;
+template<class T>
+concept noexcept_not_unreadable_text_istream_class=is_base_of<noexcept_not_unreadable_text_istream_t<typename remove_cvref<T>::char_type>,T>;
+template<class T>
 concept noexcept_text_istream_class=is_base_of<noexcept_text_istream_t<typename remove_cvref<T>::char_type>,T>;
 template<class T>
 concept noexcept_text_ostream_class=is_base_of<noexcept_text_ostream_t<typename remove_cvref<T>::char_type>,T>;
 template<class T>
 concept noexcept_text_iostream_class=is_base_of<noexcept_text_iostream_t<typename remove_cvref<T>::char_type>,T>;
+template<class T>
+concept noexcept_text_not_unreadable_istream=is_base_of<noexcept_not_unreadable_text_istream_t<char_t>,T>;
 template<class T>
 concept noexcept_text_istream=is_base_of<noexcept_text_istream_t<char_t>,T>;
 template<class T>
@@ -18070,14 +18142,24 @@ template<class T>
 concept noexcept_text_iostream=is_base_of<noexcept_text_iostream_t<char_t>,T>;
 
 //data streams
-no_vtable_struct data_istream_t:abstract_base<data_istream_t>,virtual base_istream_t{
+no_vtable_struct data_stream_t:abstract_base<data_stream_t>,virtual base_stream_t{
+	typedef byte data_type;
+};
+no_vtable_struct data_not_unreadable_istream_t:abstract_base<data_not_unreadable_istream_t>,virtual data_stream_t,virtual base_not_unreadable_istream_t{
 	virtual size_t read(byte*buf,size_t size)=0;
 	template<class T> requires ::std::is_trivially_copyable_v<T>
 	size_t read(T*v,size_t size=1){
 		return this->read(cast_to_data(v),size*sizeof(T))/sizeof(T);
 	}
 };
-no_vtable_struct data_ostream_t:abstract_base<data_ostream_t>,virtual base_ostream_t{
+no_vtable_struct data_istream_t:abstract_base<data_istream_t>,virtual base_istream_t,virtual data_not_unreadable_istream_t{
+	virtual void unread(const byte*buf,size_t size)=0;
+	template<class T> requires ::std::is_trivially_copyable_v<T>
+	void unread(const T*v,size_t size=1){
+		this->unread(cast_to_data(v),size*sizeof(T));
+	}
+};
+no_vtable_struct data_ostream_t:abstract_base<data_ostream_t>,virtual data_stream_t,virtual base_ostream_t{
 	virtual void write(const byte*buf,size_t size)=0;
 	template<class T> requires ::std::is_trivially_copyable_v<T>
 	void write(const T*v,size_t size=1){
@@ -18088,6 +18170,10 @@ no_vtable_struct data_iostream_t:abstract_base<data_iostream_t>,virtual base_ios
 
 //concept: any class that base on data_stream
 template<class T>
+concept data_stream_class=is_base_of<data_stream_t,T>;
+template<class T>
+concept data_not_unreadable_istream_class=is_base_of<data_not_unreadable_istream_t,T>;
+template<class T>
 concept data_istream_class=is_base_of<data_istream_t,T>;
 template<class T>
 concept data_ostream_class=is_base_of<data_ostream_t,T>;
@@ -18095,14 +18181,22 @@ template<class T>
 concept data_iostream_class=is_base_of<data_iostream_t,T>;
 
 //noexcept_
-no_vtable_struct noexcept_data_istream_t:abstract_base<noexcept_data_istream_t>,virtual noexcept_istream_t,virtual data_istream_t{
+no_vtable_struct noexcept_data_stream_t:abstract_base<noexcept_stream_t>,virtual noexcept_stream_t,virtual data_stream_t{};
+no_vtable_struct noexcept_not_unreadable_data_istream_t:abstract_base<noexcept_not_unreadable_data_istream_t>,virtual noexcept_data_stream_t,virtual noexcept_not_unreadable_istream_t,virtual data_not_unreadable_istream_t{
 	virtual size_t read(byte*buf,size_t size)noexcept override=0;
 	template<class T> requires ::std::is_trivially_copyable_v<T>
 	size_t read(T*v,size_t size=1)noexcept{
 		return this->read(cast_to_data(v),size*sizeof(T))/sizeof(T);
 	}
 };
-no_vtable_struct noexcept_data_ostream_t:abstract_base<noexcept_data_ostream_t>,virtual noexcept_ostream_t,virtual data_ostream_t{
+no_vtable_struct noexcept_data_istream_t:abstract_base<noexcept_data_istream_t>,virtual noexcept_not_unreadable_data_istream_t,virtual noexcept_istream_t,virtual data_istream_t{
+	virtual void unread(const byte*buf,size_t size)noexcept override=0;
+	template<class T> requires ::std::is_trivially_copyable_v<T>
+	void unread(const T*v,size_t size=1)noexcept{
+		this->unread(cast_to_data(v),size*sizeof(T));
+	}
+};
+no_vtable_struct noexcept_data_ostream_t:abstract_base<noexcept_data_ostream_t>,virtual noexcept_data_stream_t,virtual noexcept_ostream_t,virtual data_ostream_t{
 	virtual void write(const byte*buf,size_t size)noexcept override=0;
 	template<class T> requires ::std::is_trivially_copyable_v<T>
 	void write(const T*v,size_t size=1)noexcept{
@@ -18115,6 +18209,10 @@ no_vtable_struct noexcept_data_iostream_t:abstract_base<noexcept_data_iostream_t
 
 //concept: any class that base on noexcept_data_stream
 template<class T>
+concept noexcept_data_stream_class=is_base_of<noexcept_data_stream_t,T>;
+template<class T>
+concept noexcept_not_unreadable_data_istream_class=is_base_of<noexcept_not_unreadable_data_istream_t,T>;
+template<class T>
 concept noexcept_data_istream_class=is_base_of<noexcept_data_istream_t,T>;
 template<class T>
 concept noexcept_data_ostream_class=is_base_of<noexcept_data_ostream_t,T>;
@@ -18122,27 +18220,34 @@ template<class T>
 concept noexcept_data_iostream_class=is_base_of<noexcept_data_iostream_t,T>;
 
 pop_msvc_warning();
+
 //special streams
 template<class char_T>
 struct null_text_stream:noexcept_text_iostream_t<char_T>,instance_struct<null_text_stream<char_T>>{
 	virtual int_t seek(seek_type,int_t)noexcept override{return 0;}
 	virtual int_t tell()noexcept override{return 0;}
-	virtual void seek_to(int_t)noexcept override{}
+	virtual bool seek_to(int_t)noexcept override{return true;}
 	virtual void sync()noexcept override{}
 	virtual void flush()noexcept override{}
 	virtual void close()noexcept override{}
 	virtual void write(const char_T*,size_t)noexcept override{}
 	virtual size_t read(char_T*,size_t)noexcept override{return 0;}
+	virtual void unread(const char_T*,size_t)noexcept override{}
+	virtual bool is_end()noexcept override{return false;}
+	virtual bool waitting_for_data()noexcept override{return false;}
 };
 struct null_data_stream:noexcept_data_iostream_t,instance_struct<null_data_stream>{
 	virtual int_t seek(seek_type,int_t)noexcept override{return 0;}
 	virtual int_t tell()noexcept override{return 0;}
-	virtual void seek_to(int_t)noexcept override{}
+	virtual bool seek_to(int_t)noexcept override{return true;}
 	virtual void sync()noexcept override{}
 	virtual void flush()noexcept override{}
 	virtual void close()noexcept override{}
 	virtual void write(const byte*,size_t)noexcept override{}
 	virtual size_t read(byte*,size_t)noexcept override{return 0;}
+	virtual void unread(const byte*,size_t)noexcept override{}
+	virtual bool is_end()noexcept override{return false;}
+	virtual bool waitting_for_data()noexcept override{return false;}
 };
 
 //file_end
@@ -18175,7 +18280,7 @@ decltype(auto)operator<<(text_ostream_T&&stream,const char_T*str)noexcept(noexce
 	return stream << array_end_by_zero_t<const char_T>{str};
 }
 //operator>> of template<class char_T>struct text_istream_t
-template<text_istream_class text_istream_T,class char_T=typename text_istream_T::char_type>
+template<text_istream_class text_istream_T,class char_T> requires(type_info<char_T> == type_info<typename remove_cvref<text_istream_T>::char_type>)
 decltype(auto)operator>>(text_istream_T&stream,char_T&ch)noexcept(noexcept_text_istream_class<text_istream_T>){
 	stream.read(&ch,1);
 	return stream;
@@ -18223,6 +18328,24 @@ inline constexpr struct endline_t{
 		stream.flush();
 		return stream;
 	}
+	//对于换行的读入特殊处理
+	template<text_istream_class text_istream_T,class char_T=typename remove_cvref<text_istream_T>::char_type>
+	constexpr decltype(auto)operator()(text_istream_T& stream)const noexcept(noexcept_text_istream_class<text_istream_T>){
+		char_T ch;
+		while(stream>>ch){
+			if(ch==char_T{'\n'})
+				break;
+			if(ch==char_T{'\r'}){
+				if(!stream.waitting_for_data() && stream>>ch) {
+					if(ch==char_T{'\n'})
+						break;
+					stream.unread(&ch,1);
+				}
+				break;
+			}
+		}
+		return stream;
+	}
 }endline{};
 
 //operator<< of functions
@@ -18230,11 +18353,97 @@ template<class callable_T,ostream_class stream_T> requires(invoke<callable_T>.ab
 decltype(auto)operator<<(stream_T&&stream,callable_T&&callable)noexcept(invoke<callable_T>.nothrow<stream_T>){
 	return callable(stream);
 }
+//operator>> of functions
+template<class callable_T,istream_class stream_T> requires(invoke<callable_T>.able<stream_T>)
+decltype(auto)operator>>(stream_T&&stream,callable_T&&callable)noexcept(invoke<callable_T>.nothrow<stream_T>){
+	return callable(stream);
+}
 
 //file_end
 
 		#line 17 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
 
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/unreadable_wrap/_body.hpp"
+//_body.hpp
+//at namespace elc::defs::stream_n
+/*
+未完成的elc解释器base_stream文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+//warp for not_unreadable_istream to make it unreadable
+template<class stream_T> requires not_unreadable_istream_class<stream_T>
+struct unreadable_wrap:stream_T,instance_struct<unreadable_wrap<stream_T>>,virtual decltype(lambda{
+	if constexpr(noexcept_stream_class<stream_T>) {
+		if constexpr(data_stream_class<stream_T>)
+			return type_info<noexcept_data_istream_t>;
+		else
+			return type_info<noexcept_text_istream_t<typename stream_T::char_type>>;
+	}
+	else {
+		if constexpr(data_stream_class<stream_T>)
+			return type_info<data_istream_t>;
+		else
+			return type_info<text_istream_t<typename stream_T::char_type>>;
+	}
+}())::type{
+private:
+	typedef stream_T base_t;
+	typedef unreadable_wrap<stream_T> this_t;
+	override_instance_struct;
+public:
+	using stream_T::stream_T;
+	typedef stream_T::data_type data_type;
+private:
+	static constexpr size_t default_buffer_size=1<<10;
+
+	array_t<data_type> _buffer{note::size(default_buffer_size)};
+	size_t _using_size=default_buffer_size,_reading_pos=default_buffer_size;
+protected:
+	virtual size_t base_read_impl_for_wrapper(data_type*data,size_t size)noexcept_as(stream_T::read(nullptr,0)){
+		return stream_T::read(data,size);
+	}
+	virtual bool base_waitting_for_data_impl_for_wrapper()noexcept_as(stream_T::waitting_for_data()){
+		return stream_T::waitting_for_data();
+	}
+public:
+	virtual size_t read(data_type*data,size_t size)noexcept_as(stream_T::read(nullptr,0)) override{
+		if(size==0)return 0;
+		size_t aret=0;
+		if(_reading_pos!=_using_size){
+			const auto read_size=min(size,_using_size-_reading_pos);
+			copy_assign[read_size](note::from(add_const(_buffer.data()+_reading_pos)),note::to(data));
+			_reading_pos+=read_size;
+			size-=read_size;
+			aret+=read_size;
+			data+=read_size;
+		}
+		aret+=base_read_impl_for_wrapper(data,size);
+		return aret;
+	}
+	virtual void unread(const data_type*data,size_t size)noexcept override{
+		if(size==0)return;
+		if(_reading_pos<size){//unread size more than buffer can hold
+			const auto more_size=size-_reading_pos;
+			_buffer.forward_resize(more_size);
+			_using_size+=more_size;
+			_reading_pos+=more_size;
+		}
+		_reading_pos-=size;
+		copy_assign[size](note::from(data),note::to(_buffer.data()+_reading_pos));
+	}
+	virtual bool is_end()noexcept_as(stream_T::is_end())override{
+		return _reading_pos==_using_size && stream_T::is_end();
+	}
+	virtual bool waitting_for_data()noexcept_as(stream_T::waitting_for_data())override{
+		return _reading_pos==_using_size && stream_T::waitting_for_data();
+	}
+};
+
+//file_end
+
+		#line 19 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
 		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/std_wrap/_body.hpp"
 //_body.hpp
 //at namespace elc::defs::stream_n
@@ -18425,7 +18634,7 @@ INTER_NAMESPACE(stream_n)//elc::defs::stream_n
 
 //file_end
 
-		#line 19 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+		#line 20 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
 	}
 	using namespace stream_n;
 
@@ -18449,7 +18658,7 @@ inline void test_end(){
 
 //file_end
 
-		#line 25 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+		#line 26 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
 	}
 	#endif
 
@@ -18612,7 +18821,7 @@ inline void test_end(){
 
 //file_end
 
-	#line 29 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+	#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
 }
 namespace elc{
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_export.hpp"
@@ -18627,21 +18836,31 @@ namespace elc{
 #define export using defs::
 export base_stream_t;
 export base_ostream_t;
+export base_not_unreadable_istream_t;
 export base_istream_t;
 export base_iostream_t;
 export noexcept_stream_t;
 export noexcept_ostream_t;
+export noexcept_not_unreadable_istream_t;
 export noexcept_istream_t;
 export noexcept_iostream_t;
+export text_not_unreadable_istream_t;
+export text_stream_t;
 export text_istream_t;
 export text_ostream_t;
 export text_iostream_t;
+export noexcept_text_stream_t;
+export noexcept_not_unreadable_text_istream_t;
 export noexcept_text_istream_t;
 export noexcept_text_ostream_t;
 export noexcept_text_iostream_t;
+export data_stream_t;
+export data_not_unreadable_istream_t;
 export data_istream_t;
 export data_ostream_t;
 export data_iostream_t;
+export noexcept_data_stream_t;
+export noexcept_not_unreadable_data_istream_t;
 export noexcept_data_istream_t;
 export noexcept_data_ostream_t;
 export noexcept_data_iostream_t;
@@ -18653,7 +18872,7 @@ export flush;
 
 //file_end
 
-	#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+	#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
 }
 #if defined(ELC_STRING)
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
@@ -19133,7 +19352,7 @@ protected:\
 
 //file_end
 
-	#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+	#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
 #endif
 #if defined(ELC_NUMERICAL_REPRESENTATION)
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
@@ -19436,7 +19655,7 @@ protected:\
 		const auto&default_numerical_representation=decimal;
 		const auto&default_bool_representation=common_bool_representation;
 
-		template<text_ostream stream_T>
+		template<text_stream stream_T>
 		decltype(auto)get_numerical_representation_of(stream_T&&stream)noexcept{
 			if constexpr was_not_an_ill_form(stream.get_numerical_representation())
 				return stream.get_numerical_representation();
@@ -19444,7 +19663,7 @@ protected:\
 				return default_numerical_representation;
 		}
 
-		template<text_ostream stream_T>
+		template<text_stream stream_T>
 		decltype(auto)get_bool_representation_of(stream_T&&stream)noexcept{
 			if constexpr was_not_an_ill_form(stream.get_bool_representation())
 				return stream.get_bool_representation();
@@ -19474,6 +19693,36 @@ protected:\
 				stream << representation.get_false();
 			else
 				stream << representation.get_other_prefix() << union_cast<unsigned_specific_size_t<sizeof(bool)>>(data) << representation.get_other_suffix();
+			return stream;
+		}
+
+		//arithmetic input only for text_istream
+		template<arithmetic_type T,text_istream stream_T> requires(type_info<remove_cvref<T>> != type_info<char_t> &&
+																   type_info<remove_cvref<T>> != type_info<bool>)
+		decltype(auto)operator>>(stream_T&&stream,T&data)noexcept(noexcept_text_istream<stream_T>){
+			string temp;
+			stream >> temp;
+			data=from_string_get<T>(temp,get_numerical_representation_of(stream));
+			return stream;
+		}
+		template<typename T,text_istream stream_T> requires(type_info<T> == type_info<bool>)
+		decltype(auto)operator>>(stream_T&&stream,T&data)noexcept(noexcept_text_istream<stream_T>){
+			string temp;
+			stream >> temp;
+			const auto&representation=get_bool_representation_of(stream);
+			if(temp==representation.get_true())
+				data=true;
+			elseif(temp==representation.get_false())
+				data=false;
+			else{
+				if(temp.starts_with(representation.get_other_prefix())){
+					temp.remove_front(representation.get_other_prefix().size());
+					if(temp.ends_with(representation.get_other_suffix())){
+						temp.remove_back(representation.get_other_suffix().size());
+						data=union_cast<bool>(from_string_get<unsigned_specific_size_t<sizeof(bool)>>(temp,get_numerical_representation_of(stream)));
+					}
+				}
+			}
 			return stream;
 		}
 
@@ -19652,13 +19901,13 @@ protected:\
 
 //file_end
 
-	#line 78 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
+	#line 108 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 }
 #endif
 
 //file_end
 
-	#line 38 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
+	#line 39 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
 #endif
 
 //file_end
@@ -26150,8 +26399,20 @@ protected:
 			using namespace char_set;
 			while(isspace(is.peek()))
 				is.get();
-			while(!is.eof()&&!isspace(is.peek()))
+			while(!is.is_end()&&!isspace(is.peek()))
 				str+=is.get();
+			return is;
+		}
+		template<class text_istream_T> requires(type_info<text_istream_T>.base_on<text_istream_t<char_T>>)
+		friend auto& getline(text_istream_T& is,string_t& str)noexcept(noexcept_text_istream_class<text_istream_T>){
+			str.clear();
+			using namespace char_set;
+			while(isspace(is.peek()))
+				is.get();
+			while(!is.is_end()&&is.peek()!='\r'&&is.peek()!='\n')
+				str+=is.get();
+			is>>endline;//处理结尾
+			return is;
 		}
 		#undef _m
 	};
@@ -33061,7 +33322,7 @@ namespace to_string_n{
 		template<class T> requires(type_info<T> == type_info<ubigfloat>)
 		[[nodiscard]]ubigfloat from_string_get_base(string str,convert_state_t&state)const noexcept{
 			{
-				auto exponent_pos = str.find_last_of(_repres.get_exponent_separator());
+				const auto exponent_pos = str.find_last_of(_repres.get_exponent_separator());
 				if(exponent_pos != string::npos){
 					state.set_has_exponent();
 					auto expstr = str.substr(exponent_pos+1);
@@ -33076,12 +33337,12 @@ namespace to_string_n{
 				}
 			}
 			{
-				auto fractional_pos = str.find_first_of(_repres.get_fractional_separator());//分数
+				const auto fractional_pos = str.find_first_of(_repres.get_fractional_separator());//分数
 				if(fractional_pos != string::npos){
 					state.set_has_fractional();
 					auto numeratorstr = str.substr(0,fractional_pos);
 					str = str.substr(fractional_pos+1);
-					auto& denominatorstr = str;
+					const auto& denominatorstr = str;
 					auto numerator = from_string_get_base<T>(numeratorstr,state);
 					if(not state.success())
 						return {};
@@ -33092,12 +33353,12 @@ namespace to_string_n{
 				}
 			}
 			{
-				auto fractional_pos = str.find_first_of(_repres.get_fractional_sign());//小数
+				const auto fractional_pos = str.find_first_of(_repres.get_fractional_sign());//小数
 				if(fractional_pos != string::npos){
 					state.set_has_decimal();
 					auto integerstr = str.substr(0,fractional_pos);
 					str = str.substr(fractional_pos+1);
-					auto& fractionalstr = str;
+					const auto& fractionalstr = str;
 					auto integer = from_string_get<ubigint>(integerstr,state);
 					if(not state.success())
 						return {};
@@ -33904,7 +34165,7 @@ protected:\
 		const auto&default_numerical_representation=decimal;
 		const auto&default_bool_representation=common_bool_representation;
 
-		template<text_ostream stream_T>
+		template<text_stream stream_T>
 		decltype(auto)get_numerical_representation_of(stream_T&&stream)noexcept{
 			if constexpr was_not_an_ill_form(stream.get_numerical_representation())
 				return stream.get_numerical_representation();
@@ -33912,7 +34173,7 @@ protected:\
 				return default_numerical_representation;
 		}
 
-		template<text_ostream stream_T>
+		template<text_stream stream_T>
 		decltype(auto)get_bool_representation_of(stream_T&&stream)noexcept{
 			if constexpr was_not_an_ill_form(stream.get_bool_representation())
 				return stream.get_bool_representation();
@@ -33942,6 +34203,36 @@ protected:\
 				stream << representation.get_false();
 			else
 				stream << representation.get_other_prefix() << union_cast<unsigned_specific_size_t<sizeof(bool)>>(data) << representation.get_other_suffix();
+			return stream;
+		}
+
+		//arithmetic input only for text_istream
+		template<arithmetic_type T,text_istream stream_T> requires(type_info<remove_cvref<T>> != type_info<char_t> &&
+																   type_info<remove_cvref<T>> != type_info<bool>)
+		decltype(auto)operator>>(stream_T&&stream,T&data)noexcept(noexcept_text_istream<stream_T>){
+			string temp;
+			stream >> temp;
+			data=from_string_get<T>(temp,get_numerical_representation_of(stream));
+			return stream;
+		}
+		template<typename T,text_istream stream_T> requires(type_info<T> == type_info<bool>)
+		decltype(auto)operator>>(stream_T&&stream,T&data)noexcept(noexcept_text_istream<stream_T>){
+			string temp;
+			stream >> temp;
+			const auto&representation=get_bool_representation_of(stream);
+			if(temp==representation.get_true())
+				data=true;
+			elseif(temp==representation.get_false())
+				data=false;
+			else{
+				if(temp.starts_with(representation.get_other_prefix())){
+					temp.remove_front(representation.get_other_prefix().size());
+					if(temp.ends_with(representation.get_other_suffix())){
+						temp.remove_back(representation.get_other_suffix().size());
+						data=union_cast<bool>(from_string_get<unsigned_specific_size_t<sizeof(bool)>>(temp,get_numerical_representation_of(stream)));
+					}
+				}
+			}
 			return stream;
 		}
 
@@ -34120,7 +34411,7 @@ protected:\
 
 //file_end
 
-	#line 78 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
+	#line 108 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 }
 #endif
 
@@ -39408,7 +39699,7 @@ protected:\
 		#elif SYSTEM_TYPE == linux
 			char//linux下的char是utf-8，可以使用write和read从控制台的handle_type中读写
 		#endif
-		base_input_char_type;
+		base_io_char_type;
 
 		constexpr size_t code_convert_buf_size=
 		#if SYSTEM_TYPE == windows
@@ -39447,6 +39738,29 @@ protected:\
 			return aret;
 		}
 
+		//判断handle是否eof
+		inline bool is_eof(handle_type stream)noexcept{
+			#if SYSTEM_TYPE == windows
+				push_and_disable_msvc_warning(6031);//返回值忽略警告diss
+				ReadFile(stream, nullptr, 0, nullptr, nullptr);
+				pop_msvc_warning();
+				return GetLastError() == ERROR_HANDLE_EOF;
+			#elif SYSTEM_TYPE == linux
+				return feof(stream);
+			#endif
+		}
+		//判断handle是否等待输入并没有待处理的输入
+		inline bool is_wait_input(handle_type stream)noexcept{
+			#if SYSTEM_TYPE == windows
+				if(stream.is_terminal())
+					return WaitForSingleObject(stream, 0) == WAIT_TIMEOUT;
+				else
+					return false;
+			#elif SYSTEM_TYPE == linux
+				return false;
+			#endif
+		}
+
 		//basic_read_impl
 		inline size_t basic_read_impl(handle_type handle, void* buffer, size_t size)noexcept{
 			#if SYSTEM_TYPE == windows
@@ -39479,7 +39793,7 @@ protected:\
 		}
 		//由于windows的WriteFile不能正确处理终端io，特化终端io所需的impl of read/write
 		//basic_read_for_terminal_impl
-		inline size_t basic_read_for_terminal_impl(handle_type handle, base_input_char_type* buffer, size_t size)noexcept{
+		inline size_t basic_read_for_terminal_impl(handle_type handle, base_io_char_type* buffer, size_t size)noexcept{
 			#if SYSTEM_TYPE == windows
 				DWORD read_count;
 				push_and_disable_msvc_warning(6031);//返回值忽略警告diss
@@ -39487,17 +39801,17 @@ protected:\
 				pop_msvc_warning();
 				return read_count;
 			#elif SYSTEM_TYPE == linux
-				return read(handle, buffer, size*sizeof(base_input_char_type))/sizeof(base_input_char_type);
+				return read(handle, buffer, size*sizeof(base_io_char_type))/sizeof(base_io_char_type);
 			#endif
 		}
 		//basic_write_for_terminal_impl
-		inline size_t basic_write_for_terminal_impl(handle_type handle, const base_input_char_type* buffer, size_t size)noexcept{
+		inline size_t basic_write_for_terminal_impl(handle_type handle, const base_io_char_type* buffer, size_t size)noexcept{
 			#if SYSTEM_TYPE == windows
 				DWORD write_count;
 				WriteConsoleW(handle, buffer,(DWORD)size, &write_count, nullptr);
 				return write_count;
 			#elif SYSTEM_TYPE == linux
-				return write(handle, buffer, size*sizeof(base_input_char_type))/sizeof(base_input_char_type);
+				return write(handle, buffer, size*sizeof(base_io_char_type))/sizeof(base_io_char_type);
 			#endif
 		}
 		//basic_flush_impl
@@ -39572,87 +39886,15 @@ protected:\
 				return lseek(handle, offset, under_type);
 			#endif
 		}
-
-		//convert utf-32 text to char_T and write it to stream
-		template<typename char_T,size_t code_convert_buf_size,size_t(*writter)(handle_type, const char_T*, size_t)noexcept>
-		inline void base_write_text_with_code_convert_impl(handle_type stream,const char_t*buffer,size_t size)noexcept{
-			if constexpr(type_info<char_T>!=type_info<char_t>){
-				push_and_disable_msvc_warning(26494);//未初始化警告diss
-				ptrdiff_t s;
-				char_T r[code_convert_buf_size];
-				pop_msvc_warning();
-				for(size_t i=0;i<size;i++){
-					//convert it to char_T
-					s=char_set::utf32_to_auto(buffer[i],r).processed_output().size();
-					if(s == range_n::npos)
-						die_with(locale::str::code_convert_error);
-					//write it to stream
-					writter(stream,r,s);
-				}
-			}else{
-				//write it to stream
-				writter(stream,buffer,size);
-			}
-		}
-
-		inline void write_text_to_terminal_stream(handle_type stream,const char_t*buffer,size_t size)noexcept{
-			if(!stream.is_terminal())
-				base_write_text_with_code_convert_impl<char8_t,char_set::utf32_to_utf8_code_size,basic_write_impl>(stream,buffer,size);
-			else
-				base_write_text_with_code_convert_impl<base_input_char_type,code_convert_buf_size,basic_write_for_terminal_impl>(stream,buffer,size);
-		}
-
-		//read text from stream as char_T and convert it to utf-32
-		template<typename char_T,size_t code_convert_buf_size,
-				 size_t(*reader)(handle_type, char_T*, size_t)noexcept,
-				 size_t(*writter)(handle_type, const char_T*, size_t)noexcept>
-		inline size_t base_read_text_with_code_convert_impl(handle_type stream,char_t*buffer,size_t size,handle_type echo_stream)noexcept{
-			size_t read_size=0;
-			if constexpr(type_info<char_T>!=type_info<char_t>){
-				push_and_disable_msvc_warning(26494);//未初始化警告diss
-				size_t s;
-				size_t v=0;
-				char_T r[code_convert_buf_size+1];//+1是为了保证最后一个字符是0以方便编码转换函数判断
-				pop_msvc_warning();
-				size_t i=0;
-				for(;i<size;i++){
-					//read it from stream
-					s=reader(stream,r+v,code_convert_buf_size-v);
-					if(s == 0)
-						break;
-					r[s+v]=0;
-					//convert it to utf-32
-					const auto z=char_set::auto_to_utf32(buffer+i,r);
-					if(!z)
-						die_with(locale::str::code_convert_error);
-					s=z.processed_output().size();
-					if(echo_stream)
-						writter(echo_stream,r,s);
-					v=code_convert_buf_size-s;
-					copy_assign[v](r,r+s);
-				}
-				read_size = i;
-				//put back chars if v != 0
-				if(v != 0)
-					basic_seek_impl(stream,-(int_t)v*sizeof(char_T),cur);
-			}else{
-				//read it from stream
-				read_size=reader(stream,buffer,size);
-				if(echo_stream)
-					writter(echo_stream,buffer,read_size);
-			}
-			return read_size;
-		}
-		inline size_t read_text_from_terminal_stream(handle_type stream,char_t*buffer,size_t size,handle_type echo_stream)noexcept{
-			if(!stream.is_terminal())
-				return base_read_text_with_code_convert_impl<char8_t,char_set::utf32_to_utf8_code_size,
-															 basic_read_impl,basic_write_impl>(stream,buffer,size,echo_stream);
+		//before_terminal_read
+		force_inline auto before_terminal_read(handle_type stream)noexcept{
 			//GetConsoleMode if LINE_INPUT_MODE
 			#if SYSTEM_TYPE == windows
 				DWORD ConsoleModeBackup;
 				GetConsoleMode(stream, &ConsoleModeBackup);
 				//disable line input mode
 				SetConsoleMode(stream, ConsoleModeBackup & ~ENABLE_LINE_INPUT);
+				return ConsoleModeBackup;
 			#elif SYSTEM_TYPE == linux
 				//no echo and disable line input mode
 				termios oldt;
@@ -39663,15 +39905,38 @@ protected:\
 					tcsetattr(stream, TCSANOW, &oldt);
 					oldt.c_lflag = flgbak;
 				}
+				return oldt;
 			#endif
-			const size_t read_size=base_read_text_with_code_convert_impl<base_input_char_type,code_convert_buf_size,
-																		 basic_read_for_terminal_impl,basic_write_for_terminal_impl>(stream,buffer,size,echo_stream);
+		}
+		//after_terminal_read
+		force_inline void after_terminal_read(handle_type stream,auto something)noexcept{
 			#if SYSTEM_TYPE == windows
-				SetConsoleMode(stream, ConsoleModeBackup);
+				SetConsoleMode(stream, something);
 			#elif SYSTEM_TYPE == linux
-				tcsetattr(stream, TCSANOW, &oldt);
+				tcsetattr(stream, TCSANOW, &something);
 			#endif
-			return read_size;
+		}
+		//before_terminal_write
+		force_inline auto before_terminal_write(handle_type stream)noexcept{
+			//GetConsoleMode if LINE_INPUT_MODE
+			#if SYSTEM_TYPE == windows
+				DWORD ConsoleModeBackup;
+				GetConsoleMode(stream, &ConsoleModeBackup);
+				//enable ENABLE_PROCESSED_OUTPUT and ENABLE_WRAP_AT_EOL_OUTPUT ENABLE_VIRTUAL_TERMINAL_PROCESSING
+				SetConsoleMode(stream, ConsoleModeBackup | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+				return ConsoleModeBackup;
+			#elif SYSTEM_TYPE == linux
+				//nothing to do
+				return 0;
+			#endif
+		}
+		//after_terminal_write
+		force_inline void after_terminal_write(handle_type stream,auto something)noexcept{
+			#if SYSTEM_TYPE == windows
+				SetConsoleMode(stream, something);
+			#elif SYSTEM_TYPE == linux
+				//nothing to do
+			#endif
 		}
 
 		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
@@ -39821,7 +40086,7 @@ protected:\
 
 //file_end
 
-		#line 346 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/streams.hpp"
+		#line 320 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/streams.hpp"
 	}
 	//
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
@@ -39841,7 +40106,7 @@ protected:\
 
 //file_end
 
-	#line 349 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/streams.hpp"
+	#line 323 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/streams.hpp"
 #endif
 
 //file_end
@@ -40130,8 +40395,8 @@ protected:\
 	#line 14 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/stream/_body.hpp"
 
 	namespace stream_n{
-		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/stream/defs.hpp"
-//defs.hpp
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/stream/base_fstream/_body.hpp"
+//_body.hpp
 //at namespace elc::defs::stream_n
 /*
 未完成的elc解释器stream文件
@@ -40139,7 +40404,7 @@ protected:\
 转载时请在不对此文件做任何修改的同时注明出处
 项目地址：https://github.com/steve02081504/ELC
 */
-namespace base_fstream_defs{
+namespace base_fstream_n{
 	using namespace elc::APIs::streams;
 	typedef handle_type handle_t;
 
@@ -40154,8 +40419,8 @@ namespace base_fstream_defs{
 		virtual int_t tell()noexcept override{
 			return basic_tell_impl(_file);
 		}
-		virtual void seek_to(int_t pos)noexcept override{
-			basic_seek_impl(_file,pos,seek_type::beg);
+		virtual bool seek_to(int_t pos)noexcept override{
+			return basic_seek_impl(_file,pos,seek_type::beg)==pos;
 		}
 		virtual void sync()noexcept override{
 			basic_sync_impl(_file);
@@ -40185,29 +40450,42 @@ namespace base_fstream_defs{
 		}
 	};
 	template<class char_T,class base_fstream_T>
-	struct base_text_ifstream_wrapper:base_fstream_T,virtual noexcept_text_istream_t<char_T>,instance_struct<base_text_ifstream_wrapper<char_T,base_fstream_T>>{
+	struct base_not_unreadable_text_ifstream_wrapper:base_fstream_T,virtual noexcept_not_unreadable_text_istream_t<char_T>,instance_struct<base_not_unreadable_text_ifstream_wrapper<char_T,base_fstream_T>>{
 	private:
 		typedef base_fstream_T base_t;
-		typedef base_text_ifstream_wrapper<char_T,base_fstream_T> this_t;
+		typedef base_not_unreadable_text_ifstream_wrapper<char_T,base_fstream_T> this_t;
 		override_instance_struct;
 	public:
 		using base_t::base_t;
+		typedef char_T char_type;
 
 		virtual size_t read(char_T*buf,size_t size)noexcept override{
 			return basic_read_impl(base_t::_file,buf,size);
 		}
+		virtual bool is_end()noexcept override{
+			return is_eof(base_t::_file);
+		}
+		virtual bool waitting_for_data()noexcept override{
+			return is_wait_input(base_t::_file);
+		}
 	};
+	template<class char_T,class base_fstream_T>
+	using base_text_ifstream_wrapper=unreadable_wrap<base_not_unreadable_text_ifstream_wrapper<char_T,base_fstream_T>>;
 	template<class char_T,class base_fstream_T>
 	struct base_text_ofstream_wrapper:base_fstream_T,virtual noexcept_text_ostream_t<char_T>,instance_struct<base_text_ofstream_wrapper<char_T,base_fstream_T>>{
 	private:
 		typedef base_fstream_T base_t;
 		typedef base_text_ofstream_wrapper<char_T,base_fstream_T> this_t;
 		override_instance_struct;
+
+		using base_t::_file;
 	public:
 		using base_t::base_t;
 
 		virtual void write(const char_T*buf,size_t size)noexcept override{
-			basic_write_impl(base_t::_file,buf,size);
+			const auto var=before_terminal_write(_file);
+			basic_write_impl(_file,buf,size);
+			after_terminal_write(_file,var);
 		}
 	};
 
@@ -40220,67 +40498,372 @@ namespace base_fstream_defs{
 	template<class char_T>
 	using base_text_orefstream=base_text_ofstream_wrapper<char_T,base_frefstream>;
 
-	distinctive inline struct output_stream_impl_t:base_text_orefstream<char_t>,instance_struct<output_stream_impl_t>{
+	struct system_terminal_irefstream:base_text_irefstream<base_io_char_type>,instance_struct<system_terminal_irefstream>{
 	private:
-		typedef base_text_orefstream<char_t> base_t;
-		typedef output_stream_impl_t this_t;
-		override_instance_struct;
-	public:
-		output_stream_impl_t()noexcept:base_t(init_output_stream()){}
-		virtual void write(const char_t*buf,size_t size)noexcept override{
-			APIs::streams::write_text_to_terminal_stream(base_t::_file, buf, size);
-		}
-	}out_impl{};
-	distinctive inline struct error_stream_impl_t:base_text_orefstream<char_t>,instance_struct<error_stream_impl_t>{
-	private:
-		typedef base_text_orefstream<char_t> base_t;
-		typedef error_stream_impl_t this_t;
-		override_instance_struct;
-	public:
-		error_stream_impl_t()noexcept:base_t(init_error_stream()){}
-		virtual void write(const char_t*buf,size_t size)noexcept override{
-			APIs::streams::write_text_to_terminal_stream(base_t::_file, buf, size);
-		}
-	}err_impl{};
-	struct input_stream_iterface_t:virtual noexcept_text_istream_t<char_t>{
-		virtual void echo_to(base_frefstream&)noexcept=0;
-		virtual void tie_with(base_frefstream&)noexcept=0;
-		virtual size_t no_echo_read(char_t*buf,size_t size)noexcept=0;
-	};
-	distinctive inline struct input_stream_impl_t:input_stream_iterface_t,base_text_irefstream<char_t>,instance_struct<input_stream_impl_t>{
-	private:
-		typedef base_text_irefstream<char_t> base_t;
-		typedef input_stream_impl_t this_t;
+		typedef base_text_irefstream<base_io_char_type> base_t;
+		typedef system_terminal_irefstream this_t;
 		override_instance_struct;
 
-		handle_t _echo_to,_tie_with;
+		using base_t::_file;
+	protected:
+		virtual size_t base_read_impl_for_wrapper(base_io_char_type*buf,size_t size)noexcept override{
+			const auto var=before_terminal_read(_file);
+			const auto result=basic_read_for_terminal_impl(_file,buf,size);
+			after_terminal_read(_file,var);
+			return result;
+		}
 	public:
-		virtual void echo_to(base_frefstream&stream)noexcept override{
-			_echo_to=get_handle_from(stream);
+		using base_t::base_t;
+	};
+	struct system_terminal_orefstream:base_text_orefstream<base_io_char_type>,instance_struct<system_terminal_orefstream>{
+	private:
+		typedef base_text_orefstream<base_io_char_type> base_t;
+		typedef system_terminal_orefstream this_t;
+		override_instance_struct;
+	protected:
+		//ofstream没有缓冲区，所以覆写原有的write
+		virtual void write(const base_io_char_type*buf,size_t size)noexcept override{
+			basic_write_for_terminal_impl(base_t::_file,buf,size);
 		}
-		virtual void tie_with(base_frefstream&stream)noexcept override{
-			_tie_with=get_handle_from(stream);
-		}
-		input_stream_impl_t()noexcept:base_t(init_input_stream()){
-			echo_to(out_impl);
-			tie_with(out_impl);
-		}
-		virtual size_t read(char_t*buf,size_t size)noexcept override{
-			basic_flush_impl(_tie_with);
-			return APIs::streams::read_text_from_terminal_stream(base_t::_file, buf, size, _echo_to);
-		}
-		virtual size_t no_echo_read(char_t*buf,size_t size)noexcept override{
-			return APIs::streams::read_text_from_terminal_stream(base_t::_file, buf, size, nullptr);
-		}
-	}in_impl{};
+	public:
+		using base_t::base_t;
+	};
 }
-inline auto&out=base_fstream_defs::out_impl;
-inline auto&err=base_fstream_defs::err_impl;
-inline auto&in=base_fstream_defs::in_impl;
 
 //file_end
 
 		#line 17 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/stream/_body.hpp"
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/stream/defs.hpp"
+//defs.hpp
+//at namespace elc::defs::stream_n
+/*
+未完成的elc解释器stream文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/steve02081504/ELC
+*/
+namespace base_streams_impl_n{
+	using namespace elc::APIs::streams;
+	using namespace base_fstream_n;
+
+	#define inheriting_base_stream_operations_from(expr) \
+	\
+	virtual int_t seek(seek_type dir,int_t off)noexcept override{\
+		return (expr).seek(dir,off);\
+	}\
+	virtual int_t tell()noexcept override{\
+		return (expr).tell();\
+	}\
+	virtual bool seek_to(int_t pos)noexcept override{\
+		return (expr).seek_to(pos);\
+	}\
+	virtual void sync()noexcept override{\
+		(expr).sync();\
+	}\
+	virtual void flush()noexcept override{\
+		(expr).flush();\
+	}\
+	virtual void close()noexcept override{\
+		(expr).close();\
+	}\
+
+	#define inheriting_base_stream_operations_from_pointer(ptr) \
+			inheriting_base_stream_operations_from(*ptr)
+
+	#define inheriting_istream_operations_from(expr) \
+			inheriting_base_stream_operations_from(expr)\
+	\
+	virtual bool is_end()noexcept override{\
+		return (expr).is_end();\
+	}\
+	virtual bool waitting_for_data()noexcept override{\
+		return (expr).waitting_for_data();\
+	}\
+	virtual size_t read(char_t*buf,size_t size)noexcept override{\
+		return (expr).read(buf,size);\
+	}\
+	virtual void unread(const char_t*buf,size_t size)noexcept override{\
+		(expr).unread(buf,size);\
+	}\
+	virtual explicit operator bool()noexcept override{\
+		return (expr).operator bool();\
+	}\
+
+	#define inheriting_istream_operations_from_pointer(ptr) \
+			inheriting_istream_operations_from(*ptr)
+
+	#define inheriting_ostream_operations_from(expr) \
+			inheriting_base_stream_operations_from(expr)\
+	\
+	virtual void write(const char_t*buf,size_t size)noexcept override{\
+		(expr).write(buf,size);\
+	}\
+
+	#define inheriting_ostream_operations_from_pointer(ptr) \
+			inheriting_ostream_operations_from(*ptr)
+
+
+	template<class char_T>
+	struct not_unreadable_code_cvted_text_irefstream:virtual noexcept_not_unreadable_text_istream_t<char_t>,instance_struct<not_unreadable_code_cvted_text_irefstream<char_T>>{
+	private:
+		typedef noexcept_not_unreadable_text_istream_t<char_t> base_t;
+		typedef not_unreadable_code_cvted_text_irefstream this_t;
+		override_instance_struct;
+
+		noexcept_text_istream_t<char_T>*_base;
+	public:
+		explicit not_unreadable_code_cvted_text_irefstream(noexcept_text_istream_t<char_T>&base)noexcept:_base(&base){}
+		virtual ~not_unreadable_code_cvted_text_irefstream()noexcept override=default;
+
+		inheriting_base_stream_operations_from_pointer(_base);
+
+		virtual bool is_end()noexcept override{
+			return _base->is_end();
+		}
+		virtual bool waitting_for_data()noexcept override{
+			return _base->waitting_for_data();
+		}
+		virtual size_t read(char_t*buf,size_t size)noexcept override{
+			constexpr size_t this_code_convert_buf_size=char_set::to_u32_code_size<char_T>;
+			push_and_disable_msvc_warning(26494);//未初始化警告diss
+			char_T code_convert_buf[this_code_convert_buf_size];
+			pop_msvc_warning();
+			size_t readed=0;
+			while(readed<size){
+				const size_t readed_this_time=_base->read(code_convert_buf,this_code_convert_buf_size);
+				if(readed_this_time==0)
+					break;
+				const auto result=char_set::auto_to_utf32(buf+readed,code_convert_buf,readed_this_time);
+				if(!result)
+					die_with(locale::str::code_convert_error);
+				readed+=result.processed_output().size();
+				const auto size_processed_input=result.processed_input().size();
+				_base->unread(code_convert_buf+size_processed_input,readed_this_time-size_processed_input);
+			}
+			return readed;
+		}
+	};
+	template<class char_T>
+	using code_cvted_text_irefstream=unreadable_wrap<not_unreadable_code_cvted_text_irefstream<char_T>>;
+	template<class char_T>
+	struct code_cvted_text_orefstream:virtual noexcept_text_ostream_t<char_t>,instance_struct<code_cvted_text_orefstream<char_T>>{
+	private:
+		typedef noexcept_text_ostream_t<char_t> base_t;
+		typedef code_cvted_text_orefstream this_t;
+		override_instance_struct;
+
+		noexcept_text_ostream_t<char_T>*_base;
+	public:
+		explicit code_cvted_text_orefstream(noexcept_text_ostream_t<char_T>&base)noexcept:_base(&base){}
+		virtual ~code_cvted_text_orefstream()noexcept override=default;
+
+		inheriting_base_stream_operations_from_pointer(_base);
+
+		virtual void write(const char_t*buf,size_t size)noexcept override{
+			constexpr size_t this_code_convert_buf_size=char_set::to_u32_code_size<char_T>;
+			push_and_disable_msvc_warning(26494);//未初始化警告diss
+			char_T code_convert_buf[this_code_convert_buf_size];
+			pop_msvc_warning();
+			size_t writed=0;
+			while(writed<size){
+				const auto result=char_set::utf32_to_auto(buf[writed],code_convert_buf);
+				if(!result)
+					die_with(locale::str::code_convert_error);
+				_base->write(code_convert_buf,result.processed_output().size());
+				writed++;
+			}
+		}
+	};
+
+	struct terminal_irefstream_impl:virtual noexcept_text_istream_t<char_t>,instance_struct<terminal_irefstream_impl>{
+	private:
+		typedef noexcept_text_istream_t<char_t> base_t;
+		typedef terminal_irefstream_impl this_t;
+		override_instance_struct;
+
+		system_terminal_irefstream _in;
+		code_cvted_text_irefstream<base_io_char_type> _code_cvt{_in};
+	public:
+		terminal_irefstream_impl(handle_type handle)noexcept:_in(handle){}
+		virtual ~terminal_irefstream_impl()noexcept override=default;
+
+		inheriting_istream_operations_from(_code_cvt);
+	};
+	struct terminal_orefstream_impl:virtual noexcept_text_ostream_t<char_t>,instance_struct<terminal_orefstream_impl>{
+	private:
+		typedef noexcept_text_ostream_t<char_t> base_t;
+		typedef terminal_orefstream_impl this_t;
+		override_instance_struct;
+
+		system_terminal_orefstream _out;
+		code_cvted_text_orefstream<base_io_char_type> _code_cvt{_out};
+	public:
+		terminal_orefstream_impl(handle_type handle)noexcept:_out(handle){}
+		virtual ~terminal_orefstream_impl()noexcept override=default;
+
+		inheriting_ostream_operations_from(_code_cvt);
+	};
+	//文件流读入（自句柄读写）实现
+	//目前懒得写各种编码转换，所以目前只假设编码utf-8。
+	struct file_irefstream_impl:virtual noexcept_text_istream_t<char_t>,instance_struct<file_irefstream_impl>{
+	private:
+		typedef noexcept_text_istream_t<char_t> base_t;
+		typedef file_irefstream_impl this_t;
+		override_instance_struct;
+
+		base_text_irefstream<char8_t> _in;
+		code_cvted_text_irefstream<char8_t> _code_cvt{_in};
+	public:
+		file_irefstream_impl(handle_type handle)noexcept:_in(handle){}
+		virtual ~file_irefstream_impl()noexcept override=default;
+
+		inheriting_istream_operations_from(_code_cvt);
+	};
+	//文件流写出（自句柄读写）实现
+	//目前懒得写各种编码转换，所以目前只假设编码utf-8。
+	struct file_orefstream_impl:virtual noexcept_text_ostream_t<char_t>,instance_struct<file_orefstream_impl>{
+	private:
+		typedef noexcept_text_ostream_t<char_t> base_t;
+		typedef file_orefstream_impl this_t;
+		override_instance_struct;
+
+		base_text_orefstream<char8_t> _out;
+		code_cvted_text_orefstream<char8_t> _code_cvt{_out};
+	public:
+		file_orefstream_impl(handle_type handle)noexcept:_out(handle){}
+		virtual ~file_orefstream_impl()noexcept override=default;
+
+		inheriting_ostream_operations_from(_code_cvt);
+	};
+	//句柄io流
+	struct handle_istream_impl:virtual noexcept_text_istream_t<char_t>,instance_struct<handle_istream_impl>{
+	private:
+		typedef noexcept_text_istream_t<char_t> base_t;
+		typedef handle_istream_impl this_t;
+		override_instance_struct;
+
+		noexcept_text_istream_t<char_t>*_base;
+	public:
+		handle_istream_impl(handle_type handle)noexcept{
+			using defs::get;//貌似msvc在这里有bug
+			if(handle.is_terminal())
+				_base=get<terminal_irefstream_impl>(handle);
+			else
+				_base=get<file_irefstream_impl>(handle);
+		}
+		virtual ~handle_istream_impl()noexcept override{
+			unget(_base);
+		}
+
+		inheriting_istream_operations_from_pointer(_base);
+	};
+	struct handle_ostream_impl:virtual noexcept_text_ostream_t<char_t>,instance_struct<handle_ostream_impl>{
+	private:
+		typedef noexcept_text_ostream_t<char_t> base_t;
+		typedef handle_ostream_impl this_t;
+		override_instance_struct;
+
+		noexcept_text_ostream_t<char_t>*_base;
+	public:
+		handle_ostream_impl(handle_type handle)noexcept{
+			if(handle.is_terminal())
+				_base=get<terminal_orefstream_impl>(handle);
+			else
+				_base=get<file_orefstream_impl>(handle);
+		}
+		virtual ~handle_ostream_impl()noexcept override{
+			unget(_base);
+		}
+
+		inheriting_ostream_operations_from_pointer(_base);
+	};
+
+	push_and_disable_msvc_warning(26426);//非常量初始化警告diss
+	distinctive inline auto ori_base_in_handle{init_input_stream()};
+	distinctive inline auto ori_base_out_handle{init_output_stream()};
+	distinctive inline auto ori_base_err_handle{init_error_stream()};
+
+	distinctive inline handle_ostream_impl out_impl{ori_base_out_handle};
+	distinctive inline handle_ostream_impl err_impl{ori_base_err_handle};
+	//由于in需要回显，所以需要多一层定义以处理回显相关事宜
+	distinctive inline struct in_impl_t:noexcept_text_istream_t<char_t>,instance_struct<in_impl_t>{
+	private:
+		handle_istream_impl _in{ori_base_in_handle};
+		noexcept_text_ostream_t<char_t>*_tie_with;
+		size_t _unread_size=0;//避免重复回显
+	public:
+		in_impl_t()noexcept:_tie_with(&out_impl){}
+		virtual ~in_impl_t()noexcept override=default;
+
+		inheriting_base_stream_operations_from(_in);
+
+		virtual size_t read(char_t*buf,size_t size)noexcept override{
+			const size_t ret=_in.read(buf,size);
+			if(_tie_with)
+				if(ret>_unread_size){
+					const size_t tie_size=ret-_unread_size;
+					//回显中需要将回车换行、回车转换为换行
+					string_view str{buf+size-tie_size,tie_size};
+					while(str.size()){
+						const auto pos=str.find(ec('\r'));
+						if(pos==string_view::npos){
+							*_tie_with<<str;
+							break;
+						}
+						else{
+							_tie_with->write(str.data(),pos);
+							if(pos+1<str.size()&&str[pos+1]==ec('\n'))
+								str=str.substr(pos+2);
+							else
+								str=str.substr(pos+1);
+							*_tie_with << ec('\n');
+						}
+					}
+				}
+			if(ret<=_unread_size)
+				_unread_size-=ret;
+			else
+				_unread_size=0;
+			return ret;
+		}
+		virtual bool is_end()noexcept override{
+			return _in.is_end();
+		}
+		virtual bool waitting_for_data()noexcept override{
+			return _in.waitting_for_data();
+		}
+		virtual explicit operator bool()noexcept override{
+			return _in.operator bool();
+		}
+		virtual void unread(const char_t*buf,size_t size)noexcept override{
+			_in.unread(buf,size);
+			_unread_size+=size;
+		}
+		void tie_with(noexcept_text_ostream_t<char_t>*stream)noexcept{
+			_tie_with=stream;
+		}
+		noexcept_text_ostream_t<char_t>*tie_with()noexcept{
+			return _tie_with;
+		}
+	}in_impl;
+	pop_msvc_warning();
+
+	#undef inheriting_base_stream_operations_from_pointer
+	#undef inheriting_base_stream_operations_from
+
+	#undef inheriting_istream_operations_from_pointer
+	#undef inheriting_istream_operations_from
+
+	#undef inheriting_ostream_operations_from_pointer
+	#undef inheriting_ostream_operations_from
+}
+inline auto&out=base_streams_impl_n::out_impl;
+inline auto&err=base_streams_impl_n::err_impl;
+inline auto&in=base_streams_impl_n::in_impl;
+
+//file_end
+
+		#line 18 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/stream/_body.hpp"
 	}
 	#if defined(ELC_TEST_ON)
 	namespace stream_part_test{
@@ -40302,7 +40885,7 @@ inline void test_end{
 
 //file_end
 
-		#line 21 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/stream/_body.hpp"
+		#line 22 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/stream/_body.hpp"
 	}
 	#endif
 
@@ -40465,7 +41048,7 @@ inline void test_end{
 
 //file_end
 
-	#line 25 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/stream/_body.hpp"
+	#line 26 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/stream/_body.hpp"
 }
 namespace elc{
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/stream/_export.hpp"
@@ -40485,7 +41068,7 @@ export err;
 
 //file_end
 
-	#line 28 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/stream/_body.hpp"
+	#line 29 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/stream/_body.hpp"
 }
 
 //file_end
