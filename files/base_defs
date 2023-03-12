@@ -209,6 +209,9 @@ namespace elc{
 	 =???++++++++++++++++++++++++++III?
 	   ?++++++++++++++++++++++++++++I+
 */
+#if defined(_MSC_VER)//int128
+	#include <__msvc_int128.hpp>
+#endif
 namespace elc::defs{
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //_defs.hpp
@@ -501,12 +504,59 @@ protected:\
 
 //file_end
 
-	#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 
 	namespace basic_environment{
 		/// 每个bit（不是字节）的可能性
 		/// 为什么c艹委员会不定义这个？
 		constexpr size_t BIT_POSSIBILITY=2;
+
+		#if defined(_MSC_VER) && _MSVC_STL_UPDATE > 202303L//after https://github.com/microsoft/STL/pull/3559
+			#define ELC_BASE_ENV_HAS_INT128
+			typedef ::std::_Unsigned128 uint128_t;
+			typedef ::std::_Signed128 int128_t;
+		#elif defined(__SIZEOF_INT128__)
+			#define ELC_BASE_ENV_HAS_INT128
+			typedef __uint128_t uint128_t;
+			typedef __int128_t int128_t;
+		#endif
+		#if defined(ELC_BASE_ENV_HAS_INT128)
+			typedef uint128_t uint_fast128_t;
+			typedef int128_t int_fast128_t;
+		#endif
+		typedef ::std::uintmax_t basic_uintmax_t;
+		typedef ::std::intmax_t basic_intmax_t;
+		typedef decltype(lambda{
+			#if defined(ELC_BASE_ENV_HAS_INT128)
+			if constexpr(sizeof(basic_uintmax_t) < sizeof(uint128_t))
+				return uint128_t{};
+			else
+			#endif
+				return basic_uintmax_t{};
+		}()) uintmax_t;
+		typedef decltype(lambda{
+			#if defined(ELC_BASE_ENV_HAS_INT128)
+			if constexpr(sizeof(basic_intmax_t) < sizeof(int128_t))
+				return int128_t{};
+			else
+			#endif
+				return basic_intmax_t{};
+		}()) intmax_t;
+		typedef basic_uintmax_t uintmax_index_t;
+		typedef basic_intmax_t intmax_index_t;
+		template<class T>
+		constexpr inline bool is_elc_expansion_base_type_helper()noexcept{
+			#if defined(ELC_BASE_ENV_HAS_INT128)
+			if constexpr(sizeof(basic_uintmax_t) < sizeof(uint128_t) && ::std::is_same_v<T,uint128_t>)
+				return true;
+			if constexpr(sizeof(basic_intmax_t) < sizeof(int128_t) && ::std::is_same_v<T,int128_t>)
+				return true;
+			#endif
+			return false;
+		}
+		template<class T>
+		constexpr bool inline is_elc_expansion_base_type=is_elc_expansion_base_type_helper<T>();
+
 		/*! 给定大小的无符号整数类型 */
 		template<size_t size>
 		using unsigned_specific_size_t=decltype(lambda(){
@@ -545,7 +595,10 @@ TYPE_MAPPER(uint8_t)
 TYPE_MAPPER(uint16_t)
 TYPE_MAPPER(uint32_t)
 TYPE_MAPPER(uint64_t)
-TYPE_MAPPER(uintmax_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint128_t)
+#endif
+TYPE_MAPPER(::std::uintmax_t)
 TYPE_MAPPER(size_t)
 TYPE_MAPPER(unsigned char)
 TYPE_MAPPER(char8_t)
@@ -559,7 +612,7 @@ TYPE_MAPPER(unsigned long long)
 
 //file_end
 
-			#line 41 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#line 91 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 			#undef TYPE_MAPPER
 			{}
 		}());
@@ -601,10 +654,13 @@ TYPE_MAPPER(uint_fast8_t)
 TYPE_MAPPER(uint_fast16_t)
 TYPE_MAPPER(uint_fast32_t)
 TYPE_MAPPER(uint_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint_fast128_t)
+#endif
 
 //file_end
 
-			#line 49 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#line 99 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 			#undef TYPE_MAPPER
 			{}
 		}());
@@ -724,7 +780,10 @@ TYPE_MAPPER(int8_t)
 TYPE_MAPPER(int16_t)
 TYPE_MAPPER(int32_t)
 TYPE_MAPPER(int64_t)
-TYPE_MAPPER(intmax_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(int128_t)
+#endif
+TYPE_MAPPER(::std::intmax_t)
 TYPE_MAPPER(ptrdiff_t)
 TYPE_MAPPER(signed char)
 TYPE_MAPPER(short)
@@ -769,7 +828,10 @@ TYPE_MAPPER(uint8_t)
 TYPE_MAPPER(uint16_t)
 TYPE_MAPPER(uint32_t)
 TYPE_MAPPER(uint64_t)
-TYPE_MAPPER(uintmax_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint128_t)
+#endif
+TYPE_MAPPER(::std::uintmax_t)
 TYPE_MAPPER(size_t)
 TYPE_MAPPER(unsigned char)
 TYPE_MAPPER(char8_t)
@@ -818,6 +880,9 @@ TYPE_MAPPER(int_fast8_t)
 TYPE_MAPPER(int_fast16_t)
 TYPE_MAPPER(int_fast32_t)
 TYPE_MAPPER(int_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(int_fast128_t)
+#endif
 
 //file_end
 
@@ -856,6 +921,9 @@ TYPE_MAPPER(uint_fast8_t)
 TYPE_MAPPER(uint_fast16_t)
 TYPE_MAPPER(uint_fast32_t)
 TYPE_MAPPER(uint_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint_fast128_t)
+#endif
 
 //file_end
 
@@ -863,7 +931,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 68 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 118 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				return false;
 			}
@@ -971,7 +1039,10 @@ TYPE_MAPPER(int8_t)
 TYPE_MAPPER(int16_t)
 TYPE_MAPPER(int32_t)
 TYPE_MAPPER(int64_t)
-TYPE_MAPPER(intmax_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(int128_t)
+#endif
+TYPE_MAPPER(::std::intmax_t)
 TYPE_MAPPER(ptrdiff_t)
 TYPE_MAPPER(signed char)
 TYPE_MAPPER(short)
@@ -1016,7 +1087,10 @@ TYPE_MAPPER(uint8_t)
 TYPE_MAPPER(uint16_t)
 TYPE_MAPPER(uint32_t)
 TYPE_MAPPER(uint64_t)
-TYPE_MAPPER(uintmax_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint128_t)
+#endif
+TYPE_MAPPER(::std::uintmax_t)
 TYPE_MAPPER(size_t)
 TYPE_MAPPER(unsigned char)
 TYPE_MAPPER(char8_t)
@@ -1065,6 +1139,9 @@ TYPE_MAPPER(int_fast8_t)
 TYPE_MAPPER(int_fast16_t)
 TYPE_MAPPER(int_fast32_t)
 TYPE_MAPPER(int_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(int_fast128_t)
+#endif
 
 //file_end
 
@@ -1103,6 +1180,9 @@ TYPE_MAPPER(uint_fast8_t)
 TYPE_MAPPER(uint_fast16_t)
 TYPE_MAPPER(uint_fast32_t)
 TYPE_MAPPER(uint_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint_fast128_t)
+#endif
 
 //file_end
 
@@ -1110,7 +1190,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 75 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 125 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				{}
 			}
@@ -1224,7 +1304,10 @@ TYPE_MAPPER(int8_t)
 TYPE_MAPPER(int16_t)
 TYPE_MAPPER(int32_t)
 TYPE_MAPPER(int64_t)
-TYPE_MAPPER(intmax_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(int128_t)
+#endif
+TYPE_MAPPER(::std::intmax_t)
 TYPE_MAPPER(ptrdiff_t)
 TYPE_MAPPER(signed char)
 TYPE_MAPPER(short)
@@ -1269,7 +1352,10 @@ TYPE_MAPPER(uint8_t)
 TYPE_MAPPER(uint16_t)
 TYPE_MAPPER(uint32_t)
 TYPE_MAPPER(uint64_t)
-TYPE_MAPPER(uintmax_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint128_t)
+#endif
+TYPE_MAPPER(::std::uintmax_t)
 TYPE_MAPPER(size_t)
 TYPE_MAPPER(unsigned char)
 TYPE_MAPPER(char8_t)
@@ -1318,6 +1404,9 @@ TYPE_MAPPER(int_fast8_t)
 TYPE_MAPPER(int_fast16_t)
 TYPE_MAPPER(int_fast32_t)
 TYPE_MAPPER(int_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(int_fast128_t)
+#endif
 
 //file_end
 
@@ -1356,6 +1445,9 @@ TYPE_MAPPER(uint_fast8_t)
 TYPE_MAPPER(uint_fast16_t)
 TYPE_MAPPER(uint_fast32_t)
 TYPE_MAPPER(uint_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint_fast128_t)
+#endif
 
 //file_end
 
@@ -1363,7 +1455,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 88 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 138 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				return muti_convertible_count;
 			}
@@ -1666,11 +1758,27 @@ TYPE_MAPPER(uint_fast64_t)
 		}
 	}
 	using basic_environment::BIT_POSSIBILITY;
+
+	using basic_environment::basic_uintmax_t;
+	using basic_environment::basic_intmax_t;
+	using basic_environment::uintmax_index_t;
+	using basic_environment::intmax_index_t;
+	using basic_environment::uintmax_t;
+	using basic_environment::intmax_t;
+	#if defined(ELC_BASE_ENV_HAS_INT128)
+	using basic_environment::uint128_t;
+	using basic_environment::int128_t;
+	#endif
+	using basic_environment::is_elc_expansion_base_type;
+
 	using basic_environment::unsigned_specific_size_t;
 	using basic_environment::unsigned_specific_size_fast_t;
+
 	using basic_environment::to_arithmetic;
+
 	using basic_environment::wchar_t_same_as_char_t;
 	using basic_environment::wchar_t_same_as_char16_t;
+	
 	using basic_environment::get_exponent;
 	using basic_environment::get_base_num;
 	using basic_environment::get_precision;
@@ -1847,7 +1955,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-	#line 403 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 469 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -2308,8 +2416,6 @@ inline auto template_warning_helper(U&&a)noexcept{return 0;}
 //这不比博人传燃?
 using ::std::byte;
 using ::std::size_t;
-using ::std::uintmax_t;
-using ::std::intmax_t;
 
 using ::std::forward;
 using ::std::addressof;
@@ -3152,7 +3258,7 @@ namespace math{
 	template<typename T>
 	struct arithmetic_type_info_prover{
 		//bool：是否是算数类型
-		static constexpr bool is_arithmetic_type=::std::is_arithmetic_v<T>;
+		static constexpr bool is_arithmetic_type=::std::is_arithmetic_v<T> || is_elc_expansion_base_type<T>;
 		//bool：是否是基础类型
 		static constexpr bool is_basic_type=::std::is_arithmetic_v<T>;
 		//bool：是否是大数类型
@@ -4837,7 +4943,7 @@ using array_like_n::array_end_by_zero_t;
 	每个T的可能性大小
 */
 template<class T> requires ::std::is_integral_v<T>
-constexpr auto number_of_possible_values_per=uintmax_t(max(type_info<::std::make_unsigned_t<T>>))+1;
+constexpr auto number_of_possible_values_per=uintmax_index_t(max(type_info<::std::make_unsigned_t<T>>))+1;
 
 /*!
 	功能: byte* 类型数据转换为 T&，不进行任何检查
