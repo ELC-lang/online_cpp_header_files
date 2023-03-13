@@ -32,7 +32,7 @@ jobs:
       - name: clone ELC
         run: git clone https://github.com/ELC-lang/ELC --depth 1
       - name: run Header_File_constructor
-        run: ./Header_File_constructor.out ./ELC/parts/header_file/files/elc/ ./files --full --relocate https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc
+        run: ./Header_File_constructor.out ./ELC/parts/header_file/files/elc/ ./files --full --skip-simple-block-comment --relocate https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc
       - name: remove build files
         run: rm -rf ./ELC ./Header_File_constructor.out
       - name: add all
