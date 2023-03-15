@@ -413,8 +413,10 @@ protected:\
 			typedef uint128_t uint_fast128_t;
 			typedef int128_t int_fast128_t;
 		#endif
+		//基础的uintmax_t
 		typedef ::std::uintmax_t basic_uintmax_t;
 		typedef ::std::intmax_t basic_intmax_t;
+		//更新uintmax_t和intmax_t的代指
 		typedef decltype(lambda{
 			#if defined(ELC_BASE_ENV_HAS_INT128)
 			if constexpr(sizeof(basic_uintmax_t) < sizeof(uint128_t))
@@ -431,6 +433,7 @@ protected:\
 			#endif
 				return basic_intmax_t{};
 		}()) intmax_t;
+		//众所周知，class不能作为数组下标，所以uintmax_index_t等类型的存在是有必要的
 		typedef basic_uintmax_t uintmax_index_t;
 		typedef basic_intmax_t intmax_index_t;
 		template<class T>
@@ -474,7 +477,7 @@ TYPE_MAPPER(unsigned long long)
 
 //file_end
 
-			#line 91 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#line 94 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 			#undef TYPE_MAPPER
 			{}
 		}());
@@ -495,7 +498,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-			#line 99 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#line 102 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 			#undef TYPE_MAPPER
 			{}
 		}());
@@ -604,7 +607,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 118 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 121 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				return false;
 			}
@@ -701,16 +704,14 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 125 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 128 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				{}
 			}
 			template<class T>
 			static inline constexpr size_t get_arithmetic_muti_convertible_count()noexcept{
 				typedef decltype(to_arithmetic_base(declvalue(T))) my_type;
-				push_and_disable_msvc_warning(26496);//未初始化警告diss
 				size_t muti_convertible_count=0;
-				pop_msvc_warning();
 				#define TYPE_MAPPER(type) \
 				if constexpr(type_uniquer<my_type>!=type_uniquer<type> && is_convertible<T,type>)\
 					muti_convertible_count++;
@@ -804,7 +805,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 138 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 139 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				return muti_convertible_count;
 			}
@@ -843,7 +844,7 @@ TYPE_MAPPER(uint_fast64_t)
 		inline constexpr bool wchar_t_same_as_char_t=sizeof(wchar_t)==sizeof(char_t);
 		//判断wchar_t是否和char16_t相同
 		inline constexpr bool wchar_t_same_as_char16_t=sizeof(wchar_t)==sizeof(char16_t);
-		#line 193 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+		#line 194 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 		namespace float_infos{
 			//精确数部分的掩码
 			template<class T>
@@ -1261,7 +1262,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-	#line 469 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 470 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
