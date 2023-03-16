@@ -120,6 +120,7 @@
 	#define __builtin_is_my_dick_still_there() true
 	#include <cstddef>//nullptr_t
 	#include <cstdlib>//exit、size_t
+	#include <cstring>//strlen & memcpy
 	#include <new>//operator delete、launder
 	#include <algorithm>//max、min
 	#include <type_traits>//enable_if等
@@ -128,6 +129,10 @@
 	#include <cfenv>//rounding
 	#include <ctime>//time
 	#include <ranges>
+	#include <initializer_list>
+	#if defined(__clang__)||defined(__GNUC__)
+		#include <cxxabi.h>
+	#endif
 	#define ELC_BASE_DEFS
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
 //_body.hpp
@@ -163,6 +168,8 @@ namespace elc{
 #if defined(_MSC_VER)//int128
 	#include <__msvc_int128.hpp>
 #endif
+#include <bit>
+#include <climits>
 namespace elc::defs{
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //_defs.hpp
@@ -194,6 +201,11 @@ namespace elc::defs{
 	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
 	#pragma warning(disable:26482)//非常数数组索引警告diss
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
 #endif
 #if defined(_MSC_VER)
 	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
@@ -427,7 +439,7 @@ protected:\
 
 //file_end
 
-	#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 
 	namespace basic_environment{
 		/// 每个bit（不是字节）的可能性
@@ -446,6 +458,84 @@ protected:\
 		#if defined(ELC_BASE_ENV_HAS_INT128)
 			typedef uint128_t uint_fast128_t;
 			typedef int128_t int_fast128_t;
+			namespace int128_literal_detail{
+				constexpr uint8_t hexval(char c)noexcept{
+					if constexpr('a'>'A'){
+						if(c>='a')
+							return c+10-'a';
+						elseif(c>='A')
+							return c+10-'A';
+					}
+					else{
+						if(c>='A')
+							return c+10-'A';
+						elseif(c>='a')
+							return c+10-'a';
+					}
+					return c-'0';
+				}
+				template<int base>
+				constexpr uint128_t eval_literal(uint128_t val=0)noexcept{
+					return val;
+				}
+				template<int base, char c, char...cs>
+				constexpr uint128_t eval_literal(uint128_t val=0)noexcept{
+					if constexpr(c!='\''){
+						static_assert(base==16||base==10||base==8||base==2,"base must be 16,10,8 or 2");
+						static_assert(c>='0'&&c<='9'||c>='a'&&c<='f'||c>='A'&&c<='F',"invalid char");
+						static_assert(base!=16 || sizeof...(cs)<=32-1,"literal too long");
+						static_assert(base!=10 || sizeof...(cs)<=39-1,"literal too long");
+						static_assert(base!=8 || sizeof...(cs)<=44-1,"literal too long");
+						static_assert(base!=2 || sizeof...(cs)<=128-1,"literal too long");
+						static_assert(base>hexval(c),"invalid char");
+						return eval_literal<base,cs...>(val*base+hexval(c));
+					}
+					else
+						return eval_literal<base,cs...>(val);
+				}
+				template<char...cs>
+				struct literal_evaler{
+					static constexpr uint128_t value=eval_literal<10,cs...>();
+				};
+				template<char...cs>
+				struct literal_evaler<'0','x',cs...>{
+					static constexpr uint128_t value=eval_literal<16,cs...>();
+				};
+				template<char...cs>
+				struct literal_evaler<'0','X',cs...>{
+					static constexpr uint128_t value=eval_literal<16,cs...>();
+				};
+				template<char...cs>
+				struct literal_evaler<'0','b',cs...>{
+					static constexpr uint128_t value=eval_literal<2,cs...>();
+				};
+				template<char...cs>
+				struct literal_evaler<'0','B',cs...>{
+					static constexpr uint128_t value=eval_literal<2,cs...>();
+				};
+				template<char...cs>
+				struct literal_evaler<'0',cs...>{
+					static constexpr uint128_t value=eval_literal<8,cs...>();
+				};
+				template<char...cs>
+				constexpr uint128_t operator ""_u128()noexcept{
+					return literal_evaler<cs...>::value;
+				}
+				template<char...cs>
+				struct signed_literal_evaler{
+					static constexpr int128_t value=static_cast<int128_t>(literal_evaler<cs...>::value);
+				};
+				template<char...cs>
+				struct signed_literal_evaler<'-',cs...>{
+					static constexpr int128_t value=-static_cast<int128_t>(literal_evaler<cs...>::value);
+				};
+				template<char...cs>
+				constexpr int128_t operator ""_i128()noexcept{
+					return signed_literal_evaler<cs...>::value;
+				}
+			}
+			using int128_literal_detail::operator ""_u128;
+			using int128_literal_detail::operator ""_i128;
 		#endif
 		//基础的uintmax_t
 		typedef ::std::uintmax_t basic_uintmax_t;
@@ -511,7 +601,7 @@ TYPE_MAPPER(unsigned long long)
 
 //file_end
 
-			#line 94 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#line 174 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 			#undef TYPE_MAPPER
 			{}
 		}());
@@ -532,7 +622,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-			#line 102 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#line 182 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 			#undef TYPE_MAPPER
 			{}
 		}());
@@ -641,7 +731,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 121 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 201 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				return false;
 			}
@@ -738,7 +828,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 128 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 208 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				{}
 			}
@@ -839,13 +929,13 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 139 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 219 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				return muti_convertible_count;
 			}
 			template<class T>
 			static inline constexpr bool convertible_unique_helper()noexcept{
-				return get_arithmetic_muti_convertible_count<T>()==0;
+				return get_arithmetic_muti_convertible_count<T>()==1;//the oly way we can save all lifes........
 			}
 			template<class T>
 			static inline constexpr bool able_helper()noexcept{
@@ -878,7 +968,7 @@ TYPE_MAPPER(uint_fast64_t)
 		inline constexpr bool wchar_t_same_as_char_t=sizeof(wchar_t)==sizeof(char_t);
 		//判断wchar_t是否和char16_t相同
 		inline constexpr bool wchar_t_same_as_char16_t=sizeof(wchar_t)==sizeof(char16_t);
-		#line 194 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+		#line 274 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 		namespace float_infos{
 			//精确数部分的掩码
 			template<class T>
@@ -891,7 +981,7 @@ TYPE_MAPPER(uint_fast64_t)
 					#if defined(_MSC_VER)//msvc上long double就是double
 						return(uint64_t)0x000FFFFFFFFFFFFFu;
 					#else
-						return(uint128_t)0x0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFu;
+						return(uint128_t)0x0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF_u128;
 					#endif
 				}
 			}();
@@ -926,7 +1016,7 @@ TYPE_MAPPER(uint_fast64_t)
 					#if defined(_MSC_VER)//msvc上long double就是double
 						return(uint64_t)0x10000000000000u;
 					#else
-						return(uint128_t)0x10000000000000000000000000000u;
+						return(uint128_t)0x10000000000000000000000000000_u128;
 					#endif
 				}
 			}();
@@ -1034,16 +1124,33 @@ TYPE_MAPPER(uint_fast64_t)
 					#if defined(_MSC_VER)//msvc上long double就是double
 						return 0x7FFFFFFFFFFFFFFFu;
 					#else
-						return 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFu;
+						return 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_u128;
 					#endif
 				}
 			}();
+			template<class T>
+			union float_data_union{
+				T v;
+				data_type<T> data;
+			};
+			template<class T>
+			constexpr data_type<T> get_float_data(T v)noexcept{
+				float_data_union<T> tmp;
+				tmp.v=v;
+				return tmp.data;
+			}
+			template<class T>
+			constexpr T get_float_from_data(data_type<T> data)noexcept{
+				float_data_union<T> tmp;
+				tmp.data=data;
+				return tmp.v;
+			}
 		}
 		//自浮点数获取精确数部分，舍去指数和符号位
 		template<class T> requires ::std::is_floating_point_v<T>
 		force_inline constexpr auto get_precision(T v)noexcept{
 			using namespace float_infos;
-			auto tmp=*(data_type<T>*)&v;
+			auto tmp=get_float_data(v);
 			tmp&=precision_mask<T>;
 			return tmp;
 		}
@@ -1058,7 +1165,7 @@ TYPE_MAPPER(uint_fast64_t)
 		template<class T> requires ::std::is_floating_point_v<T>
 		force_inline constexpr auto base_get_exponent(T v)noexcept{
 			using namespace float_infos;
-			auto tmp=*(data_type<T>*)&v;
+			auto tmp=get_float_data(v);
 			tmp&=exponent_mask<T>;
 			tmp>>=precision_base_bit<T>;
 			return exponent_unsigned_type<T>(tmp);
@@ -1113,16 +1220,14 @@ TYPE_MAPPER(uint_fast64_t)
 			if(exponent>exponent_max<T>)return 0;//指数过大，无法表示
 			//DEN情况判断
 			const bool is_den=!(base_num>>precision_base_bit<T>);//若基数最高位为0，则exponent一定为exponent_min，不用判断
-			if(is_den){
-				const data_type<T> data=base_num;
-				return *(const T*)&data;
-			}
+			if(is_den)
+				return get_float_from_data<T>(base_num);
 			else{//非DEN情况下，根据浮点数表示规则去掉基数多余的1
 				const auto exp=exponent_unsigned_type<T>(exponent+exponent_diff<T>);
 				base_num-=get_precision_base<T>();
 				data_type<T> data=base_num;
 				data|=data_type<T>(exp)<<precision_base_bit<T>;
-				return *(T*)&data;
+				return get_float_from_data<T>(data);
 			}
 		}
 	}
@@ -1137,6 +1242,8 @@ TYPE_MAPPER(uint_fast64_t)
 	#if defined(ELC_BASE_ENV_HAS_INT128)
 	using basic_environment::uint128_t;
 	using basic_environment::int128_t;
+	using basic_environment::operator""_u128;
+	using basic_environment::operator""_i128;
 	#endif
 	using basic_environment::is_elc_expansion_base_type;
 
@@ -1170,6 +1277,9 @@ TYPE_MAPPER(uint_fast64_t)
 #undef push_and_disable_msvc_warning
 #if defined(_MSC_VER)
 	#pragma pack(pop)
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
 #endif
 #if defined(_MSC_VER)
 	#pragma pop_macro("new")
@@ -1296,7 +1406,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-	#line 470 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 567 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -1334,6 +1444,11 @@ namespace elc::defs{ //在elc::defs中定义内容
 	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
 	#pragma warning(disable:26482)//非常数数组索引警告diss
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
 #endif
 #if defined(_MSC_VER)
 	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
@@ -2052,8 +2167,7 @@ constexpr struct min_t{
 	}
 	template<typename T>
 	struct for_type_t{
-		template<class T> requires able<::std::initializer_list<T>>
-		[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const noexcept{
+		[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const noexcept requires able<::std::initializer_list<T>>{
 			return ::std::min(l);
 		}
 		template<class...Args>
@@ -2098,8 +2212,7 @@ constexpr struct max_t{
 	}
 	template<typename T>
 	struct for_type_t{
-		template<class T> requires able<::std::initializer_list<T>>
-		[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const noexcept{
+		[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const noexcept requires able<::std::initializer_list<T>>{
 			return ::std::max(l);
 		}
 		template<class...Args>
@@ -2469,7 +2582,6 @@ namespace math{
 	template<float_type T> requires is_basic_type<T>
 	[[nodiscard]]force_inline constexpr auto ceil(const T&v)noexcept{
 		if in_consteval{
-			typedef decltype(::std::ceil(v)) RT;
 			auto ceil_impl = lambda(T x, T y)noexcept{
 				return is_close(x,y) ? y : y+T{1};
 			};
@@ -2483,7 +2595,6 @@ namespace math{
 	template<float_type T> requires is_basic_type<T>
 	[[nodiscard]]force_inline constexpr auto floor(const T&v)noexcept{
 		if in_consteval{
-			typedef decltype(::std::floor(v)) RT;
 			auto floor_impl = lambda(T x, T y)noexcept{
 				return is_close(x,y) ? y : y-T{1};
 			};
@@ -2519,13 +2630,13 @@ namespace math{
 	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
 	template<arithmetic_type T>
 	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
-		#line 427 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 425 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
-		#line 439 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 437 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		for(T c=5u;c<=b;c+=6u)//遍历判断是否能被因数分解——不会有人看不懂吧?
 			if((!mod(a,c))||(!mod(a,(c+2u))))
 				return false;
-		#line 448 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 446 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		return true;
 	}
 	/*! 判断某数是否是素数 */
@@ -2538,10 +2649,10 @@ namespace math{
 
 		if(b<4)
 			return true;//1和0也是prime,我不管.
-		#line 470 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 468 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		if(mod(mod(b,6)-1u,4u))
 			return false;
-		#line 475 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 473 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		return is_prime_num_no_pre_check(b);
 	}
 	/// 求小于或等于某数的素数
@@ -2599,12 +2710,12 @@ namespace math{
 	push_and_disable_msvc_warning(26467);//gold_of_resize永远为正数
 	/// 已知当前array的size，求下一个合适的提前分配大小
 	[[nodiscard]]inline constexpr size_t get_next_gold_size_to_resize_for_array(size_t size)noexcept{
-		#line 535 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 533 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		return size_t(size*magic_number::gold_of_resize);
 	}
 	/// 已知当前hash table的size，求下一个合适的桶大小
 	[[nodiscard]]inline constexpr size_t get_next_gold_size_to_resize_for_hash(size_t size)noexcept{
-		#line 543 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 541 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		return size_t(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
 	}
 	pop_msvc_warning();
@@ -4864,7 +4975,7 @@ namespace constexpr_str_n{
 				if(is_bitmark_workable)
 					is_bitmark_for_unindex_workable=bitmark_for_unindex.mark(*this);
 			}
-		constexpr constexpr_str_t(const_string_ptr_t str):constexpr_str_t(str,array_end_by_zero_t::get_length_of(str)){}
+		constexpr constexpr_str_t(const_string_ptr_t str):constexpr_str_t(str,array_end_by_zero_t<char_T>::get_length_of(str)){}
 		consteval constexpr_str_t(const constexpr_str_t&str)=default;
 		[[nodiscard]]constexpr hash_t hash()const noexcept{return hash_result;}
 	};
@@ -5222,6 +5333,9 @@ public:
 #if defined(_MSC_VER)
 	#pragma pack(pop)
 #endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
+#endif
 #if defined(_MSC_VER)
 	#pragma pop_macro("new")
 	#pragma pop_macro("delete")
@@ -5356,7 +5470,7 @@ public:
 
 //file_end
 
-	#line 45 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+	#line 50 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 #endif
 
 //file_end
@@ -5452,7 +5566,7 @@ public:
 //file_end
 
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
-#line 46 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+#line 51 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 
 //file_end
 
@@ -5487,6 +5601,11 @@ public:
 	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
 	#pragma warning(disable:26482)//非常数数组索引警告diss
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
 #endif
 #if defined(_MSC_VER)
 	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
@@ -6019,6 +6138,9 @@ namespace overhead_n{
 #if defined(_MSC_VER)
 	#pragma pack(pop)
 #endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
+#endif
 #if defined(_MSC_VER)
 	#pragma pop_macro("new")
 	#pragma pop_macro("delete")
@@ -6239,7 +6361,7 @@ namespace elc{
 //file_end
 
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
-#line 46 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+#line 51 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 
 //file_end
 
@@ -6274,6 +6396,11 @@ namespace elc{
 	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
 	#pragma warning(disable:26482)//非常数数组索引警告diss
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
 #endif
 #if defined(_MSC_VER)
 	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
@@ -8965,6 +9092,9 @@ inline constexpr bool ispunct(char_t c)noexcept{
 #if defined(_MSC_VER)
 	#pragma pack(pop)
 #endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
+#endif
 #if defined(_MSC_VER)
 	#pragma pop_macro("new")
 	#pragma pop_macro("delete")
@@ -9151,6 +9281,11 @@ inline constexpr bool ispunct(char_t c)noexcept{
 	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
 	#pragma warning(disable:26482)//非常数数组索引警告diss
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
 #endif
 #if defined(_MSC_VER)
 	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
@@ -9537,6 +9672,9 @@ protected:\
 #if defined(_MSC_VER)
 	#pragma pack(pop)
 #endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
+#endif
 #if defined(_MSC_VER)
 	#pragma pop_macro("new")
 	#pragma pop_macro("delete")
@@ -9735,7 +9873,7 @@ protected:\
 //file_end
 
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
-#line 46 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+#line 51 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 
 //file_end
 
@@ -9769,6 +9907,11 @@ protected:\
 	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
 	#pragma warning(disable:26482)//非常数数组索引警告diss
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
 #endif
 #if defined(_MSC_VER)
 	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
@@ -10063,6 +10206,9 @@ namespace elc::defs::locale::str{
 #if defined(_MSC_VER)
 	#pragma pack(pop)
 #endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
+#endif
 #if defined(_MSC_VER)
 	#pragma pop_macro("new")
 	#pragma pop_macro("delete")
@@ -10228,6 +10374,11 @@ namespace elc::defs{ //在elc::defs中定义内容
 	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
 	#pragma warning(disable:26482)//非常数数组索引警告diss
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
 #endif
 #if defined(_MSC_VER)
 	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
@@ -15737,6 +15888,9 @@ inline void test_end(){
 #if defined(_MSC_VER)
 	#pragma pack(pop)
 #endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
+#endif
 #if defined(_MSC_VER)
 	#pragma pop_macro("new")
 	#pragma pop_macro("delete")
@@ -15933,6 +16087,11 @@ namespace elc::defs{
 	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
 	#pragma warning(disable:26482)//非常数数组索引警告diss
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
 #endif
 #if defined(_MSC_VER)
 	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
@@ -16578,20 +16737,20 @@ decltype(auto)operator>>(stream_T&&stream,callable_T&&callable)noexcept(invoke<c
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/unreadable_wrap/_body.hpp"
 //warp for not_unreadable_istream to make it unreadable
 template<class stream_T> requires not_unreadable_istream_class<stream_T>
-struct unreadable_wrap:stream_T,instance_struct<unreadable_wrap<stream_T>>,virtual decltype(lambda{
-	if constexpr(noexcept_stream_class<stream_T>) {
-		if constexpr(data_stream_class<stream_T>)
-			return type_info<noexcept_data_istream_t>;
-		else
-			return type_info<noexcept_text_istream_t<typename stream_T::char_type>>;
-	}
-	else {
-		if constexpr(data_stream_class<stream_T>)
-			return type_info<data_istream_t>;
-		else
-			return type_info<text_istream_t<typename stream_T::char_type>>;
-	}
-}())::type{
+struct unreadable_wrap:stream_T,instance_struct<unreadable_wrap<stream_T>>,virtual conditional<
+	//use conditional as workaround, see https://github.com/ELC-lang/ELC/commit/d352be02ff232d1e2b8b15197a34058166775b92 for more detail.
+	noexcept_stream_class<stream_T>,
+		conditional<data_stream_class<stream_T>,
+			noexcept_data_istream_t
+		,
+			noexcept_text_istream_t<typename stream_T::char_type>
+	>,
+		conditional<data_stream_class<stream_T>,
+			data_istream_t
+		,
+			text_istream_t<typename stream_T::char_type>
+	>
+>{
 private:
 	typedef stream_T base_t;
 	typedef unreadable_wrap<stream_T> this_t;
@@ -16875,6 +17034,9 @@ inline void test_end(){
 #if defined(_MSC_VER)
 	#pragma pack(pop)
 #endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
+#endif
 #if defined(_MSC_VER)
 	#pragma pop_macro("new")
 	#pragma pop_macro("delete")
@@ -17092,6 +17254,11 @@ namespace elc::defs{
 	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
 	#pragma warning(disable:26482)//非常数数组索引警告diss
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
 #endif
 #if defined(_MSC_VER)
 	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
@@ -17368,6 +17535,9 @@ protected:\
 #if defined(_MSC_VER)
 	#pragma pack(pop)
 #endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
+#endif
 #if defined(_MSC_VER)
 	#pragma pop_macro("new")
 	#pragma pop_macro("delete")
@@ -17545,6 +17715,11 @@ namespace elc::defs{
 	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
 	#pragma warning(disable:26482)//非常数数组索引警告diss
 	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
 #endif
 #if defined(_MSC_VER)
 	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
@@ -17895,6 +18070,9 @@ protected:\
 #undef push_and_disable_msvc_warning
 #if defined(_MSC_VER)
 	#pragma pack(pop)
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
 #endif
 #if defined(_MSC_VER)
 	#pragma pop_macro("new")
