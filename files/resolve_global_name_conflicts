@@ -446,11 +446,7 @@ protected:\
 		/// 为什么c艹委员会不定义这个？
 		constexpr size_t BIT_POSSIBILITY=2;
 
-		#if defined(_MSC_VER) && _MSVC_STL_UPDATE > 202303L//after https://github.com/microsoft/STL/pull/3559
-			#define ELC_BASE_ENV_HAS_INT128
-			typedef ::std::_Unsigned128 uint128_t;
-			typedef ::std::_Signed128 int128_t;
-		#elif defined(__SIZEOF_INT128__)
+		#if defined(__SIZEOF_INT128__)
 			#define ELC_BASE_ENV_HAS_INT128
 			typedef __uint128_t uint128_t;
 			typedef __int128_t int128_t;
@@ -601,7 +597,7 @@ TYPE_MAPPER(unsigned long long)
 
 //file_end
 
-			#line 174 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#line 170 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 			#undef TYPE_MAPPER
 			{}
 		}());
@@ -622,7 +618,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-			#line 182 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#line 178 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 			#undef TYPE_MAPPER
 			{}
 		}());
@@ -731,7 +727,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 201 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 197 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				return false;
 			}
@@ -828,7 +824,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 208 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 204 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				{}
 			}
@@ -929,7 +925,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 219 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 215 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				return muti_convertible_count;
 			}
@@ -968,7 +964,7 @@ TYPE_MAPPER(uint_fast64_t)
 		inline constexpr bool wchar_t_same_as_char_t=sizeof(wchar_t)==sizeof(char_t);
 		//判断wchar_t是否和char16_t相同
 		inline constexpr bool wchar_t_same_as_char16_t=sizeof(wchar_t)==sizeof(char16_t);
-		#line 274 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+		#line 270 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 		namespace float_infos{
 			//精确数部分的掩码
 			template<class T>
@@ -1406,7 +1402,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-	#line 567 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 563 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
