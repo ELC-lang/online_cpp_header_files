@@ -385,11 +385,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -605,11 +607,11 @@ protected:\
 			return false;
 		}
 		template<class T>
-		constexpr bool inline is_elc_expansion_base_type=is_elc_expansion_base_type_helper<T>();
+		concept is_elc_expansion_base_type=is_elc_expansion_base_type_helper<T>();
 
 		/*! 给定大小的无符号整数类型 */
 		template<size_t size>
-		using unsigned_specific_size_t=decltype(lambda(){
+		using unsigned_specific_size_t=decltype(lambda{
 			#define TYPE_MAPPER(type) if constexpr(size == sizeof(type))return (type)0;else
 			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
 //unsigned_mapper.hpp
@@ -641,7 +643,7 @@ TYPE_MAPPER(unsigned long long)
 		}());
 		/*! 至少有给定大小的快速无符号整数类型 */
 		template<size_t size>
-		using unsigned_specific_size_fast_t=decltype(lambda(){
+		using unsigned_specific_size_fast_t=decltype(lambda{
 			#define TYPE_MAPPER(type) if constexpr(size <= sizeof(type))return (type)0;else
 			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
 //unsigned_fast_mapper.hpp
@@ -1006,7 +1008,7 @@ TYPE_MAPPER(uint_fast64_t)
 		namespace float_infos{
 			//精确数部分的掩码
 			template<class T>
-			constexpr auto precision_mask=lambda(){
+			constexpr auto precision_mask=lambda{
 				if constexpr(::std::is_same_v<T,float>)
 					return(uint32_t)0x007FFFFFu;
 				elseif constexpr(::std::is_same_v<T,double>)
@@ -1025,7 +1027,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 			//浮点数的无符号整数数据类型
 			template<class T>
-			using data_type=decltype(lambda(){
+			using data_type=decltype(lambda{
 				if constexpr(::std::is_same_v<T,float>)
 					return uint32_t{};
 				elseif constexpr(::std::is_same_v<T,double>)
@@ -1041,7 +1043,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 			//自浮点数获取精确数的基（如float是2^23，double是2^52，long double是2^112）
 			template<class T>
-			constexpr auto precision_base=lambda(){
+			constexpr auto precision_base=lambda{
 				if constexpr(::std::is_same_v<T,float>)
 					return(uint32_t)0x800000u;
 				elseif constexpr(::std::is_same_v<T,double>)
@@ -1057,7 +1059,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 			//自浮点数获取精确数的基的位数（如float是23）
 			template<class T>
-			constexpr auto precision_base_bit=lambda(){
+			constexpr auto precision_base_bit=lambda{
 				if constexpr(::std::is_same_v<T,float>)
 					return 23u;
 				elseif constexpr(::std::is_same_v<T,double>)
@@ -1073,7 +1075,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 			//浮点数的指数部分的diff（如float是127，double是1023，long double是16383）
 			template<class T>
-			constexpr auto exponent_diff=lambda(){
+			constexpr auto exponent_diff=lambda{
 				if constexpr(::std::is_same_v<T,float>)
 					return 127;
 				elseif constexpr(::std::is_same_v<T,double>)
@@ -1088,7 +1090,7 @@ TYPE_MAPPER(uint_fast64_t)
 			}();
 			//浮点数的指数部分的min（如float是-126，double是-1022，long double是-16382）
 			template<class T>
-			constexpr auto exponent_min=lambda(){
+			constexpr auto exponent_min=lambda{
 				if constexpr(::std::is_same_v<T,float>)
 					return -126;
 				elseif constexpr(::std::is_same_v<T,double>)
@@ -1103,7 +1105,7 @@ TYPE_MAPPER(uint_fast64_t)
 			}();
 			//浮点数的指数部分的max（如float是127，double是1023，long double是16383）
 			template<class T>
-			constexpr auto exponent_max=lambda(){
+			constexpr auto exponent_max=lambda{
 				if constexpr(::std::is_same_v<T,float>)
 					return 127;
 				elseif constexpr(::std::is_same_v<T,double>)
@@ -1119,7 +1121,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 			//浮点数的指数部分的无符号整数类型
 			template<class T>
-			using exponent_unsigned_type=decltype(lambda(){
+			using exponent_unsigned_type=decltype(lambda{
 				if constexpr(::std::is_same_v<T,float>)
 					return uint8_t{};
 				elseif constexpr(::std::is_same_v<T,double>)
@@ -1134,7 +1136,7 @@ TYPE_MAPPER(uint_fast64_t)
 			}());
 			//浮点数的指数部分的经过偏移后的有符号整数类型
 			template<class T>
-			using exponent_type=decltype(lambda(){
+			using exponent_type=decltype(lambda{
 				if constexpr(::std::is_same_v<T,float>)
 					return int8_t{};
 				elseif constexpr(::std::is_same_v<T,double>)
@@ -1149,7 +1151,7 @@ TYPE_MAPPER(uint_fast64_t)
 			}());
 			//浮点数的指数部分的掩码
 			template<class T>
-			constexpr auto exponent_mask=lambda(){
+			constexpr auto exponent_mask=lambda{
 				if constexpr(::std::is_same_v<T,float>)
 					return 0x7FFFFFFFu;
 				elseif constexpr(::std::is_same_v<T,double>)
@@ -1288,7 +1290,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 	using basic_environment::wchar_t_same_as_char_t;
 	using basic_environment::wchar_t_same_as_char16_t;
-	
+
 	using basic_environment::get_exponent;
 	using basic_environment::get_base_num;
 	using basic_environment::get_precision;
@@ -1389,6 +1391,7 @@ TYPE_MAPPER(uint_fast64_t)
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -1624,11 +1627,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -2335,57 +2340,105 @@ namespace math{
 	inline namespace concepts{
 		/// 算术类型概念
 		template<typename T>
-		constexpr bool is_arithmetic_type=arithmetic_type_info_prover<remove_cvref<T>>::is_arithmetic_type;
+		concept arithmetic_type=arithmetic_type_info_prover<remove_cvref<T>>::is_arithmetic_type;
 		template<typename T>
-		concept arithmetic_type=is_arithmetic_type<T>;
+		concept is_arithmetic_type=arithmetic_type<T>;
 
 		/// 基础类型概念
 		template<typename T>
-		constexpr bool is_basic_type=arithmetic_type_info_prover<remove_cvref<T>>::is_basic_type;
+		concept basic_type=arithmetic_type<T> && arithmetic_type_info_prover<remove_cvref<T>>::is_basic_type;
 		template<typename T>
-		concept basic_type=is_basic_type<T>;
+		concept is_basic_type=basic_type<T>;
 
 		/// 大数类型概念
 		template<typename T>
-		constexpr bool is_big_type=arithmetic_type_info_prover<remove_cvref<T>>::is_big_type;
+		concept big_type=arithmetic_type<T> && arithmetic_type_info_prover<remove_cvref<T>>::is_big_type;
 		template<typename T>
-		concept big_type=is_big_type<T>;
+		concept is_big_type=big_type<T>;
 
 		/// 浮点类型概念
 		template<typename T>
-		constexpr bool is_float_type=arithmetic_type_info_prover<remove_cvref<T>>::is_float_type;
+		concept float_type=arithmetic_type<T> && arithmetic_type_info_prover<remove_cvref<T>>::is_float_type;
 		template<typename T>
-		concept float_type=is_float_type<T>;
+		concept is_float_type=float_type<T>;
+
+		/// 基础浮点数类型概念
+		template<typename T>
+		concept basic_float_type=float_type<T> && basic_type<T>;
+		template<typename T>
+		concept is_basic_float_type=basic_float_type<T>;
 
 		/// 整数类型概念
 		template<typename T>
-		constexpr bool is_integer_type=!is_float_type<T>;
+		concept integer_type=arithmetic_type<T> && !float_type<T>;
 		template<typename T>
-		concept integer_type=is_integer_type<T>;
+		concept is_integer_type=integer_type<T>;
+
+		/// 基础整数类型概念
+		template<typename T>
+		concept basic_integer_type=integer_type<T> && basic_type<T>;
+		template<typename T>
+		concept is_basic_integer_type=basic_integer_type<T>;
 
 		/// 有符号类型概念
 		template<typename T>
-		constexpr bool is_signed=arithmetic_type_info_prover<remove_cvref<T>>::is_signed;
+		concept signed_type=arithmetic_type<T> && arithmetic_type_info_prover<remove_cvref<T>>::is_signed;
 		template<typename T>
-		concept signed_type=is_signed<T>;
+		concept is_signed=signed_type<T>;
 
 		/// 无符号类型概念
 		template<typename T>
-		constexpr bool is_unsigned=!is_signed<T>;
+		concept unsigned_type=arithmetic_type<T> && !is_signed<T>;
 		template<typename T>
-		concept unsigned_type=is_unsigned<T>;
+		concept is_unsigned=unsigned_type<T>;
 
 		/// 有符号整数类型概念
 		template<typename T>
-		constexpr bool is_signed_integer_type=is_integer_type<T>&&is_signed<T>;
+		concept signed_integer_type=integer_type<T> && is_signed<T>;
 		template<typename T>
-		concept signed_integer_type=is_signed_integer_type<T>;
+		concept is_signed_integer_type=signed_integer_type<T>;
 
 		/// 无符号整数类型概念
 		template<typename T>
-		constexpr bool is_unsigned_integer_type=is_integer_type<T>&&is_unsigned<T>;
+		concept unsigned_integer_type=integer_type<T> && is_unsigned<T>;
 		template<typename T>
-		concept unsigned_integer_type=is_unsigned_integer_type<T>;
+		concept is_unsigned_integer_type=unsigned_integer_type<T>;
+
+		/// 无符号浮点数类型概念
+		template<typename T>
+		concept unsigned_float_type=float_type<T> && is_unsigned<T>;
+		template<typename T>
+		concept is_unsigned_float_type=unsigned_float_type<T>;
+
+		/// 有符号浮点数类型概念
+		template<typename T>
+		concept signed_float_type=float_type<T> && is_signed<T>;
+		template<typename T>
+		concept is_signed_float_type=signed_float_type<T>;
+
+		/// 有符号基础整数类型概念
+		template<typename T>
+		concept signed_basic_integer_type=basic_integer_type<T> && is_signed<T>;
+		template<typename T>
+		concept is_signed_basic_integer_type=signed_basic_integer_type<T>;
+
+		/// 无符号基础整数类型概念
+		template<typename T>
+		concept unsigned_basic_integer_type=basic_integer_type<T> && is_unsigned<T>;
+		template<typename T>
+		concept is_unsigned_basic_integer_type=unsigned_basic_integer_type<T>;
+
+		/// 有符号基础浮点数类型概念
+		template<typename T>
+		concept signed_basic_float_type=basic_float_type<T> && is_signed<T>;
+		template<typename T>
+		concept is_signed_basic_float_type=signed_basic_float_type<T>;
+
+		/// 无符号基础浮点数类型概念
+		template<typename T>
+		concept unsigned_basic_float_type=basic_float_type<T> && is_unsigned<T>;
+		template<typename T>
+		concept is_unsigned_basic_float_type=unsigned_basic_float_type<T>;
 
 		/// 有NaN的类型概念
 		template<typename T>
@@ -2439,7 +2492,7 @@ namespace math{
 	/*! 任意算数类型安全转型(ub避免.). */
 	template<arithmetic_type T,arithmetic_type U>
 	[[nodiscard]]force_inline constexpr T safe_arithmetic_cast(U x)noexcept{
-		if constexpr(::std::is_floating_point_v<U> && ::std::is_unsigned_v<T>)
+		if constexpr(basic_float_type<U> && unsigned_type<T>)
 			return (T)(intmax_t)x;
 		else
 			return (T)x;
@@ -2457,10 +2510,23 @@ namespace math{
 	/*! 求余 */
 	template<arithmetic_type T1,arithmetic_type T2>
 	[[nodiscard]]force_inline constexpr auto mod(const T1&a,const T2&b){
-		if constexpr(::std::is_floating_point_v<T1>||::std::is_floating_point_v<T2>)
+		if constexpr(basic_float_type<T1>||basic_float_type<T2>)
 			return ::std::fmod(a,b);
 		else
 			return a%b;
+	}
+	//is_odd
+	template<arithmetic_type T>
+	[[nodiscard]]force_inline constexpr bool is_odd(const T&x)noexcept{
+		if constexpr(is_integer_type<T>)
+			return x&1;
+		else
+			return mod(x,T(2));
+	}
+	//is_even
+	template<arithmetic_type T>
+	[[nodiscard]]force_inline constexpr bool is_even(const T&x)noexcept{
+		return !is_odd(x);
 	}
 	//divmod
 	template<arithmetic_type T1,arithmetic_type T2> requires(!is_big_type<T1>&&!is_big_type<T2>)
@@ -2471,7 +2537,7 @@ namespace math{
 			quot_t quot;
 			mod_t mod;
 		};
-		if constexpr(::std::is_floating_point_v<T1>||::std::is_floating_point_v<T2>)
+		if constexpr(basic_float_type<T1>||basic_float_type<T2>)
 			return divmod_result{::std::floor(a/b),::std::fmod(a,b)};
 		else
 			return divmod_result{a/b,a%b};
@@ -2480,13 +2546,13 @@ namespace math{
 	/*! 设置浮点舍入 */
 	template<typename T>
 	force_inline constexpr void set_rounding(int mode){
-		if constexpr(::std::is_floating_point_v<T>)
+		if constexpr(basic_float_type<T>)
 			::std::fesetround(mode);
 	}
 	/*!获取浮点舍入 */
 	template<typename T>
 	[[nodiscard]]force_inline constexpr int get_rounding(){
-		if constexpr(::std::is_floating_point_v<T>)
+		if constexpr(basic_float_type<T>)
 			return ::std::fegetround();
 		else
 			return 0;
@@ -2518,7 +2584,7 @@ namespace math{
 	//is_close
 	template<arithmetic_type T>
 	[[nodiscard]]force_inline constexpr bool is_close(const T&a,const T&b)noexcept{
-		if constexpr(is_float_type<T> && is_basic_type<T>)
+		if constexpr(basic_float_type<T>)
 			return abs(a-b)<=::std::numeric_limits<T>::epsilon();
 		else
 			return a==b;
@@ -2600,6 +2666,23 @@ namespace math{
 		elseif constexpr(is_basic_type<T>)
 			return ::std::pow(a,b);
 	}
+	template<big_type T,unsigned_integer_type U>
+	[[nodiscard]]force_inline constexpr auto pow(T a,U b)noexcept{
+		if constexpr(is_signed<T>){
+			const bool isneg=is_negative(a) && is_odd(b);
+			const auto abs_ret=pow(abs(a),b);
+			return copy_as_negative(abs_ret,isneg);
+		}
+		else{
+			T aret=1u;
+			while(b){
+				if(is_odd(b))aret*=a;
+				a*=a;
+				b>>=1u;
+			}
+			return aret;
+		}
+	}
 	//trunc
 	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
 	template<float_type T> requires is_basic_type<T>
@@ -2664,13 +2747,13 @@ namespace math{
 	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
 	template<arithmetic_type T>
 	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
-		#line 425 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 503 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
-		#line 437 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 515 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		for(T c=5u;c<=b;c+=6u)//遍历判断是否能被因数分解——不会有人看不懂吧?
 			if((!mod(a,c))||(!mod(a,(c+2u))))
 				return false;
-		#line 446 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 524 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		return true;
 	}
 	/*! 判断某数是否是素数 */
@@ -2683,10 +2766,10 @@ namespace math{
 
 		if(b<4)
 			return true;//1和0也是prime,我不管.
-		#line 468 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 546 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		if(mod(mod(b,6)-1u,4u))
 			return false;
-		#line 473 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 551 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		return is_prime_num_no_pre_check(b);
 	}
 	/// 求小于或等于某数的素数
@@ -2744,12 +2827,12 @@ namespace math{
 	push_and_disable_msvc_warning(26467);//gold_of_resize永远为正数
 	/// 已知当前array的size，求下一个合适的提前分配大小
 	[[nodiscard]]inline constexpr size_t get_next_gold_size_to_resize_for_array(size_t size)noexcept{
-		#line 533 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 611 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		return size_t(size*magic_number::gold_of_resize);
 	}
 	/// 已知当前hash table的size，求下一个合适的桶大小
 	[[nodiscard]]inline constexpr size_t get_next_gold_size_to_resize_for_hash(size_t size)noexcept{
-		#line 541 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 619 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
 		return size_t(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
 	}
 	pop_msvc_warning();
@@ -2798,7 +2881,7 @@ namespace math{
 					}
 					i=get_prime_num_big_than(i);
 				}
-				if constexpr(::std::is_signed_v<T> || ::std::is_floating_point_v<T>)
+				if constexpr(signed_type<T>)
 					if(is_negative(_m))
 						aret.push_back(T{-1});
 				return aret;
@@ -2825,7 +2908,7 @@ namespace math{
 						}
 						i=get_prime_num_big_than(i);
 					}
-					if constexpr(::std::is_signed_v<T> || ::std::is_floating_point_v<T>)
+					if constexpr(signed_type<T>)
 						if(is_negative(_m))
 							aret.push_back(T{-1});
 					return aret;
@@ -3010,6 +3093,8 @@ using math::copy_as_negative;
 using math::copy_as_not_negative;
 using math::to_size_t;
 using math::mod;
+using math::is_odd;
+using math::is_even;
 using math::divmod;
 using math::set_rounding;
 using math::get_rounding;
@@ -3044,15 +3129,15 @@ using math::gcd;
 namespace bit{
 	/// 位操作：循环左移（无mod）
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
+	template<unsigned_type T>
 	[[nodiscard]]force_inline constexpr auto rotl_nomod(const T v,const auto R)noexcept;
 	#define rot_base(opt,antiopt) static_cast<T>(static_cast<T>(v opt r) | static_cast<T>(v antiopt (d - r)))
 	/// 位操作：循环右移（无mod）
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
+	template<unsigned_type T>
 	[[nodiscard]]force_inline constexpr auto rotr_nomod(const T v,const auto r)noexcept{
 		constexpr auto d = ::std::numeric_limits<T>::digits;
-		if constexpr(::std::is_unsigned_v<decltype(r)>){
+		if constexpr(unsigned_type<decltype(r)>){
 			if(r)
 				return rot_base(>>,<<);
 			else
@@ -3069,10 +3154,10 @@ namespace bit{
 	}
 	/// 位操作：循环左移（无mod）
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
+	template<unsigned_type T>
 	[[nodiscard]]force_inline constexpr auto rotl_nomod(const T v,const auto r)noexcept{
 		constexpr auto d = ::std::numeric_limits<T>::digits;
-		if constexpr(::std::is_unsigned_v<decltype(r)>){
+		if constexpr(unsigned_type<decltype(r)>){
 			if(r)
 				return rot_base(<<,>>);
 			else
@@ -3090,7 +3175,7 @@ namespace bit{
 	#undef rot_base
 	/// 位操作：循环右移
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
+	template<unsigned_type T>
 	[[nodiscard]]force_inline constexpr auto rotr(const T v,const auto R)noexcept{
 		constexpr auto d = ::std::numeric_limits<T>::digits;
 		const auto r = mod(R,d);
@@ -3098,7 +3183,7 @@ namespace bit{
 	}
 	/// 位操作：循环左移
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
+	template<unsigned_type T>
 	[[nodiscard]]force_inline constexpr auto rotl(const T v,const auto R)noexcept{
 		constexpr auto d = ::std::numeric_limits<T>::digits;
 		const auto r = mod(R,d);
@@ -3138,25 +3223,25 @@ namespace bit{
 	};
 	/// 位操作：循环左移（无mod）
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
+	template<unsigned_type T>
 	[[nodiscard]]force_inline constexpr auto rotl_nomod(const T v,const rot_iterator<T>&r)noexcept{
 		return rotl_nomod(v,r.value());
 	}
 	/// 位操作：循环右移（无mod）
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
+	template<unsigned_type T>
 	[[nodiscard]]force_inline constexpr auto rotr_nomod(const T v,const rot_iterator<T>&r)noexcept{
 		return rotr_nomod(v,r.value());
 	}
 	/// 位操作：循环左移
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
+	template<unsigned_type T>
 	[[nodiscard]]force_inline constexpr auto rotl(const T v,const rot_iterator<T>&r)noexcept{
 		return rotl_nomod(v,r);
 	}
 	/// 位操作：循环右移
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
-	template<class T> requires ::std::is_unsigned_v<T>
+	template<unsigned_type T>
 	[[nodiscard]]force_inline constexpr auto rotr(const T v,const rot_iterator<T>&r)noexcept{
 		return rotr_nomod(v,r);
 	}
@@ -3631,7 +3716,7 @@ namespace array_like_n{
 	[[nodiscard]]inline auto end_of_array_like(T&&a)noexcept{return begin_of_array_like(a)+size_of_array_like(a);}
 
 	template<class T>
-	constexpr bool is_array_like=was_not_an_ill_form_with_parameter(
+	concept is_array_like=was_not_an_ill_form_with_parameter(
 									(T v){
 										begin_of_array_like(v);
 										size_of_array_like(v);
@@ -3639,9 +3724,9 @@ namespace array_like_n{
 								);
 
 	template<class T>
-	constexpr bool is_signal_value_for_array_like=type_info<remove_cvref<decltype(*begin_of_array_like(declvalue(T)))>> == type_info<T>;
+	concept is_signal_value_for_array_like=type_info<remove_cvref<decltype(*begin_of_array_like(declvalue(T)))>> == type_info<T>;
 	template<class T>
-	constexpr bool is_not_signal_value_for_array_like=!is_signal_value_for_array_like<T>;
+	concept is_not_signal_value_for_array_like=!is_signal_value_for_array_like<T>;
 
 	template<class T,class U>
 	constexpr bool strict_is_array_like_for=was_not_an_ill_form_with_parameter(
@@ -3766,7 +3851,7 @@ using array_like_n::array_end_by_zero_t;
 /*!
 	每个T的可能性大小
 */
-template<class T> requires ::std::is_integral_v<T>
+template<basic_integer_type T>
 constexpr auto number_of_possible_values_per=uintmax_index_t(max(type_info<::std::make_unsigned_t<T>>))+1;
 
 /*!
@@ -3923,7 +4008,7 @@ template<typename T>
 
 /// 判断类型是否为指针
 template<class T>
-inline constexpr bool is_pointer= ::std::is_pointer_v<T>;
+concept is_pointer= ::std::is_pointer_v<T>;
 /// 未知类型指针
 typedef void*pointer;
 /// 未知类型指针，不可写
@@ -3967,9 +4052,9 @@ namespace hash_n{
 	};
 
 	template<class T>
-	inline constexpr bool is_unstable_hash = type_info<T const>.can_convert_to<unstable_hash_value_t>;
+	concept is_unstable_hash = type_info<T const>.can_convert_to<unstable_hash_value_t>;
 	template<class T>
-	inline constexpr bool is_fundamental_hash = ::std::is_fundamental_v<T>;
+	concept is_fundamental_hash = ::std::is_fundamental_v<T>;
 
 	enable_adl(the_pointer_hash);
 	/*!
@@ -4487,7 +4572,7 @@ namespace range_n{
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr T* find_first_of(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
-		if constexpr(::std::is_integral_v<T>){
+		if constexpr(basic_integer_type<T>){
 			bitmark_for_finds<T> mark;
 			if(mark.mark(pattern))
 				return find_first_of_bitmark(mark,range);
@@ -4526,7 +4611,7 @@ namespace range_n{
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr T* find_last_of(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
-		if constexpr(::std::is_integral_v<T>){
+		if constexpr(basic_integer_type<T>){
 			bitmark_for_finds<T> mark;
 			if(mark.mark(pattern))
 				return find_last_of_bitmark(mark,range);
@@ -4566,7 +4651,7 @@ namespace range_n{
 	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr T* find_first_not_of(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
-		if constexpr(::std::is_integral_v<T>){
+		if constexpr(basic_integer_type<T>){
 			bitmark_for_finds<T> mark;
 			if(mark.mark(pattern))
 				return find_first_not_of_bitmark(mark,range);
@@ -4659,7 +4744,7 @@ namespace range_n{
 	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr T* find_last_not_of(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
-		if constexpr(::std::is_integral_v<T>){
+		if constexpr(basic_integer_type<T>){
 			bitmark_for_finds<T> mark;
 			if(mark.mark(pattern))
 				return find_last_not_of_bitmark(mark,range);
@@ -5444,6 +5529,7 @@ public:
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -5781,11 +5867,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -6249,6 +6337,7 @@ namespace overhead_n{
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -6576,11 +6665,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -8662,7 +8753,7 @@ inline constexpr auto utf8_to_utf16(char16_t *out, const char8_t *in, size_t len
 	//for return
 	const auto out_start = out;
 	const auto in_start = in;
-	auto result_builder = [&](bool success)noexcept{
+	auto result_builder = exlambda(bool success)noexcept{
 		return code_convert_result<char8_t, char16_t>(success, string_view_t<char8_t>(in_start, in - in_start), string_view_t<char16_t>(out_start, out - out_start));
 	};
 	while(in < end){
@@ -8703,7 +8794,7 @@ inline constexpr auto utf8_to_utf32(char32_t *out, const char8_t *in, size_t len
 	//for return
 	const auto out_start = out;
 	const auto in_start = in;
-	auto result_builder = [&](bool success)noexcept{
+	auto result_builder = exlambda(bool success)noexcept{
 		return code_convert_result<char8_t, char32_t>(success, string_view_t<char8_t>(in_start, in - in_start), string_view_t<char32_t>(out_start, out - out_start));
 	};
 	while(in < end){
@@ -8745,7 +8836,7 @@ inline constexpr auto utf16_to_utf8(char8_t *out, const char16_t *in, size_t len
 	//for return
 	const auto out_start = out;
 	const auto in_start = in;
-	auto result_builder = [&](bool success)noexcept{
+	auto result_builder = exlambda(bool success)noexcept{
 		return code_convert_result<char16_t, char8_t>(success, string_view_t<char16_t>(in_start, in - in_start), string_view_t<char8_t>(out_start, out - out_start));
 	};
 	while(in < end){
@@ -8784,7 +8875,7 @@ inline constexpr auto utf16_to_utf32(char32_t *out, const char16_t *in, size_t l
 	//for return
 	const auto out_start = out;
 	const auto in_start = in;
-	auto result_builder = [&](bool success)noexcept{
+	auto result_builder = exlambda(bool success)noexcept{
 		return code_convert_result<char16_t, char32_t>(success, string_view_t<char16_t>(in_start, in - in_start), string_view_t<char32_t>(out_start, out - out_start));
 	};
 	while(in < end){
@@ -8820,7 +8911,7 @@ inline constexpr auto utf32_to_utf8(char8_t *out, const char32_t *in, size_t len
 	//for return
 	const auto out_start = out;
 	const auto in_start = in;
-	auto result_builder = [&](bool success)noexcept{
+	auto result_builder = exlambda(bool success)noexcept{
 		return code_convert_result<char32_t, char8_t>(success, string_view_t<char32_t>(in_start, in - in_start), string_view_t<char8_t>(out_start, out - out_start));
 	};
 	while(in < end){
@@ -8855,7 +8946,7 @@ inline constexpr auto utf32_to_utf16(char16_t *out, const char32_t *in, size_t l
 	//for return
 	const auto out_start = out;
 	const auto in_start = in;
-	auto result_builder = [&](bool success)noexcept{
+	auto result_builder = exlambda(bool success)noexcept{
 		return code_convert_result<char32_t, char16_t>(success, string_view_t<char32_t>(in_start, in - in_start), string_view_t<char16_t>(out_start, out - out_start));
 	};
 	while(in < end){
@@ -8890,7 +8981,7 @@ inline constexpr auto utf32_to_utf32(char32_t *out, const char32_t *in, size_t l
 	//for return
 	const auto out_start = out;
 	const auto in_start = in;
-	auto result_builder = [&](bool success)noexcept{
+	auto result_builder = exlambda(bool success)noexcept{
 		return code_convert_result<char32_t, char32_t>(success, string_view_t<char32_t>(in_start, in - in_start), string_view_t<char32_t>(out_start, out - out_start));
 	};
 	while(in < end){
@@ -9203,6 +9294,7 @@ inline constexpr bool ispunct(char_t c)noexcept{
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -9461,11 +9553,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -9783,6 +9877,7 @@ protected:\
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -10087,11 +10182,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -10317,6 +10414,7 @@ namespace elc::defs::locale::str{
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -10554,11 +10652,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -10670,53 +10770,53 @@ namespace lifetime_n{
 	template<class T>
 	class construct_t;
 	template<class T,class...Args>
-	constexpr bool construct_able=::std::is_constructible_v<T,Args...>;
+	concept construct_able=::std::is_constructible_v<T,Args...>;
 	template<class T,class...Args>
-	constexpr bool construct_nothrow=::std::is_nothrow_constructible_v<T,Args...>;
+	concept construct_nothrow=::std::is_nothrow_constructible_v<T,Args...>;
 	template<class T,class...Args>
-	constexpr bool construct_trivial=::std::is_trivially_constructible_v<T,Args...>;
+	concept construct_trivial=::std::is_trivially_constructible_v<T,Args...>;
 
 	class destruct_t;
 	template<class T>
-	constexpr bool destruct_able=::std::is_destructible_v<T>;
+	concept destruct_able=::std::is_destructible_v<T>;
 	template<class T>
-	constexpr bool destruct_nothrow=::std::is_nothrow_destructible_v<T>;
+	concept destruct_nothrow=::std::is_nothrow_destructible_v<T>;
 	template<class T>
-	constexpr bool destruct_trivial=::std::is_trivially_destructible_v<T>;
+	concept destruct_trivial=::std::is_trivially_destructible_v<T>;
 	//
 
 	class copy_construct_t;
 	template<class T>
-	constexpr bool copy_construct_able=::std::is_copy_constructible_v<T>;
+	concept copy_construct_able=::std::is_copy_constructible_v<T>;
 	template<class T>
-	constexpr bool copy_construct_nothrow=::std::is_nothrow_copy_constructible_v<T>;
+	concept copy_construct_nothrow=::std::is_nothrow_copy_constructible_v<T>;
 	template<class T>
-	constexpr bool copy_construct_trivial=::std::is_trivially_copy_constructible_v<T>;
+	concept copy_construct_trivial=::std::is_trivially_copy_constructible_v<T>;
 
 	class move_construct_t;
 	template<class T>
-	constexpr bool move_construct_able=::std::is_move_constructible_v<T>;
+	concept move_construct_able=::std::is_move_constructible_v<T>;
 	template<class T>
-	constexpr bool move_construct_nothrow=::std::is_nothrow_move_constructible_v<T>;
+	concept move_construct_nothrow=::std::is_nothrow_move_constructible_v<T>;
 	template<class T>
-	constexpr bool move_construct_trivial=::std::is_trivially_move_constructible_v<T>;
+	concept move_construct_trivial=::std::is_trivially_move_constructible_v<T>;
 	//
 
 	class copy_assign_t;
 	template<class T>
-	constexpr bool copy_assign_able=::std::is_copy_assignable_v<T>;
+	concept copy_assign_able=::std::is_copy_assignable_v<T>;
 	template<class T>
-	constexpr bool copy_assign_nothrow=::std::is_nothrow_copy_assignable_v<T>;
+	concept copy_assign_nothrow=::std::is_nothrow_copy_assignable_v<T>;
 	template<class T>
-	constexpr bool copy_assign_trivial=::std::is_trivially_copy_assignable_v<T>;
+	concept copy_assign_trivial=::std::is_trivially_copy_assignable_v<T>;
 
 	class move_assign_t;
 	template<class T>
-	constexpr bool move_assign_able=::std::is_move_assignable_v<T>;
+	concept move_assign_able=::std::is_move_assignable_v<T>;
 	template<class T>
-	constexpr bool move_assign_nothrow=::std::is_nothrow_move_assignable_v<T>;
+	concept move_assign_nothrow=::std::is_nothrow_move_assignable_v<T>;
 	template<class T>
-	constexpr bool move_assign_trivial=::std::is_trivially_move_assignable_v<T>;
+	concept move_assign_trivial=::std::is_trivially_move_assignable_v<T>;
 	//
 
 	template<class T> requires ::std::is_trivially_copyable_v<T>
@@ -15999,6 +16099,7 @@ inline void test_end(){
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -16335,11 +16436,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -16581,6 +16684,7 @@ inline void test_end(){
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -16933,11 +17037,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -17811,6 +17917,7 @@ inline void test_end(){
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -18100,11 +18207,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -18312,6 +18421,7 @@ protected:\
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -18561,11 +18671,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -18848,6 +18960,7 @@ protected:\
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -19106,11 +19219,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -19255,13 +19370,13 @@ constexpr bool as_ptr_nothrow_helper()noexcept{
 		return noexcept(const_ptr(declvalue(T)));
 	elseif constexpr(type_info<remove_cvref<T>> == type_info<char_t>)
 		return noexcept(make_long_term_binary_node_from<char_t>(declvalue(T)));
-	elseif constexpr(::std::is_integral_v<remove_cvref<T>>){
-		if constexpr(::std::is_signed_v<remove_cvref<T>>)
+	elseif constexpr(basic_integer_type<remove_cvref<T>>){
+		if constexpr(signed_type<remove_cvref<T>>)
 			return noexcept(make_long_term_binary_node_from<int_t>(declvalue(T)));
 		else
 			return noexcept(make_long_term_binary_node_from<uint_t>(declvalue(T)));
 	}
-	elseif constexpr(::std::is_floating_point_v<remove_cvref<T>>)
+	elseif constexpr(basic_float_type<remove_cvref<T>>)
 		return noexcept(make_long_term_binary_node_from<float_t>(declvalue(T)));
 	elseif constexpr(construct<string>.able<T>){
 		return noexcept(make_long_term_binary_node_from<string>(declvalue(T)));
@@ -19288,13 +19403,13 @@ decltype(auto) as_ptr(T&&a)noexcept(as_ptr_nothrow_helper<T>()){
 		return const_ptr(a);
 	elseif constexpr(type_info<remove_cvref<T>> == type_info<char_t>)
 		return make_long_term_binary_node_from<char_t>(a);
-	elseif constexpr(::std::is_integral_v<remove_cvref<T>>){
-		if constexpr(::std::is_signed_v<remove_cvref<T>>)
+	elseif constexpr(basic_integer_type<remove_cvref<T>>){
+		if constexpr(signed_type<remove_cvref<T>>)
 			return make_long_term_binary_node_from<int_t>(a);
 		else
 			return make_long_term_binary_node_from<uint_t>(a);
 	}
-	elseif constexpr(::std::is_floating_point_v<remove_cvref<T>>)
+	elseif constexpr(basic_float_type<remove_cvref<T>>)
 		return make_long_term_binary_node_from<float_t>(a);
 	elseif constexpr(construct<string>.able<T>){
 		return make_long_term_binary_node_from<string>(a);
@@ -20273,6 +20388,7 @@ inline void test_end(){
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -20542,11 +20658,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -20758,6 +20876,7 @@ protected:\
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -21142,11 +21261,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -24376,14 +24497,14 @@ protected:
 		//泛型arec.
 		template<typename T> requires ::std::is_arithmetic_v<T>
 		[[nodiscard]]auto operator[](T index)noexcept{
-			if constexpr(::std::is_floating_point_v<T>)
+			if constexpr(float_type<T>)
 				return operator[](static_cast<float_t>(index));
 			else
 				return operator[](static_cast<size_t>(index));
 		}
 		template<typename T> requires ::std::is_arithmetic_v<T>
 		[[nodiscard]]const auto operator[](T index)const noexcept{
-			if constexpr(::std::is_floating_point_v<T>)
+			if constexpr(float_type<T>)
 				return operator[](static_cast<float_t>(index));
 			else
 				return operator[](static_cast<size_t>(index));
@@ -25135,6 +25256,7 @@ using string_n::string;
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -25441,11 +25563,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -25663,6 +25787,7 @@ protected:\
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -25902,11 +26027,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -26207,6 +26334,7 @@ inline void test_end(){
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -26468,11 +26596,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -26680,6 +26810,7 @@ protected:\
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -26929,11 +27060,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -27145,6 +27278,7 @@ protected:\
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -27741,11 +27875,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -27964,7 +28100,7 @@ public:
 	ubigint(const ubigint&)noexcept = default;
 	ubigint(ubigint&&)noexcept = default;
 	ubigint(const zero_t&)noexcept:ubigint(){}
-	template<typename T> requires(::std::is_integral_v<T>&&::std::is_unsigned_v<T>)
+	template<unsigned_basic_integer_type T>
 	ubigint(T value)noexcept{
 		constexpr auto size = sizeof(T)/sizeof(base_type)+((sizeof(T)%sizeof(base_type))?1:0);
 		_data.resize(size);
@@ -27978,7 +28114,7 @@ public:
 		if(used_size!=size)
 			_data.resize(used_size);
 	}
-	template<typename T> requires(::std::is_integral_v<T>&&::std::is_unsigned_v<T>)
+	template<typename T> requires(unsigned_integer_type<T>)
 	[[nodiscard]]bool is_safe_convert_to()const noexcept{
 		constexpr auto min_value=min(type_info<T>);
 		constexpr auto max_value=max(type_info<T>);
@@ -27989,7 +28125,7 @@ public:
 			return false;
 		return true;
 	}
-	template<typename T> requires(::std::is_integral_v<T>&&::std::is_unsigned_v<T>)
+	template<typename T> requires(unsigned_integer_type<T>)
 	[[nodiscard]]T convert_to()const noexcept{
 		T value=0;
 		auto i=_data.rbegin();
@@ -28052,9 +28188,9 @@ public:
 	[[nodiscard]]bool operator==(const ubigint& other)const noexcept{
 		return equal(get_data_view(),other.get_data_view());
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]bool operator==(T other)const noexcept{
-		if constexpr(::std::is_signed_v<T>){
+		if constexpr(signed_type<T>){
 			if(is_negative(other))return false;
 			return *this==to_unsigned_t<T>(other);
 		}else{
@@ -28087,9 +28223,9 @@ public:
 	[[nodiscard]]auto operator<=>(const ubigint& other)const noexcept{
 		return compare(get_data_view(),other.get_data_view());
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]auto operator<=>(T other)const noexcept{
-		if constexpr(::std::is_signed_v<T>){
+		if constexpr(signed_type<T>){
 			if(is_negative(other))return strong_ordering::greater;
 			return *this<=>to_unsigned_t<T>(other);
 		}else{
@@ -28179,7 +28315,7 @@ private:
 	static void add_to_base(base_type*buf,const data_type&b)noexcept{
 		add_to_base(buf,get_data_view_of_data(b));
 	}
-	template<typename T> requires(::std::is_integral_v<T>&&::std::is_unsigned_v<T>)
+	template<unsigned_basic_integer_type T>
 	static void add_to_base(data_type&buf,T num)noexcept{
 		//定义运算类型：若T比calc_type大，则使用T，否则使用calc_type
 		using calc_t = conditional<(sizeof(T) > sizeof(calc_type)),T,calc_type>;
@@ -28392,7 +28528,7 @@ private:
 	///
 	[[nodiscard]]static base_type div_with_base(data_type&buf,base_type*a,data_view_type b)noexcept{
 		data_view_type tryto{a,b.size()+1};
-		const calc_type dividend=[&](){
+		const calc_type dividend=exlambda{
 			const base_type*p=tryto.rbegin();
 			auto tmp=calc_type(*p);tmp*=base_type_mod;tmp+=calc_type(p[-1]);
 			return tmp;
@@ -28462,7 +28598,7 @@ private:
 		auto begin=a.rbegin()+b.size();
 		array_t<base_type> fortry(note::size(b.size()+1));
 		while(begin!=end){
-			div_with_base(fortry,begin,b);
+			discard(div_with_base(fortry,begin,b));
 			begin++;
 		};
 	}
@@ -28558,7 +28694,7 @@ public:
 		}
 	}
 	//operator<<
-	template<typename T> requires ::std::integral<T>
+	template<integer_type T>
 	[[nodiscard]]ubigint operator<<(T n)const&noexcept{
 		if(!*this)return ubigint{};
 		auto aret=*this;
@@ -28572,7 +28708,7 @@ public:
 		return aret;
 	}
 	//operator>>
-	template<typename T> requires ::std::integral<T>
+	template<integer_type T>
 	[[nodiscard]]ubigint operator>>(T n)const&noexcept{
 		if(!*this)return ubigint{};
 		auto aret=*this;
@@ -28602,19 +28738,19 @@ public:
 			shrink_to_fit();
 		return*this;
 	}
-	template<typename T> requires(::std::is_integral_v<T>&&::std::is_unsigned_v<T>)
+	template<unsigned_basic_integer_type T>
 	ubigint& operator+=(T other)&noexcept{
 		//using add_to_base to avoid new alloc
 		add_to_base(_data,other);
 		return*this;
 	}
-	template<typename T> requires(::std::is_integral_v<T>&&::std::is_unsigned_v<T>)
+	template<unsigned_basic_integer_type T>
 	[[nodiscard]]ubigint& operator+(T other)&&noexcept{
 		//using add_to_base to avoid new alloc
 		add_to_base(_data,other);
 		return*this;
 	}
-	template<typename T> requires(::std::is_integral_v<T>&&::std::is_unsigned_v<T>)
+	template<unsigned_basic_integer_type T>
 	[[nodiscard]]ubigint operator+(T other)const&noexcept{
 		auto aret = *this;
 		aret+=other;
@@ -28661,10 +28797,10 @@ public:
 		return*this;
 	}
 	//operator<<=
-	template<typename T> requires ::std::integral<T>
+	template<integer_type T>
 	inline ubigint& operator<<=(T n)&noexcept{
 		if(!*this)return*this;
-		if constexpr(::std::is_unsigned_v<T>){
+		if constexpr(unsigned_type<T>){
 			const auto oldsize=_data.size();
 			const auto newsize_diff=n/bitnum_of(base_type);
 			const auto newsize=oldsize+newsize_diff;
@@ -28717,10 +28853,10 @@ public:
 		return*this;
 	}
 	//operator>>=
-	template<typename T> requires ::std::integral<T>
+	template<integer_type T>
 	inline ubigint& operator>>=(T n)&noexcept{
 		if(!*this)return*this;
-		if constexpr(::std::is_unsigned_v<T>){
+		if constexpr(unsigned_type<T>){
 			const auto oldsize=_data.size();
 			const auto newsize_diff=n/bitnum_of(base_type);
 			const auto newsize=oldsize-newsize_diff;
@@ -28786,14 +28922,14 @@ public:
 	[[nodiscard]]ubigint&& operator%(const ubigint& other)&&noexcept{
 		return move(*this%=other);
 	}
-	template<typename T> requires ::std::integral<T>
+	template<integer_type T>
 	[[nodiscard]]ubigint&& operator<<(T n)&&noexcept{
 		return move(*this<<=n);
 	}
 	[[nodiscard]]ubigint&& operator<<(const ubigint& other)&&noexcept{
 		return move(*this<<=other);
 	}
-	template<typename T> requires ::std::integral<T>
+	template<integer_type T>
 	[[nodiscard]]ubigint&& operator>>(T n)&&noexcept{
 		return move(*this>>=n);
 	}
@@ -28864,26 +29000,6 @@ public:
 	[[nodiscard]]friend bool is_even(const ubigint& x)noexcept{
 		return !is_odd(x);
 	}
-	//friend pow
-	[[nodiscard]]friend ubigint pow(ubigint x,ubigint y)noexcept{
-		ubigint aret=1u;
-		while(y){
-			if(is_odd(y))aret*=x;
-			x*=x;
-			y>>=1u;
-		}
-		return aret;
-	}
-	template<typename T> requires(::std::integral<T> && ::std::is_unsigned_v<T>)
-	[[nodiscard]]friend ubigint pow(ubigint x,T y)noexcept{
-		ubigint aret=1u;
-		while(y){
-			if(y&1u)aret*=x;
-			x*=x;
-			y>>=1u;
-		}
-		return aret;
-	}
 };
 
 //file_end
@@ -28913,7 +29029,7 @@ public:
 	bigint(bigint&&)noexcept = default;
 	bigint(const ubigint&a)noexcept:_num(a),_is_negative(false){}
 	bigint(ubigint&&a)noexcept:_num(move(a)),_is_negative(false){}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	bigint(T value)noexcept:_num(abs(value)),_is_negative(is_negative(value)){}
 
 	bigint& operator=(const bigint&)&noexcept = default;
@@ -28928,7 +29044,7 @@ public:
 		_is_negative = false;
 		return *this;
 	}
-	template<typename T> requires(::std::is_integral_v<T>&&::std::is_unsigned_v<T>)
+	template<typename T> requires(unsigned_integer_type<T>)
 	bigint& operator=(T value)&noexcept{
 		_num = value;
 		_is_negative = false;
@@ -28943,7 +29059,7 @@ public:
 			return false;
 		return _num == other._num;
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]bool operator==(T value)const noexcept{
 		if(_is_negative != is_negative(value))
 			return false;
@@ -28958,7 +29074,7 @@ public:
 			tmp=compare.reverse(tmp);
 		return tmp;
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]auto operator<=>(T value)const noexcept{
 		if(_is_negative != is_negative(value))
 			return _is_negative?strong_ordering::less:strong_ordering::greater;
@@ -28968,7 +29084,7 @@ public:
 		return tmp;
 	}
 public:
-	template<typename T> requires ::std::is_integral_v<T>
+	template<typename T> requires basic_integer_type<T>
 	[[nodiscard]]bool is_safe_convert_to()const noexcept{
 		constexpr auto min_value=min(type_info<T>);
 		constexpr auto max_value=max(type_info<T>);
@@ -28979,9 +29095,9 @@ public:
 			return false;
 		return true;
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<typename T> requires basic_integer_type<T>
 	[[nodiscard]]T convert_to()const noexcept{
-		if constexpr(::std::is_signed_v<T>){
+		if constexpr(signed_type<T>){
 			typedef to_unsigned_t<T> UT;
 			UT tmp=_num.convert_to<UT>();
 			return _is_negative?-(T)tmp:(T)tmp;
@@ -29054,9 +29170,9 @@ public:
 	[[nodiscard]]bigint operator*(const ubigint& other)const&noexcept{
 		return bigint{_num*other,_is_negative};
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]bigint operator*(T other)const&noexcept{
-		if constexpr(::std::is_signed_v<T>)
+		if constexpr(signed_type<T>)
 			return *this*bigint(other);
 		else
 			return *this*ubigint(other);
@@ -29069,9 +29185,9 @@ public:
 	[[nodiscard]]bigint operator/(const ubigint& other)const&noexcept{
 		return bigint{_num/other,_is_negative};
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]bigint operator/(T other)const&noexcept{
-		if constexpr(::std::is_signed_v<T>)
+		if constexpr(signed_type<T>)
 			return *this/bigint(other);
 		else
 			return *this/ubigint(other);
@@ -29083,12 +29199,12 @@ public:
 	[[nodiscard]]bigint operator%(const ubigint& other)const&noexcept{
 		return bigint{_num%other,_is_negative};
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]bigint operator%(T other)const&noexcept{
 		return *this%ubigint(abs(other));
 	}
 	//operator<<
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]bigint operator<<(T n)const&noexcept{
 		return bigint{_num<<n,_is_negative};
 	}
@@ -29102,7 +29218,7 @@ public:
 		return {_num<<n,_is_negative};
 	}
 	//operator>>
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]bigint operator>>(T n)const&noexcept{
 		return bigint{_num>>n,_is_negative};
 	}
@@ -29181,9 +29297,9 @@ public:
 		_num *= move(other._num);
 		return*this;
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	bigint& operator*=(T other)&noexcept{
-		if constexpr(::std::is_signed_v<T>)
+		if constexpr(signed_type<T>)
 			return *this*=bigint(other);
 		else
 			return *this*=ubigint(other);
@@ -29199,9 +29315,9 @@ public:
 		_num /= move(other._num);
 		return*this;
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	bigint& operator/=(T other)&noexcept{
-		if constexpr(::std::is_signed_v<T>)
+		if constexpr(signed_type<T>)
 			return *this/=bigint(other);
 		else
 			return *this/=ubigint(other);
@@ -29217,12 +29333,12 @@ public:
 		_num %= move(other._num);
 		return*this;
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	bigint& operator%=(T other)&noexcept{
 		return *this%=ubigint(abs(other));
 	}
 	//operator<<=
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	bigint& operator<<=(T n)&noexcept{
 		_num <<= n;
 		return*this;
@@ -29238,7 +29354,7 @@ public:
 		return*this;
 	}
 	//operator>>=
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	bigint& operator>>=(T n)&noexcept{
 		_num >>= n;
 		return*this;
@@ -29279,7 +29395,7 @@ public:
 	[[nodiscard]]bigint&& operator*(const ubigint& other)&&noexcept{
 		return move(*this*=other);
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]bigint&& operator*(T other)&&noexcept{
 		return move(*this*=other);
 	}
@@ -29289,7 +29405,7 @@ public:
 	[[nodiscard]]bigint&& operator/(const ubigint& other)&&noexcept{
 		return move(*this/=other);
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]bigint&& operator/(T other)&&noexcept{
 		return move(*this/=other);
 	}
@@ -29299,11 +29415,11 @@ public:
 	[[nodiscard]]bigint&& operator%(const ubigint& other)&&noexcept{
 		return move(*this%=other);
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]bigint&& operator%(T other)&&noexcept{
 		return move(*this%=other);
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]bigint&& operator<<(T other)&&noexcept{
 		return move(*this<<=other);
 	}
@@ -29313,7 +29429,7 @@ public:
 	[[nodiscard]]bigint&& operator<<(const ubigint& other)&&noexcept{
 		return move(*this<<=other);
 	}
-	template<typename T> requires ::std::is_integral_v<T>
+	template<integer_type T>
 	[[nodiscard]]bigint&& operator>>(T other)&&noexcept{
 		return move(*this>>=other);
 	}
@@ -29412,9 +29528,9 @@ public:
 	ubigfloat(const ubigint& other)noexcept:_numerator(other){}
 	ubigfloat(ubigint&& other)noexcept:_numerator(move(other)){}
 
-	template<typename T> requires (::std::is_integral_v<T> && ::std::is_unsigned_v<T>)
+	template<unsigned_integer_type T>
 	ubigfloat(T num)noexcept:_numerator(num){}
-	template<typename T> requires ::std::is_floating_point_v<T>
+	template<basic_float_type T>
 	ubigfloat(T num)noexcept{
 		if(isNaN(num))return;
 		//将一个浮点类型无损的转换为两个bigint相除
@@ -29479,7 +29595,7 @@ public:
 				return false;
 		if(*this>max_value)
 			return false;
-		if constexpr(::std::is_integral_v<T>)
+		if constexpr(integer_type<T>)
 			if(_numerator%_denominator)
 				return false;
 		return true;
@@ -29487,7 +29603,7 @@ public:
 	template<typename T> requires ::std::is_arithmetic_v<T>
 	[[nodiscard]]T convert_to()&&noexcept{//只对于右值，便于编写。
 		//左值版本只需要创建一个临时变量，然后调用右值版本即可。
-		if constexpr(::std::is_integral_v<T>)
+		if constexpr(basic_integer_type<T>)
 			return trunc(*this).convert_to<T>();
 		else{//浮点数
 			if(!_denominator)
@@ -29545,7 +29661,7 @@ public:
 	}
 	template<typename T> requires ::std::is_arithmetic_v<T>
 	[[nodiscard]]T convert_to()const&noexcept{
-		if constexpr(::std::is_integral_v<T>)
+		if constexpr(basic_integer_type<T>)
 			return trunc(*this).convert_to<T>();
 		else
 			return ubigfloat(*this).convert_to<T>();
@@ -29789,11 +29905,11 @@ public:
 	}
 	[[nodiscard]]bool operator==(const bigint& other)const noexcept{
 		if(is_negative(other))return false;
-		return _numerator == other * _denominator;
+		return _numerator == abs(other) * _denominator;
 	}
 	[[nodiscard]]bool operator==(bigint&& other)const noexcept{
 		if(is_negative(other))return false;
-		return _numerator == move(other) * _denominator;
+		return _numerator == abs(move(other)) * _denominator;
 	}
 	//operator<=>
 	[[nodiscard]]auto operator<=>(const ubigfloat& other)const noexcept{
@@ -29807,11 +29923,11 @@ public:
 	}
 	[[nodiscard]]auto operator<=>(const bigint& other)const noexcept{
 		if(is_negative(other))return strong_ordering::greater;
-		return _numerator <=> other * _denominator;
+		return _numerator <=> abs(other) * _denominator;
 	}
 	[[nodiscard]]auto operator<=>(bigint&& other)const noexcept{
 		if(is_negative(other))return strong_ordering::greater;
-		return _numerator <=> move(other) * _denominator;
+		return _numerator <=> abs(move(other)) * _denominator;
 	}
 	//operatorX for rvalue
 	[[nodiscard]]ubigfloat&& operator+(const ubigfloat& other)&&noexcept{
@@ -29865,14 +29981,8 @@ public:
 	[[nodiscard]]ubigfloat&& operator+(ubigfloat&& other)noexcept{
 		return move(move(other) + *this);
 	}
-	[[nodiscard]]ubigfloat&& operator-(ubigfloat&& other)noexcept{
-		return move(move(other) - *this);
-	}
 	[[nodiscard]]ubigfloat&& operator*(ubigfloat&& other)noexcept{
 		return move(move(other) * *this);
-	}
-	[[nodiscard]]ubigfloat&& operator/(ubigfloat&& other)noexcept{
-		return move(move(other) / *this);
 	}
 	//operator!
 	[[nodiscard]]bool operator!()const noexcept{
@@ -29889,16 +29999,6 @@ public:
 		_denominator/=g;
 	}
 	//friend pow
-	friend [[nodiscard]] ubigfloat pow(ubigfloat base,ubigint exp)noexcept{
-		ubigfloat result=1u;
-		while(exp){
-			if(is_odd(exp))
-				result*=base;
-			base*=base;
-			exp>>=1u;
-		}
-		return result;
-	}
 	friend [[nodiscard]] ubigfloat pow(ubigfloat base,bigint exp)noexcept{
 		ubigfloat aret;
 		if(is_negative(exp))
@@ -29906,14 +30006,24 @@ public:
 		else
 			aret=base;
 		ubigint uexp=abs(move(exp));
-		return pow(move(aret),move(uexp));
+		return math::pow(move(aret),move(uexp));
 	}
 };
 //pow of bigint
-[[nodiscard]]inline ubigfloat pow(ubigint base,bigint exp)noexcept{
-	return pow(ubigfloat(move(base)),move(exp));
+[[nodiscard]]inline ubigfloat pow(ubigint base,ubigint exp)noexcept{
+	return math::pow(move(base),move(exp));
 }
-template<typename T> requires(::std::is_integral_v<T> && ::std::is_unsigned_v<T>)
+template<unsigned_basic_integer_type T>
+[[nodiscard]]inline ubigint pow(T base,ubigint exp)noexcept{
+	return pow(ubigint(base),move(exp));
+}
+[[nodiscard]]inline ubigfloat pow(ubigint base,bigint exp)noexcept{
+	if(is_negative(exp))
+		return ubigfloat{1u} / pow(move(base),abs(move(exp)));
+	else
+		return pow(move(base),abs(move(exp)));
+}
+template<unsigned_basic_integer_type T>
 [[nodiscard]]inline ubigfloat pow(T base,bigint exp)noexcept{
 	return pow(ubigint(base),move(exp));
 }
@@ -30007,14 +30117,14 @@ public:
 				return false;
 		if(*this>max_value)
 			return false;
-		if constexpr(::std::is_integral_v<T>)
+		if constexpr(integer_type<T>)
 			if(trunc(*this)!=*this)
 				return false;
 		return true;
 	}
 	template<typename T> requires ::std::is_arithmetic_v<T>
 	[[nodiscard]]T convert_to()const noexcept{
-		if constexpr(::std::is_unsigned_v<T>)
+		if constexpr(unsigned_type<T>)
 			return _num.convert_to<T>();
 		else{
 			using math::copy_as_negative;//貌似msvc在这里有bug
@@ -30701,10 +30811,7 @@ namespace literal_n{
 	template<unsigned base,char exp_char,bool pointed>
 	constexpr_as_auto ubigfloat eval_bigfloat_literal(ubigint val=zero,bigint exp=0)noexcept{
 		ubigfloat aret=val;
-		if(is_negative(exp))
-			do aret/=base; while(++exp);
-		elseif(exp)
-			do aret*=base; while(--exp);
+		aret*=pow(base,exp);
 		return aret;
 	}
 	template<unsigned base,char exp_char,bool pointed,char c,char...cs>
@@ -30911,6 +31018,7 @@ inline void test_end(){
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -31184,11 +31292,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -31312,31 +31422,11 @@ struct base_numerical_representation_t{
 	[[nodiscard]]virtual char_t get_char(size_t index)const noexcept=0;
 	[[nodiscard]]virtual size_t get_index(char_t c)const noexcept=0;
 	[[nodiscard]]virtual bool is_valid_char(char_t ch)const noexcept=0;
-	[[nodiscard]]bool is_finite(const bigfloat&num)const noexcept{
-		return is_finite_denominator_part(get_denominator(num));
-	}
-	[[nodiscard]]bool is_finite(const ubigfloat&num)const noexcept{
-		return is_finite_denominator_part(get_denominator(num));
-	}
 protected:
 	//获取unique_prime_factorization_table of radix
 	[[nodiscard]]virtual array_like_view_t<const size_t>get_unique_prime_factorization_table_of_radix()const noexcept=0;
-	//bigfloat的分母部分的质因数只有radix的质因数组成时才是有限小数
-	[[nodiscard]]bool is_finite_denominator_part(ubigint num)const noexcept{
-		const auto table=get_unique_prime_factorization_table_of_radix();
-		for(const auto i:table){
-			auto result=divmod(num,i);
-			while(!result.mod){
-				num=move(result.quot);
-				result=divmod(num,i);
-			}
-			if(num==1u)
-				return true;
-		}
-		return false;
-	}
 public:
-	//根据分母部分获取弥补分母到radix的幂的乘数并返回，将分母部分置零并递增exp值
+	//根据分母部分获取弥补分母到radix的幂的乘数并返回，若是有限小数将分母部分置1并递增exp值
 	[[nodiscard]]ubigint get_denominator_complement(ubigint&denominator,ptrdiff_t&exp)const noexcept{
 		const auto table=get_unique_prime_factorization_table_of_radix();
 		const auto radix=get_radix();
@@ -31727,24 +31817,17 @@ namespace to_string_n{
 		template<float_type T>
 		[[nodiscard]]string to_string_base(ubigfloat num)const noexcept{
 			string aret;
-			//判断是否是有限小数
+			//化简
 			num.simplify();
-			const bool is_finite=_repres.is_finite(num);
-			//若无限小数，以分数形式输出
-			if(!is_finite)[[unlikely]]{
-				auto&numpart=get_numerator_as_ref(num);
-				auto&denopart=get_denominator_as_ref(num);
-				auto fractional_separator=_repres.get_fractional_separator();
-				aret=to_string(move(numpart))+fractional_separator+to_string(move(denopart));
-			}
-			//有限小数
-			else[[likely]]{
-				ptrdiff_t exp=0;
-				auto& numerator=get_numerator_as_ref(num);
-				auto& denominator=get_denominator_as_ref(num);
-				const auto radix=_repres.get_radix();
-				if(!numerator)
-					return _repres.get_char(0);
+			ptrdiff_t exp=0;
+			auto& numerator=get_numerator_as_ref(num);
+			if(!numerator)
+				return _repres.get_char(0);
+			auto& denominator=get_denominator_as_ref(num);
+			const auto radix=_repres.get_radix();
+			{
+				auto denominator_backup=denominator;//备份denominator用于在发现此为无限小数时继续输出（省去还原计算）
+				auto clear_backup=exlambda{denominator_backup=decltype(denominator_backup){};};//即时清空denominator_backup以节省内存
 				//化简为numerator*radix^exp
 				{
 					auto result=divmod(denominator,radix);
@@ -31753,55 +31836,66 @@ namespace to_string_n{
 						--exp;
 						result=divmod(denominator,radix);
 					}
-					numerator*=_repres.get_denominator_complement(denominator,exp);
-					//现在denominator是1
-					if constexpr(is_basic_type<T>){//若T是基础类型
-						//根据basic_environment::float_infos::precision_base<T>*2*radix计算阈值
-						constexpr auto info_threshold_base=basic_environment::float_infos::precision_base<T>*2;
-						//获取info_threshold_num
-						const auto info_threshold_num=info_threshold_base*radix;
-						//更新exp并舍入numerator直到numerator小于info_threshold_num
-						while(numerator>info_threshold_num){
-							++exp;
-							result=divmod(move(numerator),radix);
-							if(result.mod>=radix/2)//舍入
-								++result.quot;
-							numerator=move(result.quot);
-						}
-					}
+				}
+				auto comple=_repres.get_denominator_complement(denominator,exp);
+				//现在denominator是1？若不是则说明这是一个无限小数
+				//若无限小数，以分数形式输出
+				if(denominator!=1){
+					auto fractional_separator=_repres.get_fractional_separator();
+					swap(denominator_backup,denominator);
+					clear_backup();
+					return to_string(move(numerator))+fractional_separator+to_string(move(denominator));
+				}
+				clear_backup();
+				numerator*=comple;
+			}
+			if constexpr(is_basic_type<T>){//若T是基础类型
+				//根据basic_environment::float_infos::precision_base<T>*2*radix计算阈值
+				constexpr auto info_threshold_base=basic_environment::float_infos::precision_base<T>*2;
+				//获取info_threshold_num
+				const auto info_threshold_num=info_threshold_base*radix;
+				//更新exp并舍入numerator直到numerator小于info_threshold_num
+				while(numerator>info_threshold_num){
+					++exp;
+					auto result=divmod(move(numerator),radix);
+					if(result.mod>=radix/2)//舍入
+						++result.quot;
+					numerator=move(result.quot);
+				}
+			}
+			{
+				auto result=divmod(numerator,radix);
+				while(result.quot&&!(result.mod)){
+					numerator=move(result.quot);
+					++exp;
 					result=divmod(numerator,radix);
-					while(result.quot&&!(result.mod)){
-						numerator=move(result.quot);
-						++exp;
-						result=divmod(numerator,radix);
-					}
 				}
-				//先获取numerator和exp的字符串表示
-				aret=to_string(move(numerator));
-				auto expstr=to_string(exp);
-				if(exp<0){
-					//首先计算需要的前置0的个数
-					const auto need_zero=size_t(max(ptrdiff_t{},-exp+1-aret.size()));
-					if(need_zero>expstr.size()){//选取最短表达
-						aret+=_repres.get_exponent_separator();
-						aret+=expstr;
-					}
-					else{
-						if(need_zero)
-							aret.push_front(_repres.get_char(0),need_zero);
-						//插入小数点
-						const auto dot_pos=aret.size()+exp;
-						aret.insert(dot_pos,_repres.get_fractional_sign());
-					}
+			}
+			//先获取numerator和exp的字符串表示
+			aret=to_string(move(numerator));
+			auto expstr=to_string(exp);
+			if(exp<0){
+				//首先计算需要的前置0的个数
+				const auto need_zero=size_t(max(ptrdiff_t{},-exp+1-aret.size()));
+				if(need_zero>expstr.size()){//选取最短表达
+					aret+=_repres.get_exponent_separator();
+					aret+=expstr;
 				}
-				elseif(exp>0){
-					if(size_t(exp)>expstr.size()+1){
-						aret+=_repres.get_exponent_separator();
-						aret+=expstr;
-					}
-					else//否则，补0
-						aret.push_back(_repres.get_char(0),exp);
+				else{
+					if(need_zero)
+						aret.push_front(_repres.get_char(0),need_zero);
+					//插入小数点
+					const auto dot_pos=aret.size()+exp;
+					aret.insert(dot_pos,_repres.get_fractional_sign());
 				}
+			}
+			elseif(exp>0){
+				if(size_t(exp)>expstr.size()+1){
+					aret+=_repres.get_exponent_separator();
+					aret+=expstr;
+				}
+				else//否则，补0
+					aret.push_back(_repres.get_char(0),exp);
 			}
 			return aret;
 		}
@@ -31864,12 +31958,12 @@ namespace to_string_n{
 			}
 		}
 	private:
-		template<class T> requires ::std::is_floating_point_v<T>
+		template<float_type T>
 		[[nodiscard]]string to_string_unsigneded(T num)const noexcept{
 			return to_string_base<T>(move(num));
 		}
 	public:
-		template<class T> requires ::std::is_floating_point_v<T>
+		template<basic_float_type T>
 		[[nodiscard]]string to_string(T num)const noexcept{
 			//首先，特殊值检查
 			if(isNaN(num)){
@@ -32000,7 +32094,7 @@ namespace to_string_n{
 		}
 		//floats
 	private:
-		template<class T> requires ::std::is_floating_point_v<T>
+		template<basic_float_type T>
 		[[nodiscard]]T from_string_get_unsigneded(string str,convert_state_t&state)const noexcept{
 			//首先判断特殊值
 			if constexpr(::std::numeric_limits<T>::has_signaling_NaN || ::std::numeric_limits<T>::has_quiet_NaN){
@@ -32046,7 +32140,7 @@ namespace to_string_n{
 			return from_string_get_base<ubigfloat>(move(str),state).convert_to<T>();
 		}
 	public:
-		template<class T> requires(::std::is_floating_point_v<T> && ::std::is_unsigned_v<T>)
+		template<class T> requires(float_type<T> && unsigned_type<T>)
 		[[nodiscard]]T from_string_get(const string&str,convert_state_t&state)const noexcept{
 			return from_string_get_unsigneded<T>(str,state);
 		}
@@ -32369,6 +32463,7 @@ inline void test_end(){
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -32635,11 +32730,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -32922,6 +33019,7 @@ protected:\
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -33172,11 +33270,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -33422,6 +33522,7 @@ protected:\
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -33682,11 +33783,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -34012,6 +34115,7 @@ inline void test_end{}
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -34417,11 +34521,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -34684,6 +34790,7 @@ protected:\
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
@@ -34934,11 +35041,13 @@ class name{}\
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
 #define get_recursive_lambda_caller(name) \
-lambda_with_catch(&)(auto&&...Args){\
+exlambda(auto&&...Args){\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
 #define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
 /*! 让lambda定义更加美观 */
 #define lambda_with_catch(...) [__VA_ARGS__]
 /*! 让lambda定义更加美观 */
@@ -35177,6 +35286,7 @@ inline void test_end{}
 #undef recursive_lambda
 #undef get_recursive_lambda_caller
 #undef lambda
+#undef exlambda
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
