@@ -126,6 +126,7 @@
 	#include <type_traits>//enable_if等
 	#include <typeinfo>//RTTI
 	#include <cmath>//sqrt
+	#include <bit>//countX_X
 	#include <cfenv>//rounding
 	#include <ctime>//time
 	#include <ranges>
@@ -162,16 +163,11 @@ namespace elc{
 //file_end
 
 #line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
-//_body.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
-#if defined(_MSC_VER)//int128
-	#include <__msvc_int128.hpp>
-#endif
-#include <bit>
-#include <climits>
-namespace elc::defs{
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+namespace elc::defs{ //在elc::defs中定义内容
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
+//_defs.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //_defs.hpp
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
@@ -441,1253 +437,11 @@ protected:\
 
 //file_end
 
-	#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
-
-	namespace basic_environment{
-		/// 每个bit（不是字节）的可能性
-		/// 为什么c艹委员会不定义这个？
-		constexpr size_t BIT_POSSIBILITY=2;
-
-		#if defined(__SIZEOF_INT128__)
-			#define ELC_BASE_ENV_HAS_INT128
-			typedef __uint128_t uint128_t;
-			typedef __int128_t int128_t;
-		#endif
-		#if defined(ELC_BASE_ENV_HAS_INT128)
-			typedef uint128_t uint_fast128_t;
-			typedef int128_t int_fast128_t;
-			namespace int128_literal_detail{
-				constexpr uint8_t hexval(char c)noexcept{
-					if constexpr('a'>'A'){
-						if(c>='a')
-							return c+10-'a';
-						elseif(c>='A')
-							return c+10-'A';
-					}
-					else{
-						if(c>='A')
-							return c+10-'A';
-						elseif(c>='a')
-							return c+10-'a';
-					}
-					return c-'0';
-				}
-				template<int base>
-				constexpr uint128_t eval_literal(uint128_t val=0)noexcept{
-					return val;
-				}
-				template<int base, char c, char...cs>
-				constexpr uint128_t eval_literal(uint128_t val=0)noexcept{
-					if constexpr(c!='\''){
-						static_assert(base==16||base==10||base==8||base==2,"base must be 16,10,8 or 2");
-						static_assert(c>='0'&&c<='9'||c>='a'&&c<='f'||c>='A'&&c<='F',"invalid char");
-						static_assert(base!=16 || sizeof...(cs)<=32-1,"literal too long");
-						static_assert(base!=10 || sizeof...(cs)<=39-1,"literal too long");
-						static_assert(base!=8 || sizeof...(cs)<=44-1,"literal too long");
-						static_assert(base!=2 || sizeof...(cs)<=128-1,"literal too long");
-						static_assert(base>hexval(c),"invalid char");
-						return eval_literal<base,cs...>(val*base+hexval(c));
-					}
-					else
-						return eval_literal<base,cs...>(val);
-				}
-				template<char...cs>
-				struct literal_evaler{
-					static constexpr uint128_t value=eval_literal<10,cs...>();
-				};
-				template<char...cs>
-				struct literal_evaler<'0','x',cs...>{
-					static constexpr uint128_t value=eval_literal<16,cs...>();
-				};
-				template<char...cs>
-				struct literal_evaler<'0','X',cs...>{
-					static constexpr uint128_t value=eval_literal<16,cs...>();
-				};
-				template<char...cs>
-				struct literal_evaler<'0','b',cs...>{
-					static constexpr uint128_t value=eval_literal<2,cs...>();
-				};
-				template<char...cs>
-				struct literal_evaler<'0','B',cs...>{
-					static constexpr uint128_t value=eval_literal<2,cs...>();
-				};
-				template<char...cs>
-				struct literal_evaler<'0',cs...>{
-					static constexpr uint128_t value=eval_literal<8,cs...>();
-				};
-				template<char...cs>
-				constexpr uint128_t operator ""_u128()noexcept{
-					return literal_evaler<cs...>::value;
-				}
-				template<char...cs>
-				struct signed_literal_evaler{
-					static constexpr int128_t value=static_cast<int128_t>(literal_evaler<cs...>::value);
-				};
-				template<char...cs>
-				struct signed_literal_evaler<'-',cs...>{
-					static constexpr int128_t value=-static_cast<int128_t>(literal_evaler<cs...>::value);
-				};
-				template<char...cs>
-				constexpr int128_t operator ""_i128()noexcept{
-					return signed_literal_evaler<cs...>::value;
-				}
-			}
-			using int128_literal_detail::operator ""_u128;
-			using int128_literal_detail::operator ""_i128;
-		#endif
-		//基础的uintmax_t
-		typedef ::std::uintmax_t basic_uintmax_t;
-		typedef ::std::intmax_t basic_intmax_t;
-		//更新uintmax_t和intmax_t的代指
-		typedef decltype(lambda{
-			#if defined(ELC_BASE_ENV_HAS_INT128)
-			if constexpr(sizeof(basic_uintmax_t) < sizeof(uint128_t))
-				return uint128_t{};
-			else
-			#endif
-				return basic_uintmax_t{};
-		}()) uintmax_t;
-		typedef decltype(lambda{
-			#if defined(ELC_BASE_ENV_HAS_INT128)
-			if constexpr(sizeof(basic_intmax_t) < sizeof(int128_t))
-				return int128_t{};
-			else
-			#endif
-				return basic_intmax_t{};
-		}()) intmax_t;
-		//众所周知，class不能作为数组下标，所以uintmax_index_t等类型的存在是有必要的
-		typedef basic_uintmax_t uintmax_index_t;
-		typedef basic_intmax_t intmax_index_t;
-		template<class T>
-		constexpr inline bool is_elc_expansion_base_type_helper()noexcept{
-			#if defined(ELC_BASE_ENV_HAS_INT128)
-			if constexpr(sizeof(basic_uintmax_t) < sizeof(uint128_t) && ::std::is_same_v<T,uint128_t>)
-				return true;
-			if constexpr(sizeof(basic_intmax_t) < sizeof(int128_t) && ::std::is_same_v<T,int128_t>)
-				return true;
-			#endif
-			return false;
-		}
-		template<class T>
-		concept is_elc_expansion_base_type=is_elc_expansion_base_type_helper<T>();
-
-		/*! 给定大小的无符号整数类型 */
-		template<size_t size>
-		using unsigned_specific_size_t=decltype(lambda{
-			#define TYPE_MAPPER(type) if constexpr(size == sizeof(type))return (type)0;else
-			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
-//unsigned_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
-TYPE_MAPPER(uint8_t)
-TYPE_MAPPER(uint16_t)
-TYPE_MAPPER(uint32_t)
-TYPE_MAPPER(uint64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(uint128_t)
-#endif
-TYPE_MAPPER(::std::uintmax_t)
-TYPE_MAPPER(size_t)
-TYPE_MAPPER(unsigned char)
-TYPE_MAPPER(char8_t)
-TYPE_MAPPER(char16_t)
-TYPE_MAPPER(char32_t)
-TYPE_MAPPER(wchar_t)
-TYPE_MAPPER(unsigned short)
-TYPE_MAPPER(unsigned int)
-TYPE_MAPPER(unsigned long)
-TYPE_MAPPER(unsigned long long)
-
-//file_end
-
-			#line 170 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
-			#undef TYPE_MAPPER
-			{}
-		}());
-		/*! 至少有给定大小的快速无符号整数类型 */
-		template<size_t size>
-		using unsigned_specific_size_fast_t=decltype(lambda{
-			#define TYPE_MAPPER(type) if constexpr(size <= sizeof(type))return (type)0;else
-			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
-//unsigned_fast_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
-TYPE_MAPPER(uint_fast8_t)
-TYPE_MAPPER(uint_fast16_t)
-TYPE_MAPPER(uint_fast32_t)
-TYPE_MAPPER(uint_fast64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(uint_fast128_t)
-#endif
-
-//file_end
-
-			#line 178 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
-			#undef TYPE_MAPPER
-			{}
-		}());
-		//这里的定义不能使用basedefs中的type_info，所以得重新造一个小轮子
-		struct type_uniquer_t{
-			constexpr bool operator==(const type_uniquer_t&other)const noexcept{return this==&other;}
-		};
-		template<class T>
-		inline constexpr type_uniquer_t type_uniquer{};
-		//任意类型转算数类型
-		inline constexpr struct to_arithmetic_t{
-			template<class T,class type>
-			//由于::std::is_convertible_v的歧义性质，使用requires表达式辅助推断type是否为实际支持的类型
-			//由于requires表达式的强制性质，使用::std::is_convertible_v辅助推断隐式转换是否可行
-			static inline constexpr bool is_convertible = ::std::is_convertible_v<T, type> && was_not_an_ill_form(static_cast<type>(declvalue(T)));
-			template<class T>
-			static inline constexpr bool r_able_helper()noexcept{
-				#define TYPE_MAPPER(type) if constexpr(is_convertible<T,type>)return true;else
-				#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-//float_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
-//float_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
-TYPE_MAPPER(float)
-TYPE_MAPPER(double)
-TYPE_MAPPER(long double)
-
-//file_end
-
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
-//signed_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
-TYPE_MAPPER(int8_t)
-TYPE_MAPPER(int16_t)
-TYPE_MAPPER(int32_t)
-TYPE_MAPPER(int64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(int128_t)
-#endif
-TYPE_MAPPER(::std::intmax_t)
-TYPE_MAPPER(ptrdiff_t)
-TYPE_MAPPER(signed char)
-TYPE_MAPPER(short)
-TYPE_MAPPER(int)
-TYPE_MAPPER(long)
-TYPE_MAPPER(long long)
-
-//file_end
-
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
-//unsigned_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
-TYPE_MAPPER(uint8_t)
-TYPE_MAPPER(uint16_t)
-TYPE_MAPPER(uint32_t)
-TYPE_MAPPER(uint64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(uint128_t)
-#endif
-TYPE_MAPPER(::std::uintmax_t)
-TYPE_MAPPER(size_t)
-TYPE_MAPPER(unsigned char)
-TYPE_MAPPER(char8_t)
-TYPE_MAPPER(char16_t)
-TYPE_MAPPER(char32_t)
-TYPE_MAPPER(wchar_t)
-TYPE_MAPPER(unsigned short)
-TYPE_MAPPER(unsigned int)
-TYPE_MAPPER(unsigned long)
-TYPE_MAPPER(unsigned long long)
-
-//file_end
-
-#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_fast_mapper.hpp"
-//signed_fast_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_fast_mapper.hpp"
-TYPE_MAPPER(int_fast8_t)
-TYPE_MAPPER(int_fast16_t)
-TYPE_MAPPER(int_fast32_t)
-TYPE_MAPPER(int_fast64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(int_fast128_t)
-#endif
-
-//file_end
-
-#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
-//unsigned_fast_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
-TYPE_MAPPER(uint_fast8_t)
-TYPE_MAPPER(uint_fast16_t)
-TYPE_MAPPER(uint_fast32_t)
-TYPE_MAPPER(uint_fast64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(uint_fast128_t)
-#endif
-
-//file_end
-
-#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-
-//file_end
-
-				#line 197 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
-				#undef TYPE_MAPPER
-				return false;
-			}
-			template<class T>
-			static force_inline constexpr auto to_arithmetic_base(T&&v)noexcept{
-				#define TYPE_MAPPER(type) if constexpr(r_able_helper<T>()&&is_convertible<T,type>)return (type)v;else
-				#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-//float_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
-//float_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
-TYPE_MAPPER(float)
-TYPE_MAPPER(double)
-TYPE_MAPPER(long double)
-
-//file_end
-
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
-//signed_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
-TYPE_MAPPER(int8_t)
-TYPE_MAPPER(int16_t)
-TYPE_MAPPER(int32_t)
-TYPE_MAPPER(int64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(int128_t)
-#endif
-TYPE_MAPPER(::std::intmax_t)
-TYPE_MAPPER(ptrdiff_t)
-TYPE_MAPPER(signed char)
-TYPE_MAPPER(short)
-TYPE_MAPPER(int)
-TYPE_MAPPER(long)
-TYPE_MAPPER(long long)
-
-//file_end
-
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
-//unsigned_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
-TYPE_MAPPER(uint8_t)
-TYPE_MAPPER(uint16_t)
-TYPE_MAPPER(uint32_t)
-TYPE_MAPPER(uint64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(uint128_t)
-#endif
-TYPE_MAPPER(::std::uintmax_t)
-TYPE_MAPPER(size_t)
-TYPE_MAPPER(unsigned char)
-TYPE_MAPPER(char8_t)
-TYPE_MAPPER(char16_t)
-TYPE_MAPPER(char32_t)
-TYPE_MAPPER(wchar_t)
-TYPE_MAPPER(unsigned short)
-TYPE_MAPPER(unsigned int)
-TYPE_MAPPER(unsigned long)
-TYPE_MAPPER(unsigned long long)
-
-//file_end
-
-#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_fast_mapper.hpp"
-//signed_fast_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_fast_mapper.hpp"
-TYPE_MAPPER(int_fast8_t)
-TYPE_MAPPER(int_fast16_t)
-TYPE_MAPPER(int_fast32_t)
-TYPE_MAPPER(int_fast64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(int_fast128_t)
-#endif
-
-//file_end
-
-#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
-//unsigned_fast_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
-TYPE_MAPPER(uint_fast8_t)
-TYPE_MAPPER(uint_fast16_t)
-TYPE_MAPPER(uint_fast32_t)
-TYPE_MAPPER(uint_fast64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(uint_fast128_t)
-#endif
-
-//file_end
-
-#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-
-//file_end
-
-				#line 204 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
-				#undef TYPE_MAPPER
-				{}
-			}
-			template<class T>
-			static inline constexpr size_t get_arithmetic_muti_convertible_count()noexcept{
-				typedef decltype(to_arithmetic_base(declvalue(T))) my_type;
-				size_t muti_convertible_count=0;
-				#define TYPE_MAPPER(type) \
-				if constexpr(type_uniquer<my_type>!=type_uniquer<type> && is_convertible<T,type>)\
-					muti_convertible_count++;
-				#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-//float_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
-//float_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
-TYPE_MAPPER(float)
-TYPE_MAPPER(double)
-TYPE_MAPPER(long double)
-
-//file_end
-
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
-//signed_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
-TYPE_MAPPER(int8_t)
-TYPE_MAPPER(int16_t)
-TYPE_MAPPER(int32_t)
-TYPE_MAPPER(int64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(int128_t)
-#endif
-TYPE_MAPPER(::std::intmax_t)
-TYPE_MAPPER(ptrdiff_t)
-TYPE_MAPPER(signed char)
-TYPE_MAPPER(short)
-TYPE_MAPPER(int)
-TYPE_MAPPER(long)
-TYPE_MAPPER(long long)
-
-//file_end
-
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
-//unsigned_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
-TYPE_MAPPER(uint8_t)
-TYPE_MAPPER(uint16_t)
-TYPE_MAPPER(uint32_t)
-TYPE_MAPPER(uint64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(uint128_t)
-#endif
-TYPE_MAPPER(::std::uintmax_t)
-TYPE_MAPPER(size_t)
-TYPE_MAPPER(unsigned char)
-TYPE_MAPPER(char8_t)
-TYPE_MAPPER(char16_t)
-TYPE_MAPPER(char32_t)
-TYPE_MAPPER(wchar_t)
-TYPE_MAPPER(unsigned short)
-TYPE_MAPPER(unsigned int)
-TYPE_MAPPER(unsigned long)
-TYPE_MAPPER(unsigned long long)
-
-//file_end
-
-#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_fast_mapper.hpp"
-//signed_fast_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_fast_mapper.hpp"
-TYPE_MAPPER(int_fast8_t)
-TYPE_MAPPER(int_fast16_t)
-TYPE_MAPPER(int_fast32_t)
-TYPE_MAPPER(int_fast64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(int_fast128_t)
-#endif
-
-//file_end
-
-#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
-//unsigned_fast_mapper.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
-TYPE_MAPPER(uint_fast8_t)
-TYPE_MAPPER(uint_fast16_t)
-TYPE_MAPPER(uint_fast32_t)
-TYPE_MAPPER(uint_fast64_t)
-#if defined(ELC_BASE_ENV_HAS_INT128)
-	TYPE_MAPPER(uint_fast128_t)
-#endif
-
-//file_end
-
-#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
-
-//file_end
-
-				#line 215 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
-				#undef TYPE_MAPPER
-				return muti_convertible_count;
-			}
-			template<class T>
-			static inline constexpr bool convertible_unique_helper()noexcept{
-				return get_arithmetic_muti_convertible_count<T>()==1;//the oly way we can save all lifes........
-			}
-			template<class T>
-			static inline constexpr bool able_helper()noexcept{
-				if constexpr(r_able_helper<T>())
-					return convertible_unique_helper<T>();
-				else
-					return false;
-			}
-			template<class T>
-			static inline constexpr bool able = able_helper<T>();
-			//nothrow
-			template<class T>
-			static inline constexpr bool nothrow_helper()noexcept{
-				if constexpr(able<T>){
-					typedef decltype(to_arithmetic_base(declvalue(T))) my_type;
-					return ::std::is_nothrow_convertible_v<T,my_type>;
-				}
-				else
-					return false;
-			}
-			template<class T>
-			static inline constexpr bool nothrow = nothrow_helper<T>();
-			//算数类型转任意类型
-			template<class T> requires able<T>
-			force_inline constexpr auto operator()(T&&v)const noexcept(nothrow<T>){
-				return to_arithmetic_base(::std::forward<T>(v));
-			}
-		}to_arithmetic{};
-		//判断wchar_t是否和char_t相同
-		inline constexpr bool wchar_t_same_as_char_t=sizeof(wchar_t)==sizeof(char_t);
-		//判断wchar_t是否和char16_t相同
-		inline constexpr bool wchar_t_same_as_char16_t=sizeof(wchar_t)==sizeof(char16_t);
-		#line 270 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
-		namespace float_infos{
-			//精确数部分的掩码
-			template<class T>
-			constexpr auto precision_mask=lambda{
-				if constexpr(::std::is_same_v<T,float>)
-					return(uint32_t)0x007FFFFFu;
-				elseif constexpr(::std::is_same_v<T,double>)
-					return(uint64_t)0x000FFFFFFFFFFFFFu;
-				elseif constexpr(::std::is_same_v<T,long double>){
-					#if defined(_MSC_VER)//msvc上long double就是double
-						return(uint64_t)0x000FFFFFFFFFFFFFu;
-					#else
-						return(uint128_t)0x0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF_u128;
-					#endif
-				}
-			}();
-			//精确数的无符号整数类型
-			template<class T>
-			using precision_type=decltype(precision_mask<T>);
-
-			//浮点数的无符号整数数据类型
-			template<class T>
-			using data_type=decltype(lambda{
-				if constexpr(::std::is_same_v<T,float>)
-					return uint32_t{};
-				elseif constexpr(::std::is_same_v<T,double>)
-					return uint64_t{};
-				elseif constexpr(::std::is_same_v<T,long double>){
-					#if defined(_MSC_VER)//msvc上long double就是double
-						return uint64_t{};
-					#else
-						return uint128_t{};
-					#endif
-				}
-			}());
-
-			//自浮点数获取精确数的基（如float是2^23，double是2^52，long double是2^112）
-			template<class T>
-			constexpr auto precision_base=lambda{
-				if constexpr(::std::is_same_v<T,float>)
-					return(uint32_t)0x800000u;
-				elseif constexpr(::std::is_same_v<T,double>)
-					return(uint64_t)0x10000000000000u;
-				elseif constexpr(::std::is_same_v<T,long double>){
-					#if defined(_MSC_VER)//msvc上long double就是double
-						return(uint64_t)0x10000000000000u;
-					#else
-						return(uint128_t)0x10000000000000000000000000000_u128;
-					#endif
-				}
-			}();
-
-			//自浮点数获取精确数的基的位数（如float是23）
-			template<class T>
-			constexpr auto precision_base_bit=lambda{
-				if constexpr(::std::is_same_v<T,float>)
-					return 23u;
-				elseif constexpr(::std::is_same_v<T,double>)
-					return 52u;
-				elseif constexpr(::std::is_same_v<T,long double>){
-					#if defined(_MSC_VER)//msvc上long double就是double
-						return 52u;
-					#else
-						return 112u;
-					#endif
-				}
-			}();
-
-			//浮点数的指数部分的diff（如float是127，double是1023，long double是16383）
-			template<class T>
-			constexpr auto exponent_diff=lambda{
-				if constexpr(::std::is_same_v<T,float>)
-					return 127;
-				elseif constexpr(::std::is_same_v<T,double>)
-					return 1023;
-				elseif constexpr(::std::is_same_v<T,long double>){
-					#if defined(_MSC_VER)//msvc上long double就是double
-						return 1023;
-					#else
-						return 16383;
-					#endif
-				}
-			}();
-			//浮点数的指数部分的min（如float是-126，double是-1022，long double是-16382）
-			template<class T>
-			constexpr auto exponent_min=lambda{
-				if constexpr(::std::is_same_v<T,float>)
-					return -126;
-				elseif constexpr(::std::is_same_v<T,double>)
-					return -1022;
-				elseif constexpr(::std::is_same_v<T,long double>){
-					#if defined(_MSC_VER)//msvc上long double就是double
-						return -1022;
-					#else
-						return -16382;
-					#endif
-				}
-			}();
-			//浮点数的指数部分的max（如float是127，double是1023，long double是16383）
-			template<class T>
-			constexpr auto exponent_max=lambda{
-				if constexpr(::std::is_same_v<T,float>)
-					return 127;
-				elseif constexpr(::std::is_same_v<T,double>)
-					return 1023;
-				elseif constexpr(::std::is_same_v<T,long double>){
-					#if defined(_MSC_VER)//msvc上long double就是double
-						return 1023;
-					#else
-						return 16383;
-					#endif
-				}
-			}();
-
-			//浮点数的指数部分的无符号整数类型
-			template<class T>
-			using exponent_unsigned_type=decltype(lambda{
-				if constexpr(::std::is_same_v<T,float>)
-					return uint8_t{};
-				elseif constexpr(::std::is_same_v<T,double>)
-					return uint16_t{};
-				elseif constexpr(::std::is_same_v<T,long double>){
-					#if defined(_MSC_VER)//msvc上long double就是double
-						return uint16_t{};
-					#else
-						return uint16_t{};
-					#endif
-				}
-			}());
-			//浮点数的指数部分的经过偏移后的有符号整数类型
-			template<class T>
-			using exponent_type=decltype(lambda{
-				if constexpr(::std::is_same_v<T,float>)
-					return int8_t{};
-				elseif constexpr(::std::is_same_v<T,double>)
-					return int16_t{};
-				elseif constexpr(::std::is_same_v<T,long double>){
-					#if defined(_MSC_VER)//msvc上long double就是double
-						return int16_t{};
-					#else
-						return int16_t{};
-					#endif
-				}
-			}());
-			//浮点数的指数部分的掩码
-			template<class T>
-			constexpr auto exponent_mask=lambda{
-				if constexpr(::std::is_same_v<T,float>)
-					return 0x7FFFFFFFu;
-				elseif constexpr(::std::is_same_v<T,double>)
-					return 0x7FFFFFFFFFFFFFFFu;
-				elseif constexpr(::std::is_same_v<T,long double>){
-					#if defined(_MSC_VER)//msvc上long double就是double
-						return 0x7FFFFFFFFFFFFFFFu;
-					#else
-						return 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_u128;
-					#endif
-				}
-			}();
-			template<class T>
-			union float_data_union{
-				T v;
-				data_type<T> data;
-			};
-			template<class T>
-			constexpr data_type<T> get_float_data(T v)noexcept{
-				float_data_union<T> tmp;
-				tmp.v=v;
-				return tmp.data;
-			}
-			template<class T>
-			constexpr T get_float_from_data(data_type<T> data)noexcept{
-				float_data_union<T> tmp;
-				tmp.data=data;
-				return tmp.v;
-			}
-		}
-		//自浮点数获取精确数部分，舍去指数和符号位
-		template<class T> requires ::std::is_floating_point_v<T>
-		force_inline constexpr auto get_precision(T v)noexcept{
-			using namespace float_infos;
-			auto tmp=get_float_data(v);
-			tmp&=precision_mask<T>;
-			return tmp;
-		}
-		//自浮点数获取精确数的基（如float是2^23，double是2^52，long double是2^112）
-		template<class T> requires ::std::is_floating_point_v<T>
-		force_inline constexpr auto get_precision_base(T=T{})noexcept{
-			return float_infos::precision_base<T>;
-		}
-		template<class T> requires ::std::is_floating_point_v<T>
-		using float_precision_base_t = decltype(get_precision_base<T>());
-		//（基础的）自浮点数获取指数部分，舍去基数和符号位
-		template<class T> requires ::std::is_floating_point_v<T>
-		force_inline constexpr auto base_get_exponent(T v)noexcept{
-			using namespace float_infos;
-			auto tmp=get_float_data(v);
-			tmp&=exponent_mask<T>;
-			tmp>>=precision_base_bit<T>;
-			return exponent_unsigned_type<T>(tmp);
-		}
-		//自浮点数获取指数部分，舍去基数和符号位
-		template<class T> requires ::std::is_floating_point_v<T>
-		force_inline constexpr auto get_exponent(T v)noexcept{
-			const auto tmp=base_get_exponent(v);
-			using namespace float_infos;
-			if(tmp==0)return exponent_min<T>;
-			else return exponent_type<T>(tmp)-exponent_diff<T>;
-		}
-		//自浮点数获取基数
-		template<class T> requires ::std::is_floating_point_v<T>
-		force_inline constexpr auto get_base_num(T v)noexcept{
-			//特殊情况处理（exp=0时，base=0）
-			const auto tmp=base_get_exponent(v);
-			return tmp?get_precision_base(v):float_precision_base_t<T>{};
-		}
-		//自基数和指数构造浮点数
-		//num=base_num*2^exponent
-		template<class T> requires ::std::is_floating_point_v<T>
-		force_inline constexpr T make_float(float_precision_base_t<T> base_num,ptrdiff_t exponent)noexcept{
-			using namespace float_infos;
-			//首先将基数转换为precision_base（2^precision_base_bit）为分母的分数的分子
-			//并在此过程中加减指数
-			//需要注意的是，这里的基数是包含1的，所以转换目标是base_num>>precision_base_bit为1
-			{
-				const auto tmp=::std::countl_zero(base_num);
-				constexpr auto need_shift=bitnum_of(base_num)-precision_base_bit<T>-1;
-				const ptrdiff_t shift=tmp-need_shift;
-				if(shift>0){
-					base_num<<=shift;
-					exponent-=shift;
-				}
-				elseif(shift<0){
-					base_num>>=-shift;
-					exponent-=shift;
-				}
-			}
-			//适当放缩后，需要偏移指数部分，原因如下：
-			//原有逻辑是num=base_num*2^exponent，这是大分数的表达逻辑
-			//但是浮点数的逻辑是num=(base_num/precision_base)*2^exponent
-			//将precision_base合并到exponent中，即可得到浮点数的逻辑
-			exponent+=precision_base_bit<T>;
-			if(exponent < exponent_min<T>){//指数过小，需要舍去
-				const auto diff=exponent_min<T> - exponent;
-				base_num>>=diff;
-				exponent+=diff;
-				if(!base_num)return 0;//基数过小，无法表示
-			}
-			if(exponent>exponent_max<T>)return 0;//指数过大，无法表示
-			//DEN情况判断
-			const bool is_den=!(base_num>>precision_base_bit<T>);//若基数最高位为0，则exponent一定为exponent_min，不用判断
-			if(is_den)
-				return get_float_from_data<T>(base_num);
-			else{//非DEN情况下，根据浮点数表示规则去掉基数多余的1
-				const auto exp=exponent_unsigned_type<T>(exponent+exponent_diff<T>);
-				base_num-=get_precision_base<T>();
-				data_type<T> data=base_num;
-				data|=data_type<T>(exp)<<precision_base_bit<T>;
-				return get_float_from_data<T>(data);
-			}
-		}
-	}
-	using basic_environment::BIT_POSSIBILITY;
-
-	using basic_environment::basic_uintmax_t;
-	using basic_environment::basic_intmax_t;
-	using basic_environment::uintmax_index_t;
-	using basic_environment::intmax_index_t;
-	using basic_environment::uintmax_t;
-	using basic_environment::intmax_t;
-	#if defined(ELC_BASE_ENV_HAS_INT128)
-	using basic_environment::uint128_t;
-	using basic_environment::int128_t;
-	using basic_environment::operator""_u128;
-	using basic_environment::operator""_i128;
-	#endif
-	using basic_environment::is_elc_expansion_base_type;
-
-	using basic_environment::unsigned_specific_size_t;
-	using basic_environment::unsigned_specific_size_fast_t;
-
-	using basic_environment::to_arithmetic;
-
-	using basic_environment::wchar_t_same_as_char_t;
-	using basic_environment::wchar_t_same_as_char16_t;
-
-	using basic_environment::get_exponent;
-	using basic_environment::get_base_num;
-	using basic_environment::get_precision;
-	using basic_environment::get_precision_base;
-	using basic_environment::float_precision_base_t;
-	using basic_environment::make_float;
-
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
-//_undefs.hpp
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
-//defs at "_defs.hpp"
-
-#if defined(_MSC_VER)
-	#pragma warning(pop)
-#endif
-//#undef suppress_msvc_warning
-#undef disable_msvc_warning
-#undef push_msvc_warning
-#undef pop_msvc_warning
-#undef push_and_disable_msvc_warning
-#if defined(_MSC_VER)
-	#pragma pack(pop)
-#endif
-#if defined(__GNUC__)
-	#pragma GCC diagnostic pop
-#endif
-#if defined(_MSC_VER)
-	#pragma pop_macro("new")
-	#pragma pop_macro("delete")
-	#pragma pop_macro("min")
-	#pragma pop_macro("max")
-	#pragma pop_macro("abs")
-	#pragma pop_macro("export")
-	#pragma pop_macro("rand")
-	#pragma pop_macro("sqrt")
-	#pragma pop_macro("elc")
-#endif
-
-//
-#if defined(ELC_VOID_NAME)
-	#define void the_void
-#endif
-//
-#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
-	#define rand the_rand
-#endif
-
-// #undef often_noexcept
-#undef noexcept_as
-#undef noexcept_as_auto
-#undef constexpr_as
-#undef constexpr_as_auto
-
-#undef using_method_from_base_t
-#undef using_method_from_value
-
-#undef floop
-#undef enable_adl
-
-#undef re_declvalue
-#undef re_decltype
-
-#undef declvalue
-
-#undef template_error
-#undef template_warning
-
-#undef type_info_of
-#undef type_name_of
-
-#undef is_common_attribute
-#undef is_special_attribute
-
-#undef has_attribute
-#undef not_has_attribute
-
-#undef float_size_of
-#undef bitnum_of
-
-#undef def_common_attribute_with_nothing
-#undef def_special_attribute_with_nothing
-
-#undef common_attribute_t
-#undef special_attribute_t
-
-#undef enable_if
-#undef enabled_by_default
-#undef disabled_by_default
-#undef enable_if_not_ill_form
-#undef enable_flag
-
-#undef was_an_ill_form
-#undef was_an_ill_form_with_parameter
-#undef was_not_an_ill_form
-#undef was_not_an_ill_form_and_noexcept
-#undef was_not_an_ill_form_with_parameter
-
-#undef recursive_lambda
-#undef get_recursive_lambda_caller
-#undef lambda
-#undef exlambda
-#undef lambda_with_catch
-#undef self_recursion
-#undef lambda_RLSRRS
-
-#undef MAGIC
-
-#undef nothing
-
-#undef elseif
-#undef _big_than_
-#undef _small_than_
-
-#if defined(_MSC_VER)
-	#undef not
-	#undef and
-	#undef or
-#endif
-
-#undef INTER_NAMESPACE
-#undef BREAK_NAMESPACE
-
-#undef szie
-#undef form
-
-#undef template_name
-#undef type_name
-
-#undef not_in_debug
-
-#undef es
-#undef ec
-
-#undef ELC_TEST_EVENTNAME
-
-#undef override_instance_struct
-
-#undef distinctive
-
-#undef force_inline
-
-#undef with_no_vtable
-
-#undef in_consteval
-
-#undef no_vtable_struct
-#undef no_vtable_class
-
-//#undef get_elc_defs
-
-//file_end
-
-	#line 563 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
-}
-
-//file_end
-
-#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
-namespace elc::defs{ //在elc::defs中定义内容
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
-//_defs.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-//_defs.hpp
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-//undefs at "_undefs.hpp"
-
-//set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
-
-#if defined(_MSC_VER)
-	#pragma warning(push,ELC_WARNING_LEVEL)
-	#pragma warning(disable:4099)//class与struct混用警告diss
-	#pragma warning(disable:4584)//重复子类警告diss
-	#pragma warning(disable:4250)//域控制继承警告diss
-	#pragma warning(disable:26432)//不完全默认方法警告diss
-	#pragma warning(disable:26435)//virtual override方法警告diss
-	#pragma warning(disable:26481)//容器安利diss
-	#pragma warning(disable:26446)//gsl::at安利diss
-	#pragma warning(disable:26434)//方法覆盖警告diss
-	#pragma warning(disable:26429)//gsl::not_null安利diss
-	#pragma warning(disable:26471)//对void*进行static_cast安利diss
-	#pragma warning(disable:26474)//隐式指针转换显式cast警告diss
-	#pragma warning(disable:26473)//相同指针显式cast警告diss
-	#pragma warning(disable:26456)//隐藏非虚运算符警告diss
-	#pragma warning(disable:26485)//数组作指针警告diss
-	#pragma warning(disable:26490)//reinterpret_cast警告diss
-	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
-	#pragma warning(disable:26482)//非常数数组索引警告diss
-	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
-#endif
-#if defined(__GNUC__)
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic warning "-Wall"//开启所有警告
-	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
-#endif
-#if defined(_MSC_VER)
-	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
-	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
-	#define push_msvc_warning() __pragma(warning(push))
-	#define pop_msvc_warning() __pragma(warning(pop))
-	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
-#else
-	//#define suppress_msvc_warning(...)
-	#define disable_msvc_warning(...)
-	#define push_msvc_warning()
-	#define pop_msvc_warning()
-	#define push_and_disable_msvc_warning(...)
-#endif
-#if defined(_MSC_VER)
-	//push pack settings
-	#pragma pack(push)
-	#pragma pack()
-#endif
-#if defined(_MSC_VER)
-	//push and undef common macros
-	#pragma push_macro("new")
-	#undef new
-	#pragma push_macro("delete")
-	#undef delete
-	#pragma push_macro("min")
-	#undef min
-	#pragma push_macro("max")
-	#undef max
-	#pragma push_macro("abs")
-	#undef abs
-	#pragma push_macro("export")
-	#undef export
-	#pragma push_macro("rand")
-	#undef rand
-	#pragma push_macro("sqrt")
-	#undef sqrt
-	#pragma push_macro("elc")
-	#undef elc
-#endif
-//
-#if defined(ELC_VOID_NAME)
-	#undef void
-#endif
-//
-#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
-	#undef rand
-#endif
-
-// #define often_noexcept
-#define noexcept_as(...) noexcept(noexcept((__VA_ARGS__)))//dnmd C艹标准就是没有noexcept_as_auto
-#define noexcept_as_auto MAGIC//哦现在有了
-#define constexpr_as(...) MAGIC constexpr//( •̀ ω •́ )✌
-#define constexpr_as_auto MAGIC MAGIC constexpr//✌( •̀ ω •́ )✌
-
-#define using_method_from_base_t(name,...) \
-template<class...Args> requires was_not_an_ill_form(declvalue(base_t).name(declvalue(Args)...))\
-auto name(Args&&...rest)__VA_ARGS__ noexcept_as(base_t::name(declvalue(Args)...))\
-{\
-	return base_t::name(forward<Args>(rest)...);\
-}\
-
-#define using_method_from_value(name,value_name,...) \
-template<class...Args> requires was_not_an_ill_form(re_declvalue(value_name).name(declvalue(Args)...))\
-auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(declvalue(Args)...))\
-{\
-	return value_name.name(forward<Args>(rest)...);\
-}\
-
-#define floop while(__builtin_is_my_dick_still_there())
-#if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
-	#define enable_adl(name) template<typename=void>void name()noexcept=delete
-#else
-	#define enable_adl(name) void name()noexcept=delete
-#endif
-
-#define re_declvalue(...) (declvalue(decltype(__VA_ARGS__)))
-#define re_decltype(...) (decltype(declvalue(__VA_ARGS__)))
-
-#define declvalue(...) (::std::declval<__VA_ARGS__>())
-
-/*! 实例化到此将引发错误 */
-#define template_error(reason) static_assert(template_error_helper<T>,reason)
-/*! 实例化到此将引发警告 */
-#define template_warning(reason) template_warning_helper<T>(reason)
-
-//for type_info
-#define type_info_of(...) base_type_info_t(typeid(__VA_ARGS__))
-#define type_name_of(...) (type_info_of(__VA_ARGS__).get_name())
-
-#define is_common_attribute(name) public attribute<T,name<T>>
-#define is_special_attribute(name) public attribute<T,name>
-
-#define has_attribute(...) template_name has_attribute_helper<__VA_ARGS__>()
-#define not_has_attribute(...) template_name not_has_has_attribute_helper<__VA_ARGS__>()
-
-//for float_size_t
-#define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
-//bitnum_of
-#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
-
-//for attribute
-#define def_common_attribute_with_nothing(name) \
-template<typename T>\
-class name{}\
-
-#define def_special_attribute_with_nothing(name) \
-class name{}\
-
-#define common_attribute_t template<class>class
-#define special_attribute_t class
-
-/*!
-若参数的布尔值为零，那么此模板不会实例化
-
-为什么不用cpp20的constraints？
-1.不能类内定义
-2.不能作为模板参数
-一句话总结：c艹标准会sb
-*/
-#define enable_if(...) class enable_state= ::std::enable_if_t<__VA_ARGS__>
-/*! 默认参与模板候选 */
-#define enabled_by_default class enable_state=void
-/*! 默认不参与模板候选 */
-#define disabled_by_default class enable_state= ::std::enable_if_t<false>
-/*! 若参数为病式，那么此模板不会实例化 */
-#define enable_if_not_ill_form(...) class enable_state= ::std::void_t<decltype(__VA_ARGS__)>
-/*!用于模板声明 */
-#define enable_flag class enable_state
-
-#define was_an_ill_form(...) (!was_not_an_ill_form(__VA_ARGS__))
-#define was_an_ill_form_with_parameter(...) (!was_not_an_ill_form_with_parameter(__VA_ARGS__))
-#define was_not_an_ill_form(...) (bool(requires{__VA_ARGS__;}))
-#define was_not_an_ill_form_and_noexcept(...) (bool(requires{__VA_ARGS__;{__VA_ARGS__}noexcept;}))
-#define was_not_an_ill_form_with_parameter(...) (bool(requires __VA_ARGS__ ))
-
-/*! 让lambda递归更加美观 */
-#define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
-/*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
-	return name(name,Args...);\
-}
-/*! 让lambda定义更加美观 */
-#define lambda []
-/*! 让lambda定义更加美观 */
-#define exlambda [&]
-/*! 让lambda定义更加美观 */
-#define lambda_with_catch(...) [__VA_ARGS__]
-/*! 让lambda定义更加美观 */
-#define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
-//recursive_lambda_self_referential_reserved_symbolname
-#define lambda_RLSRRS _my_jb_super_sb_name_
-
-#define MAGIC//ahh,ko no tenno da!
-
-/*! 装饰性语法糖 */
-#define nothing
-
-/*! aya风格语法糖 */
-#define elseif else if
-/*! aya风格语法糖 */
-#define _big_than_ >
-/*! aya风格语法糖 */
-#define _small_than_ <
-
-#if defined(_MSC_VER)
-	#define not !
-	#define and &&
-	#define or ||
-#endif
-
-/*! 进入名称空间，并不是很美观 */
-#define INTER_NAMESPACE(NAMESPACENAME) namespace NAMESPACENAME{
-/*! 退出名称空间，并不是很美观 */
-#define BREAK_NAMESPACE }
-
-/*! template说明符 */
-#define template_name template
-/*! template说明符 */
-#define type_name class
-
-#if defined(DEBUG) || defined(_DEBUG)
-	#define not_in_debug 0
-#else
-	#define not_in_debug 1
-#endif
-
-#define es U""
-#define ec(ch) U ## ch
-
-#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
-	#define ELC_TEST_EVENTNAME(name) stest_eventer _the_stest_eventer__(L""name)
-#else
-	#define ELC_TEST_EVENTNAME(name)
-#endif
-
-#define override_instance_struct \
-protected:\
-	virtual void abstract_method_unget_this()noexcept_as(instance_struct<this_t>::abstract_method_unget_this())override{instance_struct<this_t>::abstract_method_unget_this();}\
-	virtual void* _abstract_method_copy_get_this()noexcept_as(instance_struct<this_t>::_abstract_method_copy_get_this())override{return instance_struct<this_t>::_abstract_method_copy_get_this();}\
-	virtual void* _abstract_method_get_resize_this(size_t size)noexcept_as(instance_struct<this_t>::instance_struct<this_t>::_abstract_method_get_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_resize_this(size);}\
-	virtual void* _abstract_method_get_forward_resize_this(size_t size)noexcept_as(instance_struct<this_t>::_abstract_method_get_forward_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_forward_resize_this(size);}\
-	virtual size_t abstract_method_get_size_of_get_for_this()noexcept override{return instance_struct<this_t>::abstract_method_get_size_of_get_for_this();}
-
-#if defined(_MSC_VER) && !defined(__clang__)
-	#define distinctive __declspec(dllexport)
-#else
-	#define distinctive
-#endif
-
-#if defined(_MSC_VER) && !defined(__clang__)
-	#define force_inline __forceinline
-#elif defined(__GNUC__) || defined(__clang__)
-	#define force_inline __attribute__((always_inline)) inline
-#else
-	#define force_inline inline
-#endif
-
-#if defined(_MSC_VER) && !defined(__clang__)
-	#define with_no_vtable __declspec(novtable)
-#else
-	#define with_no_vtable
-#endif
-
-#define in_consteval (::std::is_constant_evaluated())
-
-#define no_vtable_struct struct with_no_vtable
-#define no_vtable_class class with_no_vtable
-
-//#define get_elc_defs using namespace ::elc::defs
-
-//file_end
-
 #line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
 
 //file_end
 
-	#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+	#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
 
 	namespace base{}
 	using namespace base;//导出内容：defs内的名称空间只起到大体名称分组的作用，不进行名称阻拦
@@ -1705,15 +459,15 @@ protected:\
 	#endif
 
 	namespace base{
-		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
 //_body.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
 //恭喜你找到elc内大部分语法糖所在地
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/template_helper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/template_helper.hpp"
 //template_helper.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/template_helper.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/template_helper.hpp"
 /*!
 宏辅助,用以补全元编程错误宏template_error的内容.
 */
@@ -1728,11 +482,11 @@ inline auto template_warning_helper(U&&a)noexcept{return 0;}
 
 //file_end
 
-#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/using_std.hpp"
+#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/using_std.hpp"
 //using_std.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/using_std.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/using_std.hpp"
 //从std中导入一些名称.
 //这不比博人传燃?
 using ::std::byte;
@@ -1741,7 +495,7 @@ using ::std::size_t;
 using ::std::forward;
 using ::std::addressof;
 using ::std::swap;
-#line 52 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/using_std.hpp"
+#line 52 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/using_std.hpp"
 template<class T>
 using remove_cvref= ::std::remove_cvref_t<T>;
 template<class T>
@@ -1764,21 +518,21 @@ using ::std::countl_one;
 
 //file_end
 
-#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/concept.hpp"
+#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/concept.hpp"
 //concept.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/concept.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/concept.hpp"
 //template<typename T,template<typename>constexpr bool name>
 //concept as_concept=name<T>;
 
 //file_end
 
-#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/magic_number.hpp"
+#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/magic_number.hpp"
 //magic_number.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/magic_number.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/magic_number.hpp"
 namespace magic_number{
 	/*! 黄金分割比
 		数理逻辑不应通过强奸感性来定义审美.
@@ -1803,12 +557,12 @@ namespace magic_number{
 
 //file_end
 
-#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
 
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/other.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/other.hpp"
 //other.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/other.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/other.hpp"
 class empty_type{};
 
 template<typename T,typename U>
@@ -1842,12 +596,12 @@ static void destroy(T*a)noexcept{
 
 //file_end
 
-#line 37 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 37 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
 
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/cast.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/cast.hpp"
 //cast.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/cast.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/cast.hpp"
 push_and_disable_msvc_warning(
 	26491//down_cast警告diss
 	26466//down_cast警告diss
@@ -1878,11 +632,11 @@ pop_msvc_warning();
 
 //file_end
 
-#line 39 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/special_flags.hpp"
+#line 39 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/special_flags.hpp"
 //special_flag.hpp
 //at namespace elc::defs::base
-#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/special_flags.hpp"
+#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/special_flags.hpp"
 /// 快捷定义特殊类型的constexpr
 #define defspecflag(name) \
 constexpr struct name##_t{} name{}
@@ -1898,11 +652,11 @@ defspecflag(pre_alloc);
 
 //file_end
 
-#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/non_Xable.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/non_Xable.hpp"
 //non_Xable.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/non_Xable.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/non_Xable.hpp"
 /// 禁止复制赋值
 struct non_copy_assign_able{
 	constexpr non_copy_assign_able()noexcept=default;
@@ -1953,11 +707,11 @@ struct non_moveable:non_move_assign_able,non_move_construct_able{};
 
 //file_end
 
-#line 41 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/attribute.hpp"
+#line 41 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/attribute.hpp"
 //attribute.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/attribute.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/attribute.hpp"
 template<class T,typename attribute_name>
 struct attribute{
 protected:
@@ -2015,21 +769,21 @@ struct common_attribute_pack{
 
 //file_end
 
-#line 42 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/special_attribute.hpp"
+#line 42 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/special_attribute.hpp"
 //special_attribute.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/special_attribute.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/special_attribute.hpp"
 def_common_attribute_with_nothing(never_in_array);
 def_special_attribute_with_nothing(build_by_get_only);
 
 //file_end
 
-#line 43 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/type_info.hpp"
+#line 43 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/type_info.hpp"
 //type_info.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/type_info.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/type_info.hpp"
 struct type_name_t;/// 自动重整类型名并在析构时释放重整结果，对于gcc和clang的傻逼实现
 struct base_type_info_t{
 private:
@@ -2078,7 +832,7 @@ struct type_info_t{
 	template<class U>
 	static constexpr bool can_t_nothrow_convert_to=!can_nothrow_convert_to<U>;
 
-	#line 86 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/type_info.hpp"
+	#line 86 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/type_info.hpp"
 	template<special_attribute_t attribute_name>
 	static constexpr bool has_attribute_helper(){
 		return base_on<attribute_name>;
@@ -2135,14 +889,14 @@ template<class T>
 template<class T,class U>
 [[nodiscard]]constexpr bool operator==(const type_info_t<T>&,const type_info_t<U>&){return false;}
 
-#line 157 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/type_info.hpp"
+#line 157 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/type_info.hpp"
 //file_end
 
-#line 44 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/min_max.hpp"
+#line 44 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/min_max.hpp"
 //min_max.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/min_max.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/min_max.hpp"
 /*!
 获取几个参数中的最小值或某类型能表示的最小值.
 用法:
@@ -2236,60 +990,16 @@ constexpr struct max_t{
 
 //file_end
 
-#line 45 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+#line 45 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 //math.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 namespace math{
 	/// 算术类型帮助类型
 	/// 任何后续定义的新算术类型都可以重载这些类型来实现数学库的泛型支持
 	template<typename T>
-	struct arithmetic_type_info_prover{
-		//bool：是否是算数类型
-		static constexpr bool is_arithmetic_type=::std::is_arithmetic_v<T> || is_elc_expansion_base_type<T>;
-		//bool：是否是基础类型
-		static constexpr bool is_basic_type=::std::is_arithmetic_v<T>;
-		//bool：是否是大数类型
-		static constexpr bool is_big_type=false;
-		//bool：是否是浮点类型
-		static constexpr bool is_float_type=::std::is_floating_point_v<T>;
-		//bool：是否是有符号类型
-		static constexpr bool is_signed=::std::is_signed_v<T>;
-		//bool：是否有NaN
-	private:
-		static constexpr bool has_NaN_helper()noexcept{
-			if constexpr(is_arithmetic_type)
-				return ::std::numeric_limits<T>::has_quiet_NaN || ::std::numeric_limits<T>::has_signaling_NaN;
-			else
-				return false;
-		}
-	public:
-		static constexpr bool has_NaN=has_NaN_helper();
-		//bool：是否有inf
-	private:
-		static constexpr bool has_inf_helper()noexcept{
-			if constexpr(is_arithmetic_type)
-				return ::std::numeric_limits<T>::has_infinity;
-			else
-				return false;
-		}
-	public:
-		static constexpr bool has_inf=has_inf_helper();
-		//对应的无符号和有符号类型
-		using unsigned_type=decltype(lambda{
-			if constexpr(::std::is_unsigned_v<T>||::std::is_floating_point_v<T>)
-				return T();
-			elseif constexpr(::std::is_signed_v<T>)
-				return::std::make_unsigned_t<T>();
-		}());
-		using signed_type=decltype(lambda{
-			if constexpr(::std::is_signed_v<T>||::std::is_floating_point_v<T>)
-				return T();
-			elseif constexpr(::std::is_unsigned_v<T> && (type_info<T>!=type_info<bool>))
-				return::std::make_signed_t<T>();
-		}());
-	};
+	struct arithmetic_type_info_prover;
 	/*! 无符号位的对应类型 */
 	template<typename T>
 	using to_unsigned_t = typename arithmetic_type_info_prover<remove_cvref<T>>::unsigned_type;
@@ -2709,13 +1419,13 @@ namespace math{
 	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
 	template<arithmetic_type T>
 	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
-		#line 503 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 459 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
-		#line 515 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 471 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		for(T c=5u;c<=b;c+=6u)//遍历判断是否能被因数分解——不会有人看不懂吧?
 			if((!mod(a,c))||(!mod(a,(c+2u))))
 				return false;
-		#line 524 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 480 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return true;
 	}
 	/*! 判断某数是否是素数 */
@@ -2728,10 +1438,10 @@ namespace math{
 
 		if(b<4)
 			return true;//1和0也是prime,我不管.
-		#line 546 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 502 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		if(mod(mod(b,6)-1u,4u))
 			return false;
-		#line 551 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
+		#line 507 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return is_prime_num_no_pre_check(b);
 	}
 	/// 求小于或等于某数的素数
@@ -2788,14 +1498,16 @@ namespace math{
 	}
 	push_and_disable_msvc_warning(26467);//gold_of_resize永远为正数
 	/// 已知当前array的size，求下一个合适的提前分配大小
-	[[nodiscard]]inline constexpr size_t get_next_gold_size_to_resize_for_array(size_t size)noexcept{
-		#line 611 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
-		return size_t(size*magic_number::gold_of_resize);
+	template<unsigned_integer_type size_T>
+	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_array(size_T size)noexcept{
+		#line 568 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		return size_T(size*magic_number::gold_of_resize);
 	}
 	/// 已知当前hash table的size，求下一个合适的桶大小
-	[[nodiscard]]inline constexpr size_t get_next_gold_size_to_resize_for_hash(size_t size)noexcept{
-		#line 619 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/math.hpp"
-		return size_t(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
+	template<unsigned_integer_type size_T>
+	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_hash(size_T size)noexcept{
+		#line 577 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		return size_T(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
 	}
 	pop_msvc_warning();
 
@@ -2891,24 +1603,25 @@ namespace math{
 		}
 	}get_prime_factorization{};
 	//编译时质因数分解到质因数表
-	template<size_t number>
+	template<unsigned_integer_type number_T,number_T number>
 	struct prime_factorization_table_t{
+		typedef prime_factorization_table_t<number_T,number> this_t;
 		static constexpr size_t table_size=lambda{
-			size_t i=2,m=number;
-			size_t ret=0;
+			number_T i=2,m=number;
+			size_t aret=0;
 			while(m!=1){
 				while(!(m%i)){
-					++ret;
+					++aret;
 					m/=i;
 				}
 				i=get_prime_num_big_than(i);
 			}
-			return ret;
+			return aret;
 		}();
-		size_t _table[table_size];
+		number_T _table[table_size];
 		constexpr force_inline prime_factorization_table_t()noexcept{
-			size_t i=2,m=number;
-			size_t index=0;
+			number_T i=2,m=number;
+			number_T index=0;
 			while(m!=1){
 				while(!(m%i)){
 					_table[index++]=i;
@@ -2917,20 +1630,20 @@ namespace math{
 				i=get_prime_num_big_than(i);
 			}
 		}
-		[[nodiscard]]constexpr force_inline size_t operator[](size_t index)const noexcept{
+		[[nodiscard]]constexpr force_inline number_T operator[](size_t index)const noexcept{
 			return _table[index];
 		}
 		//begin and end for range for
-		[[nodiscard]]constexpr force_inline size_t* begin()noexcept{
+		[[nodiscard]]constexpr force_inline number_T* begin()noexcept{
 			return _table;
 		}
-		[[nodiscard]]constexpr force_inline size_t* end()noexcept{
+		[[nodiscard]]constexpr force_inline number_T* end()noexcept{
 			return _table+table_size;
 		}
-		[[nodiscard]]constexpr force_inline const size_t* begin()const noexcept{
+		[[nodiscard]]constexpr force_inline const number_T* begin()const noexcept{
 			return _table;
 		}
-		[[nodiscard]]constexpr force_inline const size_t* end()const noexcept{
+		[[nodiscard]]constexpr force_inline const number_T* end()const noexcept{
 			return _table+table_size;
 		}
 		//size
@@ -2938,45 +1651,46 @@ namespace math{
 			return table_size;
 		}
 		//friend
-		template<class T> requires(type_info<remove_cv<T>> == type_info<size_t>)
-		[[nodiscard]]friend inline auto size_of_array_like(const prime_factorization_table_t<number>&)noexcept{
+		template<class T> requires(type_info<remove_cv<T>> == type_info<number_T>)
+		[[nodiscard]]friend inline auto size_of_array_like(const this_t&)noexcept{
 			return table_size;
 		}
-		template<class T> requires(type_info<remove_cv<T>> == type_info<size_t>)
-		[[nodiscard]]friend inline auto begin_of_array_like(prime_factorization_table_t<number>&table)noexcept{
+		template<class T> requires(type_info<remove_cv<T>> == type_info<number_T>)
+		[[nodiscard]]friend inline auto begin_of_array_like(this_t&table)noexcept{
 			return table.begin();
 		}
-		template<class T> requires(type_info<remove_cv<T>> == type_info<size_t>)
-		[[nodiscard]]friend inline auto end_of_array_like(prime_factorization_table_t<number>&table)noexcept{
+		template<class T> requires(type_info<remove_cv<T>> == type_info<number_T>)
+		[[nodiscard]]friend inline auto end_of_array_like(this_t&table)noexcept{
 			return table.end();
 		}
-		template<class T> requires(type_info<remove_cv<T>> == type_info<size_t>)
-		[[nodiscard]]friend inline auto begin_of_array_like(const prime_factorization_table_t<number>&table)noexcept{
+		template<class T> requires(type_info<remove_cv<T>> == type_info<number_T>)
+		[[nodiscard]]friend inline auto begin_of_array_like(const this_t&table)noexcept{
 			return table.begin();
 		}
-		template<class T> requires(type_info<remove_cv<T>> == type_info<size_t>)
-		[[nodiscard]]friend inline auto end_of_array_like(const prime_factorization_table_t<number>&table)noexcept{
+		template<class T> requires(type_info<remove_cv<T>> == type_info<number_T>)
+		[[nodiscard]]friend inline auto end_of_array_like(const this_t&table)noexcept{
 			return table.end();
 		}
 	};
 	//编译时的唯一质因数分解到质因数表
-	template<size_t number>
+	template<unsigned_integer_type number_T,number_T number>
 	struct unique_prime_factorization_table_t{
+		typedef unique_prime_factorization_table_t<number_T,number> this_t;
 		static constexpr size_t table_size=lambda{
-			size_t i=2,m=number;
-			size_t ret=0;
+			number_T i=2,m=number;
+			size_t aret=0;
 			while(m!=1){
 				if(!(m%i)){
-					++ret;
+					++aret;
 					do m/=i;while(!(m%i));
 				}
 				i=get_prime_num_big_than(i);
 			}
-			return ret;
+			return aret;
 		}();
-		size_t _table[table_size]={};
+		number_T _table[table_size]={};
 		constexpr force_inline unique_prime_factorization_table_t()noexcept{
-			size_t i=2,m=number;
+			number_T i=2,m=number;
 			size_t index=0;
 			while(m!=1){
 				if(!(m%i)){
@@ -2986,20 +1700,20 @@ namespace math{
 				i=get_prime_num_big_than(i);
 			}
 		}
-		[[nodiscard]]constexpr force_inline size_t operator[](size_t index)const noexcept{
+		[[nodiscard]]constexpr force_inline number_T operator[](size_t index)const noexcept{
 			return _table[index];
 		}
 		//begin and end for range for
-		[[nodiscard]]constexpr force_inline size_t* begin()noexcept{
+		[[nodiscard]]constexpr force_inline number_T* begin()noexcept{
 			return _table;
 		}
-		[[nodiscard]]constexpr force_inline size_t* end()noexcept{
+		[[nodiscard]]constexpr force_inline number_T* end()noexcept{
 			return _table+table_size;
 		}
-		[[nodiscard]]constexpr force_inline const size_t* begin()const noexcept{
+		[[nodiscard]]constexpr force_inline const number_T* begin()const noexcept{
 			return _table;
 		}
-		[[nodiscard]]constexpr force_inline const size_t* end()const noexcept{
+		[[nodiscard]]constexpr force_inline const number_T* end()const noexcept{
 			return _table+table_size;
 		}
 		//size
@@ -3007,24 +1721,24 @@ namespace math{
 			return table_size;
 		}
 		//friend
-		template<class T> requires(type_info<remove_cv<T>> == type_info<size_t>)
-		[[nodiscard]]friend inline auto size_of_array_like(const unique_prime_factorization_table_t<number>&)noexcept{
+		template<class T> requires(type_info<remove_cv<T>> == type_info<number_T>)
+		[[nodiscard]]friend inline auto size_of_array_like(const this_t&)noexcept{
 			return table_size;
 		}
-		template<class T> requires(type_info<remove_cv<T>> == type_info<size_t>)
-		[[nodiscard]]friend inline auto begin_of_array_like(unique_prime_factorization_table_t<number>&table)noexcept{
+		template<class T> requires(type_info<remove_cv<T>> == type_info<number_T>)
+		[[nodiscard]]friend inline auto begin_of_array_like(this_t&table)noexcept{
 			return table.begin();
 		}
-		template<class T> requires(type_info<remove_cv<T>> == type_info<size_t>)
-		[[nodiscard]]friend inline auto end_of_array_like(unique_prime_factorization_table_t<number>&table)noexcept{
+		template<class T> requires(type_info<remove_cv<T>> == type_info<number_T>)
+		[[nodiscard]]friend inline auto end_of_array_like(this_t&table)noexcept{
 			return table.end();
 		}
-		template<class T> requires(type_info<remove_cv<T>> == type_info<size_t>)
-		[[nodiscard]]friend inline auto begin_of_array_like(const unique_prime_factorization_table_t<number>&table)noexcept{
+		template<class T> requires(type_info<remove_cv<T>> == type_info<number_T>)
+		[[nodiscard]]friend inline auto begin_of_array_like(const this_t&table)noexcept{
 			return table.begin();
 		}
-		template<class T> requires(type_info<remove_cv<T>> == type_info<size_t>)
-		[[nodiscard]]friend inline auto end_of_array_like(const unique_prime_factorization_table_t<number>&table)noexcept{
+		template<class T> requires(type_info<remove_cv<T>> == type_info<number_T>)
+		[[nodiscard]]friend inline auto end_of_array_like(const this_t&table)noexcept{
 			return table.end();
 		}
 	};
@@ -3083,11 +1797,1877 @@ using math::gcd;
 
 //file_end
 
-#line 46 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/bit.hpp"
+#line 46 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
+
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/literal_support.hpp"
+//literal_support.hpp
+//at namespace elc::defs::base
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/literal_support.hpp"
+namespace literal_support{
+	constexpr uint8_t hexval(char c)noexcept{
+		if constexpr('a'>'A'){
+			if(c>='a')
+				return c+10-'a';
+			elseif(c>='A')
+				return c+10-'A';
+		}
+		else{
+			if(c>='A')
+				return c+10-'A';
+			elseif(c>='a')
+				return c+10-'a';
+		}
+		return c-'0';
+	}
+	template<class integer_T>
+	class unsigned_integer_literal_evaler{
+		template<unsigned base>
+		static constexpr_as_auto integer_T eval_impl(integer_T val={})noexcept{
+			return val;
+		}
+		template<unsigned base,char c,char...cs>
+		static constexpr_as_auto integer_T eval_impl(integer_T val={})noexcept{
+			if constexpr(c!='\''){
+				static_assert(base==16||base==10||base==8||base==2,"base must be 16,10,8 or 2");
+				static_assert(c>='0'&&c<='9'||c>='a'&&c<='f'||c>='A'&&c<='F',"invalid char");
+				static_assert(base>hexval(c),"invalid char");
+				return eval_impl<base,cs...>(val*base+hexval(c));
+			}else
+				return eval_impl<base,cs...>(val);
+		}
+		template<unsigned default_base,char...cs>
+		struct eval_differ{
+			static constexpr_as_auto integer_T eval()noexcept{
+				return eval_impl<default_base,cs...>();
+			}
+		};
+		template<unsigned default_base,char...cs>
+		struct eval_differ<default_base,'0','x',cs...>{
+			static constexpr_as_auto integer_T eval()noexcept{
+				return eval_impl<16,cs...>();
+			}
+		};
+		template<unsigned default_base,char...cs>
+		struct eval_differ<default_base,'0','X',cs...>{
+			static constexpr_as_auto integer_T eval()noexcept{
+				return eval_impl<16,cs...>();
+			}
+		};
+		template<unsigned default_base,char...cs>
+		struct eval_differ<default_base,'0','b',cs...>{
+			static constexpr_as_auto integer_T eval()noexcept{
+				return eval_impl<2,cs...>();
+			}
+		};
+		template<unsigned default_base,char...cs>
+		struct eval_differ<default_base,'0','B',cs...>{
+			static constexpr_as_auto integer_T eval()noexcept{
+				return eval_impl<2,cs...>();
+			}
+		};
+		template<unsigned default_base,char...cs>
+		struct eval_differ<default_base,'0',cs...>{
+			static constexpr_as_auto integer_T eval()noexcept{
+				return eval_impl<8,cs...>();
+			}
+		};
+	public:
+		template<unsigned default_base,char...cs>
+		static constexpr_as_auto integer_T eval_with_base()noexcept{
+			return eval_differ<default_base,cs...>::eval();
+		}
+		template<char...cs>
+		static constexpr_as_auto integer_T eval()noexcept{
+			return eval_with_base<10,cs...>();
+		}
+	};
+	template<class integer_T,class unsigned_integer_T>
+	class signed_integer_literal_evaler{
+		template<unsigned default_base,char...cs>
+		struct eval_differ{
+			static constexpr_as_auto integer_T eval()noexcept{
+				return unsigned_integer_literal_evaler<unsigned_integer_T>::template eval_with_base<default_base,cs...>();
+			}
+		};
+		template<unsigned default_base,char...cs>
+		struct eval_differ<default_base,'-',cs...>{
+			static constexpr_as_auto integer_T eval()noexcept{
+				return -static_cast<integer_T>(unsigned_integer_literal_evaler<unsigned_integer_T>::template eval_with_base<default_base,cs...>());
+			}
+		};
+	public:
+		template<unsigned default_base,char...cs>
+		static constexpr_as_auto integer_T eval_with_base()noexcept{
+			return eval_differ<default_base,cs...>::eval();
+		}
+		template<char...cs>
+		static constexpr_as_auto integer_T eval()noexcept{
+			return eval_with_base<10,cs...>();
+		}
+	};
+	template<class float_T,class base_process_T,class exp_process_integer_T,class exp_process_unsigned_integer_T>
+	class unsigned_float_literal_evaler{
+		template<unsigned base,char exp_char,bool pointed>
+		static constexpr_as_auto float_T eval_impl(base_process_T val={},exp_process_integer_T exp={})noexcept{
+			float_T aret=val;
+			aret*=pow(base,exp);
+			return aret;
+		}
+		template<unsigned base,char exp_char,bool pointed,char c,char...cs>
+		static constexpr_as_auto float_T eval_impl(base_process_T val={},exp_process_integer_T exp={})noexcept{
+			if constexpr(c=='\''){
+				return eval_impl<base,exp_char,pointed,cs...>(val,exp);
+			}
+			elseif constexpr(c=='.'){
+				static_assert(!pointed,"pointed twice");
+				return eval_impl<base,exp_char,true,cs...>(val,exp);
+			}
+			elseif constexpr(c==exp_char || c==exp_char+('A'-'a')){
+				exp+=signed_integer_literal_evaler<exp_process_integer_T,exp_process_unsigned_integer_T>::template eval_with_base<base,cs...>();
+				return eval_impl<base,exp_char,pointed>(val,exp);
+			}
+			else{
+				if constexpr(pointed)
+					--exp;
+				static_assert(base==16||base==10||base==8||base==2,"base must be 16,10,8 or 2");
+				static_assert(c>='0'&&c<='9'||c>='a'&&c<='f'||c>='A'&&c<='F',"invalid char");
+				static_assert(base>hexval(c),"invalid char");
+				return eval_impl<base,exp_char,pointed,cs...>(val*base+hexval(c),exp);
+			}
+		}
+		template<unsigned default_base,char default_exp_char,char...cs>
+		struct eval_differ{
+			static constexpr_as_auto float_T eval()noexcept{
+				return eval_impl<default_base,default_exp_char,false,cs...>();
+			}
+		};
+		template<unsigned default_base,char default_exp_char,char...cs>
+		struct eval_differ<default_base,default_exp_char,'0','x',cs...>{
+			static constexpr_as_auto float_T eval()noexcept{
+				return eval_impl<16,'p',false,cs...>();
+			}
+		};
+		template<unsigned default_base,char default_exp_char,char...cs>
+		struct eval_differ<default_base,default_exp_char,'0','X',cs...>{
+			static constexpr_as_auto float_T eval()noexcept{
+				return eval_impl<16,'p',false,cs...>();
+			}
+		};
+	public:
+		template<unsigned default_base,char default_exp_char,char...cs>
+		static constexpr_as_auto float_T eval_with_base()noexcept{
+			return eval_differ<default_base,default_exp_char,cs...>::eval();
+		}
+		template<char...cs>
+		static constexpr_as_auto float_T eval()noexcept{
+			return eval_with_base<10,'e',cs...>();
+		}
+	};
+	template<class float_T,class unsigned_float_T,class base_process_T,class exp_process_integer_T,class exp_process_unsigned_integer_T>
+	class signed_float_literal_evaler{
+		template<unsigned default_base,char default_exp_char,char...cs>
+		struct eval_differ{
+			static constexpr_as_auto float_T eval()noexcept{
+				return unsigned_float_literal_evaler<unsigned_float_T,base_process_T,exp_process_integer_T,exp_process_unsigned_integer_T>::template eval_with_base<default_base,default_exp_char,cs...>();
+			}
+		};
+		template<unsigned default_base,char default_exp_char,char...cs>
+		struct eval_differ<default_base,default_exp_char,'-',cs...>{
+			static constexpr_as_auto float_T eval()noexcept{
+				return -static_cast<float_T>(unsigned_float_literal_evaler<unsigned_float_T,base_process_T,exp_process_integer_T,exp_process_unsigned_integer_T>::template eval_with_base<default_base,default_exp_char,cs...>());
+			}
+		};
+	public:
+		template<unsigned default_base,char default_exp_char,char...cs>
+		static constexpr_as_auto float_T eval_with_base()noexcept{
+			return eval_differ<default_base,default_exp_char,cs...>::eval();
+		}
+		template<char...cs>
+		static constexpr_as_auto float_T eval()noexcept{
+			return eval_with_base<10,'e',cs...>();
+		}
+	};
+}
+
+//file_end
+
+#line 48 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
+
+//file_end
+
+		#line 52 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+	}
+
+	//由于vcruntime的type_info在全局定义,这里需要额外声明使用base::type_info.
+	#if defined(_VCRUNTIME_H)
+		using base::type_info;
+	#endif
+
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
+//_undefs.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
+//_undefs.hpp
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
+//defs at "_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(pop)
+#endif
+//#undef suppress_msvc_warning
+#undef disable_msvc_warning
+#undef push_msvc_warning
+#undef pop_msvc_warning
+#undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
+	#pragma pop_macro("elc")
+#endif
+
+//
+#if defined(ELC_VOID_NAME)
+	#define void the_void
+#endif
+//
+#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
+	#define rand the_rand
+#endif
+
+// #undef often_noexcept
+#undef noexcept_as
+#undef noexcept_as_auto
+#undef constexpr_as
+#undef constexpr_as_auto
+
+#undef using_method_from_base_t
+#undef using_method_from_value
+
+#undef floop
+#undef enable_adl
+
+#undef re_declvalue
+#undef re_decltype
+
+#undef declvalue
+
+#undef template_error
+#undef template_warning
+
+#undef type_info_of
+#undef type_name_of
+
+#undef is_common_attribute
+#undef is_special_attribute
+
+#undef has_attribute
+#undef not_has_attribute
+
+#undef float_size_of
+#undef bitnum_of
+
+#undef def_common_attribute_with_nothing
+#undef def_special_attribute_with_nothing
+
+#undef common_attribute_t
+#undef special_attribute_t
+
+#undef enable_if
+#undef enabled_by_default
+#undef disabled_by_default
+#undef enable_if_not_ill_form
+#undef enable_flag
+
+#undef was_an_ill_form
+#undef was_an_ill_form_with_parameter
+#undef was_not_an_ill_form
+#undef was_not_an_ill_form_and_noexcept
+#undef was_not_an_ill_form_with_parameter
+
+#undef recursive_lambda
+#undef get_recursive_lambda_caller
+#undef lambda
+#undef exlambda
+#undef lambda_with_catch
+#undef self_recursion
+#undef lambda_RLSRRS
+
+#undef MAGIC
+
+#undef nothing
+
+#undef elseif
+#undef _big_than_
+#undef _small_than_
+
+#if defined(_MSC_VER)
+	#undef not
+	#undef and
+	#undef or
+#endif
+
+#undef INTER_NAMESPACE
+#undef BREAK_NAMESPACE
+
+#undef szie
+#undef form
+
+#undef template_name
+#undef type_name
+
+#undef not_in_debug
+
+#undef es
+#undef ec
+
+#undef ELC_TEST_EVENTNAME
+
+#undef override_instance_struct
+
+#undef distinctive
+
+#undef force_inline
+
+#undef with_no_vtable
+
+#undef in_consteval
+
+#undef no_vtable_struct
+#undef no_vtable_class
+
+//#undef get_elc_defs
+
+//file_end
+
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
+
+//file_end
+
+	#line 60 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+}
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+//_body.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+namespace elc::defs{
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+//_defs.hpp
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+//undefs at "_undefs.hpp"
+
+//set ELC_WARNING_LEVEL default to 4(max)
+#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(push,ELC_WARNING_LEVEL)
+	#pragma warning(disable:4099)//class与struct混用警告diss
+	#pragma warning(disable:4584)//重复子类警告diss
+	#pragma warning(disable:4250)//域控制继承警告diss
+	#pragma warning(disable:26432)//不完全默认方法警告diss
+	#pragma warning(disable:26435)//virtual override方法警告diss
+	#pragma warning(disable:26481)//容器安利diss
+	#pragma warning(disable:26446)//gsl::at安利diss
+	#pragma warning(disable:26434)//方法覆盖警告diss
+	#pragma warning(disable:26429)//gsl::not_null安利diss
+	#pragma warning(disable:26471)//对void*进行static_cast安利diss
+	#pragma warning(disable:26474)//隐式指针转换显式cast警告diss
+	#pragma warning(disable:26473)//相同指针显式cast警告diss
+	#pragma warning(disable:26456)//隐藏非虚运算符警告diss
+	#pragma warning(disable:26485)//数组作指针警告diss
+	#pragma warning(disable:26490)//reinterpret_cast警告diss
+	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
+	#pragma warning(disable:26482)//非常数数组索引警告diss
+	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
+#endif
+#if defined(_MSC_VER)
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
+	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
+	#define push_msvc_warning() __pragma(warning(push))
+	#define pop_msvc_warning() __pragma(warning(pop))
+	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
+#else
+	//#define suppress_msvc_warning(...)
+	#define disable_msvc_warning(...)
+	#define push_msvc_warning()
+	#define pop_msvc_warning()
+	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
+	#pragma push_macro("elc")
+	#undef elc
+#endif
+//
+#if defined(ELC_VOID_NAME)
+	#undef void
+#endif
+//
+#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
+	#undef rand
+#endif
+
+// #define often_noexcept
+#define noexcept_as(...) noexcept(noexcept((__VA_ARGS__)))//dnmd C艹标准就是没有noexcept_as_auto
+#define noexcept_as_auto MAGIC//哦现在有了
+#define constexpr_as(...) MAGIC constexpr//( •̀ ω •́ )✌
+#define constexpr_as_auto MAGIC MAGIC constexpr//✌( •̀ ω •́ )✌
+
+#define using_method_from_base_t(name,...) \
+template<class...Args> requires was_not_an_ill_form(declvalue(base_t).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(base_t::name(declvalue(Args)...))\
+{\
+	return base_t::name(forward<Args>(rest)...);\
+}\
+
+#define using_method_from_value(name,value_name,...) \
+template<class...Args> requires was_not_an_ill_form(re_declvalue(value_name).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(declvalue(Args)...))\
+{\
+	return value_name.name(forward<Args>(rest)...);\
+}\
+
+#define floop while(__builtin_is_my_dick_still_there())
+#if defined(_MSC_VER) && _MSC_VER>=1935
+	//https://developercommunity.visualstudio.com/t/10193638
+	#define enable_adl(name) template<typename=void>void name()noexcept=delete
+#else
+	#define enable_adl(name) void name()noexcept=delete
+#endif
+
+#define re_declvalue(...) (declvalue(decltype(__VA_ARGS__)))
+#define re_decltype(...) (decltype(declvalue(__VA_ARGS__)))
+
+#define declvalue(...) (::std::declval<__VA_ARGS__>())
+
+/*! 实例化到此将引发错误 */
+#define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发警告 */
+#define template_warning(reason) template_warning_helper<T>(reason)
+
+//for type_info
+#define type_info_of(...) base_type_info_t(typeid(__VA_ARGS__))
+#define type_name_of(...) (type_info_of(__VA_ARGS__).get_name())
+
+#define is_common_attribute(name) public attribute<T,name<T>>
+#define is_special_attribute(name) public attribute<T,name>
+
+#define has_attribute(...) template_name has_attribute_helper<__VA_ARGS__>()
+#define not_has_attribute(...) template_name not_has_has_attribute_helper<__VA_ARGS__>()
+
+//for float_size_t
+#define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
+//bitnum_of
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
+
+//for attribute
+#define def_common_attribute_with_nothing(name) \
+template<typename T>\
+class name{}\
+
+#define def_special_attribute_with_nothing(name) \
+class name{}\
+
+#define common_attribute_t template<class>class
+#define special_attribute_t class
+
+/*!
+若参数的布尔值为零，那么此模板不会实例化
+
+为什么不用cpp20的constraints？
+1.不能类内定义
+2.不能作为模板参数
+一句话总结：c艹标准会sb
+*/
+#define enable_if(...) class enable_state= ::std::enable_if_t<__VA_ARGS__>
+/*! 默认参与模板候选 */
+#define enabled_by_default class enable_state=void
+/*! 默认不参与模板候选 */
+#define disabled_by_default class enable_state= ::std::enable_if_t<false>
+/*! 若参数为病式，那么此模板不会实例化 */
+#define enable_if_not_ill_form(...) class enable_state= ::std::void_t<decltype(__VA_ARGS__)>
+/*!用于模板声明 */
+#define enable_flag class enable_state
+
+#define was_an_ill_form(...) (!was_not_an_ill_form(__VA_ARGS__))
+#define was_an_ill_form_with_parameter(...) (!was_not_an_ill_form_with_parameter(__VA_ARGS__))
+#define was_not_an_ill_form(...) (bool(requires{__VA_ARGS__;}))
+#define was_not_an_ill_form_and_noexcept(...) (bool(requires{__VA_ARGS__;{__VA_ARGS__}noexcept;}))
+#define was_not_an_ill_form_with_parameter(...) (bool(requires __VA_ARGS__ ))
+
+/*! 让lambda递归更加美观 */
+#define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
+/*! 让lambda递归更加美观 */
+#define get_recursive_lambda_caller(name) \
+exlambda(auto&&...Args){\
+	return name(name,Args...);\
+}
+/*! 让lambda定义更加美观 */
+#define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
+/*! 让lambda定义更加美观 */
+#define lambda_with_catch(...) [__VA_ARGS__]
+/*! 让lambda定义更加美观 */
+#define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
+//recursive_lambda_self_referential_reserved_symbolname
+#define lambda_RLSRRS _my_jb_super_sb_name_
+
+#define MAGIC//ahh,ko no tenno da!
+
+/*! 装饰性语法糖 */
+#define nothing
+
+/*! aya风格语法糖 */
+#define elseif else if
+/*! aya风格语法糖 */
+#define _big_than_ >
+/*! aya风格语法糖 */
+#define _small_than_ <
+
+#if defined(_MSC_VER)
+	#define not !
+	#define and &&
+	#define or ||
+#endif
+
+/*! 进入名称空间，并不是很美观 */
+#define INTER_NAMESPACE(NAMESPACENAME) namespace NAMESPACENAME{
+/*! 退出名称空间，并不是很美观 */
+#define BREAK_NAMESPACE }
+
+/*! template说明符 */
+#define template_name template
+/*! template说明符 */
+#define type_name class
+
+#if defined(DEBUG) || defined(_DEBUG)
+	#define not_in_debug 0
+#else
+	#define not_in_debug 1
+#endif
+
+#define es U""
+#define ec(ch) U ## ch
+
+#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
+	#define ELC_TEST_EVENTNAME(name) stest_eventer _the_stest_eventer__(L""name)
+#else
+	#define ELC_TEST_EVENTNAME(name)
+#endif
+
+#define override_instance_struct \
+protected:\
+	virtual void abstract_method_unget_this()noexcept_as(instance_struct<this_t>::abstract_method_unget_this())override{instance_struct<this_t>::abstract_method_unget_this();}\
+	virtual void* _abstract_method_copy_get_this()noexcept_as(instance_struct<this_t>::_abstract_method_copy_get_this())override{return instance_struct<this_t>::_abstract_method_copy_get_this();}\
+	virtual void* _abstract_method_get_resize_this(size_t size)noexcept_as(instance_struct<this_t>::instance_struct<this_t>::_abstract_method_get_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_resize_this(size);}\
+	virtual void* _abstract_method_get_forward_resize_this(size_t size)noexcept_as(instance_struct<this_t>::_abstract_method_get_forward_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_forward_resize_this(size);}\
+	virtual size_t abstract_method_get_size_of_get_for_this()noexcept override{return instance_struct<this_t>::abstract_method_get_size_of_get_for_this();}
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define distinctive __declspec(dllexport)
+#else
+	#define distinctive
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define force_inline __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+	#define force_inline __attribute__((always_inline)) inline
+#else
+	#define force_inline inline
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define with_no_vtable __declspec(novtable)
+#else
+	#define with_no_vtable
+#endif
+
+#define in_consteval (::std::is_constant_evaluated())
+
+#define no_vtable_struct struct with_no_vtable
+#define no_vtable_class class with_no_vtable
+
+//#define get_elc_defs using namespace ::elc::defs
+
+//file_end
+
+	#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+
+	namespace basic_environment{
+		/// 每个bit（不是字节）的可能性
+		/// 为什么c艹委员会不定义这个？
+		constexpr size_t BIT_POSSIBILITY=2;
+
+		#if defined(__SIZEOF_INT128__)
+			#define ELC_BASE_ENV_HAS_INT128
+			typedef __uint128_t uint128_t;
+			typedef __int128_t int128_t;
+		#endif
+		#if defined(ELC_BASE_ENV_HAS_INT128)
+			typedef uint128_t uint_fast128_t;
+			typedef int128_t int_fast128_t;
+			template<char...cs>
+			constexpr uint128_t operator ""_u128()noexcept{
+				return literal_support::unsigned_integer_literal_evaler<uint128_t>::eval<cs...>();
+			}
+			template<char...cs>
+			constexpr int128_t operator ""_i128()noexcept{
+				return literal_support::signed_integer_literal_evaler<int128_t,uint128_t>::eval<cs...>();
+			}
+		#endif
+		//基础的uintmax_t
+		typedef ::std::uintmax_t basic_uintmax_t;
+		typedef ::std::intmax_t basic_intmax_t;
+		//更新uintmax_t和intmax_t的代指
+		typedef decltype(lambda{
+			#if defined(ELC_BASE_ENV_HAS_INT128)
+			if constexpr(sizeof(basic_uintmax_t) < sizeof(uint128_t))
+				return uint128_t{};
+			else
+			#endif
+				return basic_uintmax_t{};
+		}()) uintmax_t;
+		typedef decltype(lambda{
+			#if defined(ELC_BASE_ENV_HAS_INT128)
+			if constexpr(sizeof(basic_intmax_t) < sizeof(int128_t))
+				return int128_t{};
+			else
+			#endif
+				return basic_intmax_t{};
+		}()) intmax_t;
+		//众所周知，class不能作为数组下标，所以uintmax_index_t等类型的存在是有必要的
+		typedef basic_uintmax_t uintmax_index_t;
+		typedef basic_intmax_t intmax_index_t;
+		template<class T>
+		constexpr inline bool is_elc_expansion_base_type_helper()noexcept{
+			#if defined(ELC_BASE_ENV_HAS_INT128)
+			if constexpr(sizeof(basic_uintmax_t) < sizeof(uint128_t) && type_info<T> == type_info<uint128_t>)
+				return true;
+			if constexpr(sizeof(basic_intmax_t) < sizeof(int128_t) && type_info<T> == type_info<int128_t>)
+				return true;
+			#endif
+			return false;
+		}
+		template<class T>
+		concept is_elc_expansion_base_type=is_elc_expansion_base_type_helper<T>();
+
+		/*! 给定大小的无符号整数类型 */
+		template<size_t size>
+		using unsigned_specific_size_t=decltype(lambda{
+			#define TYPE_MAPPER(type) if constexpr(size == sizeof(type))return (type)0;else
+			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+//unsigned_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+TYPE_MAPPER(uint8_t)
+TYPE_MAPPER(uint16_t)
+TYPE_MAPPER(uint32_t)
+TYPE_MAPPER(uint64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint128_t)
+#endif
+TYPE_MAPPER(::std::uintmax_t)
+TYPE_MAPPER(size_t)
+TYPE_MAPPER(unsigned char)
+TYPE_MAPPER(char8_t)
+TYPE_MAPPER(char16_t)
+TYPE_MAPPER(char32_t)
+TYPE_MAPPER(wchar_t)
+TYPE_MAPPER(unsigned short)
+TYPE_MAPPER(unsigned int)
+TYPE_MAPPER(unsigned long)
+TYPE_MAPPER(unsigned long long)
+
+//file_end
+
+			#line 95 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#undef TYPE_MAPPER
+			{}
+		}());
+		/*! 至少有给定大小的快速无符号整数类型 */
+		template<size_t size>
+		using unsigned_specific_size_fast_t=decltype(lambda{
+			#define TYPE_MAPPER(type) if constexpr(size <= sizeof(type))return (type)0;else
+			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
+//unsigned_fast_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
+TYPE_MAPPER(uint_fast8_t)
+TYPE_MAPPER(uint_fast16_t)
+TYPE_MAPPER(uint_fast32_t)
+TYPE_MAPPER(uint_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint_fast128_t)
+#endif
+
+//file_end
+
+			#line 103 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#undef TYPE_MAPPER
+			{}
+		}());
+		//任意类型转算数类型
+		inline constexpr class to_arithmetic_t{
+			template<class T,class type>
+			//由于can_convert_to的歧义性质，使用requires表达式辅助推断type是否为实际支持的类型
+			//由于requires表达式的强制性质，使用can_convert_to辅助推断隐式转换是否可行
+			static inline constexpr bool is_convertible = type_info<T>.can_convert_to<type> && was_not_an_ill_form(static_cast<type>(declvalue(T)));
+			template<class T>
+			static inline constexpr bool r_able_helper()noexcept{
+				#define TYPE_MAPPER(type) if constexpr(is_convertible<T,type>)return true;else
+				#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+//float_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
+//float_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
+TYPE_MAPPER(float)
+TYPE_MAPPER(double)
+TYPE_MAPPER(long double)
+
+//file_end
+
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
+//signed_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
+TYPE_MAPPER(int8_t)
+TYPE_MAPPER(int16_t)
+TYPE_MAPPER(int32_t)
+TYPE_MAPPER(int64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(int128_t)
+#endif
+TYPE_MAPPER(::std::intmax_t)
+TYPE_MAPPER(ptrdiff_t)
+TYPE_MAPPER(signed char)
+TYPE_MAPPER(short)
+TYPE_MAPPER(int)
+TYPE_MAPPER(long)
+TYPE_MAPPER(long long)
+
+//file_end
+
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+//unsigned_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+TYPE_MAPPER(uint8_t)
+TYPE_MAPPER(uint16_t)
+TYPE_MAPPER(uint32_t)
+TYPE_MAPPER(uint64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint128_t)
+#endif
+TYPE_MAPPER(::std::uintmax_t)
+TYPE_MAPPER(size_t)
+TYPE_MAPPER(unsigned char)
+TYPE_MAPPER(char8_t)
+TYPE_MAPPER(char16_t)
+TYPE_MAPPER(char32_t)
+TYPE_MAPPER(wchar_t)
+TYPE_MAPPER(unsigned short)
+TYPE_MAPPER(unsigned int)
+TYPE_MAPPER(unsigned long)
+TYPE_MAPPER(unsigned long long)
+
+//file_end
+
+#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_fast_mapper.hpp"
+//signed_fast_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_fast_mapper.hpp"
+TYPE_MAPPER(int_fast8_t)
+TYPE_MAPPER(int_fast16_t)
+TYPE_MAPPER(int_fast32_t)
+TYPE_MAPPER(int_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(int_fast128_t)
+#endif
+
+//file_end
+
+#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
+//unsigned_fast_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
+TYPE_MAPPER(uint_fast8_t)
+TYPE_MAPPER(uint_fast16_t)
+TYPE_MAPPER(uint_fast32_t)
+TYPE_MAPPER(uint_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint_fast128_t)
+#endif
+
+//file_end
+
+#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+
+//file_end
+
+				#line 116 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#undef TYPE_MAPPER
+				return false;
+			}
+			template<class T>
+			static force_inline constexpr auto to_arithmetic_base(T&&v)noexcept{
+				#define TYPE_MAPPER(type) if constexpr(r_able_helper<T>()&&is_convertible<T,type>)return (type)v;else
+				#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+//float_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
+//float_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
+TYPE_MAPPER(float)
+TYPE_MAPPER(double)
+TYPE_MAPPER(long double)
+
+//file_end
+
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
+//signed_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
+TYPE_MAPPER(int8_t)
+TYPE_MAPPER(int16_t)
+TYPE_MAPPER(int32_t)
+TYPE_MAPPER(int64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(int128_t)
+#endif
+TYPE_MAPPER(::std::intmax_t)
+TYPE_MAPPER(ptrdiff_t)
+TYPE_MAPPER(signed char)
+TYPE_MAPPER(short)
+TYPE_MAPPER(int)
+TYPE_MAPPER(long)
+TYPE_MAPPER(long long)
+
+//file_end
+
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+//unsigned_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+TYPE_MAPPER(uint8_t)
+TYPE_MAPPER(uint16_t)
+TYPE_MAPPER(uint32_t)
+TYPE_MAPPER(uint64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint128_t)
+#endif
+TYPE_MAPPER(::std::uintmax_t)
+TYPE_MAPPER(size_t)
+TYPE_MAPPER(unsigned char)
+TYPE_MAPPER(char8_t)
+TYPE_MAPPER(char16_t)
+TYPE_MAPPER(char32_t)
+TYPE_MAPPER(wchar_t)
+TYPE_MAPPER(unsigned short)
+TYPE_MAPPER(unsigned int)
+TYPE_MAPPER(unsigned long)
+TYPE_MAPPER(unsigned long long)
+
+//file_end
+
+#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_fast_mapper.hpp"
+//signed_fast_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_fast_mapper.hpp"
+TYPE_MAPPER(int_fast8_t)
+TYPE_MAPPER(int_fast16_t)
+TYPE_MAPPER(int_fast32_t)
+TYPE_MAPPER(int_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(int_fast128_t)
+#endif
+
+//file_end
+
+#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
+//unsigned_fast_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
+TYPE_MAPPER(uint_fast8_t)
+TYPE_MAPPER(uint_fast16_t)
+TYPE_MAPPER(uint_fast32_t)
+TYPE_MAPPER(uint_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint_fast128_t)
+#endif
+
+//file_end
+
+#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+
+//file_end
+
+				#line 123 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#undef TYPE_MAPPER
+				{}
+			}
+			template<class T>
+			static inline constexpr size_t get_arithmetic_muti_convertible_count()noexcept{
+				typedef decltype(to_arithmetic_base(declvalue(T))) to_type;
+				size_t muti_convertible_count=0;
+				#define TYPE_MAPPER(type) \
+				if constexpr(type_info<to_type>!=type_info<type> && is_convertible<T,type>)\
+					muti_convertible_count++;
+				#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+//float_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
+//float_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/float_mapper.hpp"
+TYPE_MAPPER(float)
+TYPE_MAPPER(double)
+TYPE_MAPPER(long double)
+
+//file_end
+
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
+//signed_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_mapper.hpp"
+TYPE_MAPPER(int8_t)
+TYPE_MAPPER(int16_t)
+TYPE_MAPPER(int32_t)
+TYPE_MAPPER(int64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(int128_t)
+#endif
+TYPE_MAPPER(::std::intmax_t)
+TYPE_MAPPER(ptrdiff_t)
+TYPE_MAPPER(signed char)
+TYPE_MAPPER(short)
+TYPE_MAPPER(int)
+TYPE_MAPPER(long)
+TYPE_MAPPER(long long)
+
+//file_end
+
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+//unsigned_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_mapper.hpp"
+TYPE_MAPPER(uint8_t)
+TYPE_MAPPER(uint16_t)
+TYPE_MAPPER(uint32_t)
+TYPE_MAPPER(uint64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint128_t)
+#endif
+TYPE_MAPPER(::std::uintmax_t)
+TYPE_MAPPER(size_t)
+TYPE_MAPPER(unsigned char)
+TYPE_MAPPER(char8_t)
+TYPE_MAPPER(char16_t)
+TYPE_MAPPER(char32_t)
+TYPE_MAPPER(wchar_t)
+TYPE_MAPPER(unsigned short)
+TYPE_MAPPER(unsigned int)
+TYPE_MAPPER(unsigned long)
+TYPE_MAPPER(unsigned long long)
+
+//file_end
+
+#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_fast_mapper.hpp"
+//signed_fast_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/signed_fast_mapper.hpp"
+TYPE_MAPPER(int_fast8_t)
+TYPE_MAPPER(int_fast16_t)
+TYPE_MAPPER(int_fast32_t)
+TYPE_MAPPER(int_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(int_fast128_t)
+#endif
+
+//file_end
+
+#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
+//unsigned_fast_mapper.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/unsigned_fast_mapper.hpp"
+TYPE_MAPPER(uint_fast8_t)
+TYPE_MAPPER(uint_fast16_t)
+TYPE_MAPPER(uint_fast32_t)
+TYPE_MAPPER(uint_fast64_t)
+#if defined(ELC_BASE_ENV_HAS_INT128)
+	TYPE_MAPPER(uint_fast128_t)
+#endif
+
+//file_end
+
+#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/arithmetic_mapper/all_mapper.hpp"
+
+//file_end
+
+				#line 134 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#undef TYPE_MAPPER
+				return muti_convertible_count;
+			}
+			template<class T>
+			static inline constexpr bool convertible_unique_helper()noexcept{
+				return get_arithmetic_muti_convertible_count<T>()==1;//the oly way we can save all lifes........
+			}
+			template<class T>
+			static inline constexpr bool able_helper()noexcept{
+				if constexpr(r_able_helper<T>())
+					return convertible_unique_helper<T>();
+				else
+					return false;
+			}
+		public:
+			template<class T>
+			static inline constexpr bool able = able_helper<T>();
+		private:
+			//nothrow
+			template<class T>
+			static inline constexpr bool nothrow_helper()noexcept{				
+				typedef decltype(to_arithmetic_base(declvalue(T))) to_type;
+				if constexpr(able<T>)
+					return type_info<T>.can_nothrow_convert_to<to_type>;
+				else
+					return false;
+			}
+		public:
+			template<class T>
+			static inline constexpr bool nothrow = nothrow_helper<T>();
+			//算数类型转任意类型
+			template<class T> requires able<T>
+			force_inline constexpr auto operator()(T&&v)const noexcept(nothrow<T>){
+				return to_arithmetic_base(forward<T>(v));
+			}
+		}to_arithmetic{};
+		//判断wchar_t是否和char_t相同
+		inline constexpr bool wchar_t_same_as_char_t=sizeof(wchar_t)==sizeof(char_t);
+		//判断wchar_t是否和char16_t相同
+		inline constexpr bool wchar_t_same_as_char16_t=sizeof(wchar_t)==sizeof(char16_t);
+		#line 191 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+		namespace float_infos{
+			//精确数部分的掩码
+			template<basic_float_type T>
+			constexpr auto precision_mask=lambda{
+				if constexpr(type_info<T> == type_info<float>)
+					return(uint32_t)0x007FFFFFu;
+				elseif constexpr(type_info<T> == type_info<double>)
+					return(uint64_t)0x000FFFFFFFFFFFFFu;
+				elseif constexpr(type_info<T> == type_info<long double>){
+					#if defined(_MSC_VER)//msvc上long double就是double
+						return(uint64_t)0x000FFFFFFFFFFFFFu;
+					#else
+						return(uint128_t)0x0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF_u128;
+					#endif
+				}
+			}();
+			//精确数的无符号整数类型
+			template<basic_float_type T>
+			using precision_type=decltype(precision_mask<T>);
+
+			//浮点数的无符号整数数据类型
+			template<basic_float_type T>
+			using data_type=decltype(lambda{
+				if constexpr(type_info<T> == type_info<float>)
+					return uint32_t{};
+				elseif constexpr(type_info<T> == type_info<double>)
+					return uint64_t{};
+				elseif constexpr(type_info<T> == type_info<long double>){
+					#if defined(_MSC_VER)//msvc上long double就是double
+						return uint64_t{};
+					#else
+						return uint128_t{};
+					#endif
+				}
+			}());
+
+			//自浮点数获取精确数的基（如float是2^23，double是2^52，long double是2^112）
+			template<basic_float_type T>
+			constexpr auto precision_base=lambda{
+				if constexpr(type_info<T> == type_info<float>)
+					return(uint32_t)0x800000u;
+				elseif constexpr(type_info<T> == type_info<double>)
+					return(uint64_t)0x10000000000000u;
+				elseif constexpr(type_info<T> == type_info<long double>){
+					#if defined(_MSC_VER)//msvc上long double就是double
+						return(uint64_t)0x10000000000000u;
+					#else
+						return(uint128_t)0x10000000000000000000000000000_u128;
+					#endif
+				}
+			}();
+
+			//自浮点数获取精确数的基的位数（如float是23）
+			template<basic_float_type T>
+			constexpr auto precision_base_bit=lambda{
+				if constexpr(type_info<T> == type_info<float>)
+					return 23u;
+				elseif constexpr(type_info<T> == type_info<double>)
+					return 52u;
+				elseif constexpr(type_info<T> == type_info<long double>){
+					#if defined(_MSC_VER)//msvc上long double就是double
+						return 52u;
+					#else
+						return 112u;
+					#endif
+				}
+			}();
+
+			//浮点数的指数部分的diff（如float是127，double是1023，long double是16383）
+			template<basic_float_type T>
+			constexpr auto exponent_diff=lambda{
+				if constexpr(type_info<T> == type_info<float>)
+					return 127;
+				elseif constexpr(type_info<T> == type_info<double>)
+					return 1023;
+				elseif constexpr(type_info<T> == type_info<long double>){
+					#if defined(_MSC_VER)//msvc上long double就是double
+						return 1023;
+					#else
+						return 16383;
+					#endif
+				}
+			}();
+			//浮点数的指数部分的min（如float是-126，double是-1022，long double是-16382）
+			template<basic_float_type T>
+			constexpr auto exponent_min=lambda{
+				if constexpr(type_info<T> == type_info<float>)
+					return -126;
+				elseif constexpr(type_info<T> == type_info<double>)
+					return -1022;
+				elseif constexpr(type_info<T> == type_info<long double>){
+					#if defined(_MSC_VER)//msvc上long double就是double
+						return -1022;
+					#else
+						return -16382;
+					#endif
+				}
+			}();
+			//浮点数的指数部分的max（如float是127，double是1023，long double是16383）
+			template<basic_float_type T>
+			constexpr auto exponent_max=lambda{
+				if constexpr(type_info<T> == type_info<float>)
+					return 127;
+				elseif constexpr(type_info<T> == type_info<double>)
+					return 1023;
+				elseif constexpr(type_info<T> == type_info<long double>){
+					#if defined(_MSC_VER)//msvc上long double就是double
+						return 1023;
+					#else
+						return 16383;
+					#endif
+				}
+			}();
+
+			//浮点数的指数部分的无符号整数类型
+			template<basic_float_type T>
+			using exponent_unsigned_type=decltype(lambda{
+				if constexpr(type_info<T> == type_info<float>)
+					return uint8_t{};
+				elseif constexpr(type_info<T> == type_info<double>)
+					return uint16_t{};
+				elseif constexpr(type_info<T> == type_info<long double>){
+					#if defined(_MSC_VER)//msvc上long double就是double
+						return uint16_t{};
+					#else
+						return uint16_t{};
+					#endif
+				}
+			}());
+			//浮点数的指数部分的经过偏移后的有符号整数类型
+			template<basic_float_type T>
+			using exponent_type=decltype(lambda{
+				if constexpr(type_info<T> == type_info<float>)
+					return int8_t{};
+				elseif constexpr(type_info<T> == type_info<double>)
+					return int16_t{};
+				elseif constexpr(type_info<T> == type_info<long double>){
+					#if defined(_MSC_VER)//msvc上long double就是double
+						return int16_t{};
+					#else
+						return int16_t{};
+					#endif
+				}
+			}());
+			//浮点数的指数部分的掩码
+			template<basic_float_type T>
+			constexpr auto exponent_mask=lambda{
+				if constexpr(type_info<T> == type_info<float>)
+					return 0x7FFFFFFFu;
+				elseif constexpr(type_info<T> == type_info<double>)
+					return 0x7FFFFFFFFFFFFFFFu;
+				elseif constexpr(type_info<T> == type_info<long double>){
+					#if defined(_MSC_VER)//msvc上long double就是double
+						return 0x7FFFFFFFFFFFFFFFu;
+					#else
+						return 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_u128;
+					#endif
+				}
+			}();
+			template<basic_float_type T>
+			union float_data_union{
+				T v;
+				data_type<T> data;
+			};
+			template<basic_float_type T>
+			constexpr data_type<T> get_float_data(T v)noexcept{
+				float_data_union<T> tmp;
+				tmp.v=v;
+				return tmp.data;
+			}
+			template<basic_float_type T>
+			constexpr T get_float_from_data(data_type<T> data)noexcept{
+				float_data_union<T> tmp;
+				tmp.data=data;
+				return tmp.v;
+			}
+		}
+		//自浮点数获取精确数部分，舍去指数和符号位
+		template<basic_float_type T>
+		force_inline constexpr auto get_precision(T v)noexcept{
+			using namespace float_infos;
+			auto tmp=get_float_data(v);
+			tmp&=precision_mask<T>;
+			return tmp;
+		}
+		//自浮点数获取精确数的基（如float是2^23，double是2^52，long double是2^112）
+		template<basic_float_type T>
+		force_inline constexpr auto get_precision_base(T=T{})noexcept{
+			return float_infos::precision_base<T>;
+		}
+		template<basic_float_type T>
+		using float_precision_base_t = decltype(get_precision_base<T>());
+		//（基础的）自浮点数获取指数部分，舍去基数和符号位
+		template<basic_float_type T>
+		force_inline constexpr auto base_get_exponent(T v)noexcept{
+			using namespace float_infos;
+			auto tmp=get_float_data(v);
+			tmp&=exponent_mask<T>;
+			tmp>>=precision_base_bit<T>;
+			return exponent_unsigned_type<T>(tmp);
+		}
+		//自浮点数获取指数部分，舍去基数和符号位
+		template<basic_float_type T>
+		force_inline constexpr auto get_exponent(T v)noexcept{
+			const auto tmp=base_get_exponent(v);
+			using namespace float_infos;
+			if(tmp==0)return exponent_min<T>;
+			else return exponent_type<T>(tmp)-exponent_diff<T>;
+		}
+		//自浮点数获取基数
+		template<basic_float_type T>
+		force_inline constexpr auto get_base_num(T v)noexcept{
+			//特殊情况处理（exp=0时，base=0）
+			const auto tmp=base_get_exponent(v);
+			return tmp?get_precision_base(v):float_precision_base_t<T>{};
+		}
+		//自基数和指数构造浮点数
+		//num=base_num*2^exponent
+		template<basic_float_type T>
+		force_inline constexpr T make_float(float_precision_base_t<T> base_num,ptrdiff_t exponent)noexcept{
+			using namespace float_infos;
+			//首先将基数转换为precision_base（2^precision_base_bit）为分母的分数的分子
+			//并在此过程中加减指数
+			//需要注意的是，这里的基数是包含1的，所以转换目标是base_num>>precision_base_bit为1
+			{
+				const auto tmp=countl_zero(base_num);
+				constexpr auto need_shift=bitnum_of(base_num)-precision_base_bit<T>-1;
+				const ptrdiff_t shift=tmp-need_shift;
+				if(shift>0){
+					base_num<<=shift;
+					exponent-=shift;
+				}
+				elseif(shift<0){
+					base_num>>=-shift;
+					exponent-=shift;
+				}
+			}
+			//适当放缩后，需要偏移指数部分，原因如下：
+			//原有逻辑是num=base_num*2^exponent，这是大分数的表达逻辑
+			//但是浮点数的逻辑是num=(base_num/precision_base)*2^exponent
+			//将precision_base合并到exponent中，即可得到浮点数的逻辑
+			exponent+=precision_base_bit<T>;
+			if(exponent < exponent_min<T>){//指数过小，需要舍去
+				const auto diff=exponent_min<T> - exponent;
+				base_num>>=diff;
+				exponent+=diff;
+				if(!base_num)return 0;//基数过小，无法表示
+			}
+			if(exponent>exponent_max<T>)return 0;//指数过大，无法表示
+			//DEN情况判断
+			const bool is_den=!(base_num>>precision_base_bit<T>);//若基数最高位为0，则exponent一定为exponent_min，不用判断
+			if(is_den)
+				return get_float_from_data<T>(base_num);
+			else{//非DEN情况下，根据浮点数表示规则去掉基数多余的1
+				const auto exp=exponent_unsigned_type<T>(exponent+exponent_diff<T>);
+				base_num-=get_precision_base<T>();
+				data_type<T> data=base_num;
+				data|=data_type<T>(exp)<<precision_base_bit<T>;
+				return get_float_from_data<T>(data);
+			}
+		}
+	}
+	using basic_environment::BIT_POSSIBILITY;
+
+	using basic_environment::basic_uintmax_t;
+	using basic_environment::basic_intmax_t;
+	using basic_environment::uintmax_index_t;
+	using basic_environment::intmax_index_t;
+	using basic_environment::uintmax_t;
+	using basic_environment::intmax_t;
+	#if defined(ELC_BASE_ENV_HAS_INT128)
+	using basic_environment::uint128_t;
+	using basic_environment::int128_t;
+	using basic_environment::operator""_u128;
+	using basic_environment::operator""_i128;
+	#endif
+	using basic_environment::is_elc_expansion_base_type;
+
+	using basic_environment::unsigned_specific_size_t;
+	using basic_environment::unsigned_specific_size_fast_t;
+
+	using basic_environment::to_arithmetic;
+
+	using basic_environment::wchar_t_same_as_char_t;
+	using basic_environment::wchar_t_same_as_char16_t;
+
+	using basic_environment::get_exponent;
+	using basic_environment::get_base_num;
+	using basic_environment::get_precision;
+	using basic_environment::get_precision_base;
+	using basic_environment::float_precision_base_t;
+	using basic_environment::make_float;
+
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
+//_undefs.hpp
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
+//defs at "_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(pop)
+#endif
+//#undef suppress_msvc_warning
+#undef disable_msvc_warning
+#undef push_msvc_warning
+#undef pop_msvc_warning
+#undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
+	#pragma pop_macro("elc")
+#endif
+
+//
+#if defined(ELC_VOID_NAME)
+	#define void the_void
+#endif
+//
+#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
+	#define rand the_rand
+#endif
+
+// #undef often_noexcept
+#undef noexcept_as
+#undef noexcept_as_auto
+#undef constexpr_as
+#undef constexpr_as_auto
+
+#undef using_method_from_base_t
+#undef using_method_from_value
+
+#undef floop
+#undef enable_adl
+
+#undef re_declvalue
+#undef re_decltype
+
+#undef declvalue
+
+#undef template_error
+#undef template_warning
+
+#undef type_info_of
+#undef type_name_of
+
+#undef is_common_attribute
+#undef is_special_attribute
+
+#undef has_attribute
+#undef not_has_attribute
+
+#undef float_size_of
+#undef bitnum_of
+
+#undef def_common_attribute_with_nothing
+#undef def_special_attribute_with_nothing
+
+#undef common_attribute_t
+#undef special_attribute_t
+
+#undef enable_if
+#undef enabled_by_default
+#undef disabled_by_default
+#undef enable_if_not_ill_form
+#undef enable_flag
+
+#undef was_an_ill_form
+#undef was_an_ill_form_with_parameter
+#undef was_not_an_ill_form
+#undef was_not_an_ill_form_and_noexcept
+#undef was_not_an_ill_form_with_parameter
+
+#undef recursive_lambda
+#undef get_recursive_lambda_caller
+#undef lambda
+#undef exlambda
+#undef lambda_with_catch
+#undef self_recursion
+#undef lambda_RLSRRS
+
+#undef MAGIC
+
+#undef nothing
+
+#undef elseif
+#undef _big_than_
+#undef _small_than_
+
+#if defined(_MSC_VER)
+	#undef not
+	#undef and
+	#undef or
+#endif
+
+#undef INTER_NAMESPACE
+#undef BREAK_NAMESPACE
+
+#undef szie
+#undef form
+
+#undef template_name
+#undef type_name
+
+#undef not_in_debug
+
+#undef es
+#undef ec
+
+#undef ELC_TEST_EVENTNAME
+
+#undef override_instance_struct
+
+#undef distinctive
+
+#undef force_inline
+
+#undef with_no_vtable
+
+#undef in_consteval
+
+#undef no_vtable_struct
+#undef no_vtable_class
+
+//#undef get_elc_defs
+
+//file_end
+
+	#line 484 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+}
+
+//file_end
+
+#line 62 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+namespace elc::defs{ //在elc::defs中定义内容
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
+//_defs.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+//_defs.hpp
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+//undefs at "_undefs.hpp"
+
+//set ELC_WARNING_LEVEL default to 4(max)
+#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(push,ELC_WARNING_LEVEL)
+	#pragma warning(disable:4099)//class与struct混用警告diss
+	#pragma warning(disable:4584)//重复子类警告diss
+	#pragma warning(disable:4250)//域控制继承警告diss
+	#pragma warning(disable:26432)//不完全默认方法警告diss
+	#pragma warning(disable:26435)//virtual override方法警告diss
+	#pragma warning(disable:26481)//容器安利diss
+	#pragma warning(disable:26446)//gsl::at安利diss
+	#pragma warning(disable:26434)//方法覆盖警告diss
+	#pragma warning(disable:26429)//gsl::not_null安利diss
+	#pragma warning(disable:26471)//对void*进行static_cast安利diss
+	#pragma warning(disable:26474)//隐式指针转换显式cast警告diss
+	#pragma warning(disable:26473)//相同指针显式cast警告diss
+	#pragma warning(disable:26456)//隐藏非虚运算符警告diss
+	#pragma warning(disable:26485)//数组作指针警告diss
+	#pragma warning(disable:26490)//reinterpret_cast警告diss
+	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
+	#pragma warning(disable:26482)//非常数数组索引警告diss
+	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
+#endif
+#if defined(_MSC_VER)
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
+	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
+	#define push_msvc_warning() __pragma(warning(push))
+	#define pop_msvc_warning() __pragma(warning(pop))
+	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
+#else
+	//#define suppress_msvc_warning(...)
+	#define disable_msvc_warning(...)
+	#define push_msvc_warning()
+	#define pop_msvc_warning()
+	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
+	#pragma push_macro("elc")
+	#undef elc
+#endif
+//
+#if defined(ELC_VOID_NAME)
+	#undef void
+#endif
+//
+#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
+	#undef rand
+#endif
+
+// #define often_noexcept
+#define noexcept_as(...) noexcept(noexcept((__VA_ARGS__)))//dnmd C艹标准就是没有noexcept_as_auto
+#define noexcept_as_auto MAGIC//哦现在有了
+#define constexpr_as(...) MAGIC constexpr//( •̀ ω •́ )✌
+#define constexpr_as_auto MAGIC MAGIC constexpr//✌( •̀ ω •́ )✌
+
+#define using_method_from_base_t(name,...) \
+template<class...Args> requires was_not_an_ill_form(declvalue(base_t).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(base_t::name(declvalue(Args)...))\
+{\
+	return base_t::name(forward<Args>(rest)...);\
+}\
+
+#define using_method_from_value(name,value_name,...) \
+template<class...Args> requires was_not_an_ill_form(re_declvalue(value_name).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(declvalue(Args)...))\
+{\
+	return value_name.name(forward<Args>(rest)...);\
+}\
+
+#define floop while(__builtin_is_my_dick_still_there())
+#if defined(_MSC_VER) && _MSC_VER>=1935
+	//https://developercommunity.visualstudio.com/t/10193638
+	#define enable_adl(name) template<typename=void>void name()noexcept=delete
+#else
+	#define enable_adl(name) void name()noexcept=delete
+#endif
+
+#define re_declvalue(...) (declvalue(decltype(__VA_ARGS__)))
+#define re_decltype(...) (decltype(declvalue(__VA_ARGS__)))
+
+#define declvalue(...) (::std::declval<__VA_ARGS__>())
+
+/*! 实例化到此将引发错误 */
+#define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发警告 */
+#define template_warning(reason) template_warning_helper<T>(reason)
+
+//for type_info
+#define type_info_of(...) base_type_info_t(typeid(__VA_ARGS__))
+#define type_name_of(...) (type_info_of(__VA_ARGS__).get_name())
+
+#define is_common_attribute(name) public attribute<T,name<T>>
+#define is_special_attribute(name) public attribute<T,name>
+
+#define has_attribute(...) template_name has_attribute_helper<__VA_ARGS__>()
+#define not_has_attribute(...) template_name not_has_has_attribute_helper<__VA_ARGS__>()
+
+//for float_size_t
+#define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
+//bitnum_of
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
+
+//for attribute
+#define def_common_attribute_with_nothing(name) \
+template<typename T>\
+class name{}\
+
+#define def_special_attribute_with_nothing(name) \
+class name{}\
+
+#define common_attribute_t template<class>class
+#define special_attribute_t class
+
+/*!
+若参数的布尔值为零，那么此模板不会实例化
+
+为什么不用cpp20的constraints？
+1.不能类内定义
+2.不能作为模板参数
+一句话总结：c艹标准会sb
+*/
+#define enable_if(...) class enable_state= ::std::enable_if_t<__VA_ARGS__>
+/*! 默认参与模板候选 */
+#define enabled_by_default class enable_state=void
+/*! 默认不参与模板候选 */
+#define disabled_by_default class enable_state= ::std::enable_if_t<false>
+/*! 若参数为病式，那么此模板不会实例化 */
+#define enable_if_not_ill_form(...) class enable_state= ::std::void_t<decltype(__VA_ARGS__)>
+/*!用于模板声明 */
+#define enable_flag class enable_state
+
+#define was_an_ill_form(...) (!was_not_an_ill_form(__VA_ARGS__))
+#define was_an_ill_form_with_parameter(...) (!was_not_an_ill_form_with_parameter(__VA_ARGS__))
+#define was_not_an_ill_form(...) (bool(requires{__VA_ARGS__;}))
+#define was_not_an_ill_form_and_noexcept(...) (bool(requires{__VA_ARGS__;{__VA_ARGS__}noexcept;}))
+#define was_not_an_ill_form_with_parameter(...) (bool(requires __VA_ARGS__ ))
+
+/*! 让lambda递归更加美观 */
+#define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
+/*! 让lambda递归更加美观 */
+#define get_recursive_lambda_caller(name) \
+exlambda(auto&&...Args){\
+	return name(name,Args...);\
+}
+/*! 让lambda定义更加美观 */
+#define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
+/*! 让lambda定义更加美观 */
+#define lambda_with_catch(...) [__VA_ARGS__]
+/*! 让lambda定义更加美观 */
+#define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
+//recursive_lambda_self_referential_reserved_symbolname
+#define lambda_RLSRRS _my_jb_super_sb_name_
+
+#define MAGIC//ahh,ko no tenno da!
+
+/*! 装饰性语法糖 */
+#define nothing
+
+/*! aya风格语法糖 */
+#define elseif else if
+/*! aya风格语法糖 */
+#define _big_than_ >
+/*! aya风格语法糖 */
+#define _small_than_ <
+
+#if defined(_MSC_VER)
+	#define not !
+	#define and &&
+	#define or ||
+#endif
+
+/*! 进入名称空间，并不是很美观 */
+#define INTER_NAMESPACE(NAMESPACENAME) namespace NAMESPACENAME{
+/*! 退出名称空间，并不是很美观 */
+#define BREAK_NAMESPACE }
+
+/*! template说明符 */
+#define template_name template
+/*! template说明符 */
+#define type_name class
+
+#if defined(DEBUG) || defined(_DEBUG)
+	#define not_in_debug 0
+#else
+	#define not_in_debug 1
+#endif
+
+#define es U""
+#define ec(ch) U ## ch
+
+#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
+	#define ELC_TEST_EVENTNAME(name) stest_eventer _the_stest_eventer__(L""name)
+#else
+	#define ELC_TEST_EVENTNAME(name)
+#endif
+
+#define override_instance_struct \
+protected:\
+	virtual void abstract_method_unget_this()noexcept_as(instance_struct<this_t>::abstract_method_unget_this())override{instance_struct<this_t>::abstract_method_unget_this();}\
+	virtual void* _abstract_method_copy_get_this()noexcept_as(instance_struct<this_t>::_abstract_method_copy_get_this())override{return instance_struct<this_t>::_abstract_method_copy_get_this();}\
+	virtual void* _abstract_method_get_resize_this(size_t size)noexcept_as(instance_struct<this_t>::instance_struct<this_t>::_abstract_method_get_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_resize_this(size);}\
+	virtual void* _abstract_method_get_forward_resize_this(size_t size)noexcept_as(instance_struct<this_t>::_abstract_method_get_forward_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_forward_resize_this(size);}\
+	virtual size_t abstract_method_get_size_of_get_for_this()noexcept override{return instance_struct<this_t>::abstract_method_get_size_of_get_for_this();}
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define distinctive __declspec(dllexport)
+#else
+	#define distinctive
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define force_inline __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+	#define force_inline __attribute__((always_inline)) inline
+#else
+	#define force_inline inline
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define with_no_vtable __declspec(novtable)
+#else
+	#define with_no_vtable
+#endif
+
+#define in_consteval (::std::is_constant_evaluated())
+
+#define no_vtable_struct struct with_no_vtable
+#define no_vtable_class class with_no_vtable
+
+//#define get_elc_defs using namespace ::elc::defs
+
+//file_end
+
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
+
+//file_end
+
+	#line 64 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+
+	namespace base{
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+//_body.hpp
+//at namespace elc::defs::base
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/arithmetic_type_info_prover.hpp"
+//arithmetic_type_info_prover.hpp
+//at namespace elc::defs::base
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/arithmetic_type_info_prover.hpp"
+namespace math{
+	template<typename T>
+	struct arithmetic_type_info_prover{
+		//bool：是否是算数类型
+		static constexpr bool is_arithmetic_type=::std::is_arithmetic_v<T> || is_elc_expansion_base_type<T>;
+		//bool：是否是基础类型
+		static constexpr bool is_basic_type=::std::is_arithmetic_v<T>;
+		//bool：是否是大数类型
+		static constexpr bool is_big_type=false;
+		//bool：是否是浮点类型
+		static constexpr bool is_float_type=::std::is_floating_point_v<T>;
+		//bool：是否是有符号类型
+		static constexpr bool is_signed=::std::is_signed_v<T>;
+		//bool：是否有NaN
+	private:
+		static constexpr bool has_NaN_helper()noexcept{
+			if constexpr(is_arithmetic_type)
+				return ::std::numeric_limits<T>::has_quiet_NaN || ::std::numeric_limits<T>::has_signaling_NaN;
+			else
+				return false;
+		}
+	public:
+		static constexpr bool has_NaN=has_NaN_helper();
+		//bool：是否有inf
+	private:
+		static constexpr bool has_inf_helper()noexcept{
+			if constexpr(is_arithmetic_type)
+				return ::std::numeric_limits<T>::has_infinity;
+			else
+				return false;
+		}
+	public:
+		static constexpr bool has_inf=has_inf_helper();
+		//对应的无符号和有符号类型
+		using unsigned_type=decltype(lambda{
+			if constexpr(::std::is_unsigned_v<T>||::std::is_floating_point_v<T>)
+				return T();
+			elseif constexpr(::std::is_signed_v<T>)
+				return::std::make_unsigned_t<T>();
+		}());
+		using signed_type=decltype(lambda{
+			if constexpr(::std::is_signed_v<T>||::std::is_floating_point_v<T>)
+				return T();
+			elseif constexpr(::std::is_unsigned_v<T> && (type_info<T>!=type_info<bool>))
+				return::std::make_signed_t<T>();
+		}());
+	};
+}
+
+//file_end
+
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/bit.hpp"
 //bit.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/bit.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/bit.hpp"
 namespace bit{
 	/// 位操作：循环左移（无mod）
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
@@ -3216,11 +3796,11 @@ using bit::rot_iterator;
 
 //file_end
 
-#line 47 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/null_ptr.hpp"
+#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/null_ptr.hpp"
 //null_ptr.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/null_ptr.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/null_ptr.hpp"
 namespace null_ptr_n{
 	/*!
 	提醒子类定义者重载get_null_ptr.
@@ -3275,11 +3855,11 @@ typedef decltype(nullptr) nullptr_t;
 
 //file_end
 
-#line 48 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/compare.hpp"
+#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/compare.hpp"
 //compare.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/compare.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/compare.hpp"
 //end_by_zero_t
 /*!
 用于标志某一数据串以0结尾
@@ -3621,11 +4201,11 @@ constexpr struct compare_t{
 
 //file_end
 
-#line 49 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/note.hpp"
+#line 34 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/note.hpp"
 //note.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/note.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/note.hpp"
 namespace note_n{
 	#define def_note(name) \
 	template<typename T>\
@@ -3651,11 +4231,11 @@ namespace note=note_n;
 
 //file_end
 
-#line 50 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/array_like.hpp"
+#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/array_like.hpp"
 //array_like.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/array_like.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/array_like.hpp"
 namespace array_like_n{
 	enable_adl(size_of_array_like);
 	template<class T>
@@ -3805,11 +4385,11 @@ using array_like_n::array_end_by_zero_t;
 
 //file_end
 
-#line 51 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/data.hpp"
+#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/data.hpp"
 //data.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/data.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/data.hpp"
 /*!
 	每个T的可能性大小
 */
@@ -3941,11 +4521,11 @@ template<class T>
 
 //file_end
 
-#line 52 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/pointer.hpp"
+#line 37 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/pointer.hpp"
 //pointer.hpp
 //at namespace elc::defs::base
-#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/pointer.hpp"
+#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/pointer.hpp"
 enable_adl(the_pointer_to_bool);
 /// 指针转bool的重载接口，允许类对此进行自定义
 /// elc内部的指针转bool应当视情况使用默认配置或此重载接口
@@ -3993,11 +4573,11 @@ template<class T>
 
 //file_end
 
-#line 53 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/hash.hpp"
+#line 38 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/hash.hpp"
 //hash.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/hash.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/hash.hpp"
 namespace hash_n{
 	typedef size_t hash_base_t;
 	struct hash_value_t{
@@ -4268,11 +4848,11 @@ using hash_n::hash;
 
 //file_end
 
-#line 54 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/range.hpp"
+#line 39 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/range.hpp"
 //range.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/range.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/range.hpp"
 namespace range_n{
 	//  range_t
 	/// 用以表示某类型的数值范围，仅可表示闭区间
@@ -4735,11 +5315,11 @@ using range_n::find_last_not_of;
 
 //file_end
 
-#line 55 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/string_view.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/string_view.hpp"
 //string_view.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/string_view.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/string_view.hpp"
 //仅是声明
 namespace constexpr_str_n {
 	template<typename char_T>
@@ -4915,11 +5495,11 @@ using string_view_n::string_view;
 
 //file_end
 
-#line 56 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/type_name.hpp"
+#line 41 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/type_name.hpp"
 //type_name.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/type_name.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/type_name.hpp"
 struct type_name_t:string_view_t<char>{
 	//对于gcc和clang，这个类型有一个malloced的char*，以便于在析构时释放
 	//一切源于abi::__cxa_demangle
@@ -4996,11 +5576,11 @@ template<typename T>
 
 //file_end
 
-#line 57 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/constexpr_str.hpp"
+#line 42 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/constexpr_str.hpp"
 //constexpr_str.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/constexpr_str.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/constexpr_str.hpp"
 namespace constexpr_str_n{
 	/// constexpr_str_t的退化类型，表明这是常量字符串，但没有可用的额外信息
 	template<typename char_T>
@@ -5190,11 +5770,11 @@ using range_n::find_last_not_of;
 
 //file_end
 
-#line 58 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/logical_bool.hpp"
+#line 43 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/logical_bool.hpp"
 //logic.hpp
 //at namespace elc::defs::base
-#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/logical_bool.hpp"
+#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/logical_bool.hpp"
 /*! 混沌布尔值。
 	允许输出介于真假之间的内容的布尔值。
 	混沌布尔值会有五个可能的值，分别为true,false,neither,either。unknown视为不合法。
@@ -5205,7 +5785,7 @@ using range_n::find_last_not_of;
 	允许与或非运算：输出结果仍然为混沌布尔值,参与运算的值如果有unknown则均输出unknown.
 	允许判定相等，输出结果为混沌布尔值,参与运算的值如果有unknown则均输出unknown，否则仅有true和false两个合法值。
 */
-#line 47 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/logical_bool.hpp"
+#line 47 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/logical_bool.hpp"
 struct logical_bool{
 private:
 	[[no_unique_address]]bool _is_true;
@@ -5238,11 +5818,11 @@ constexpr logical_bool neither{special_init,0,0},either{special_init,1,1},unknow
 
 //file_end
 
-#line 59 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/zero.hpp"
+#line 44 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/zero.hpp"
 //zero.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/zero.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/zero.hpp"
 /*!
 没什么用的语法糖,等价于字面量0.
 */
@@ -5270,11 +5850,11 @@ inline constexpr bool is_all_byte_zero(T&&a)noexcept{
 
 //file_end
 
-#line 60 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/count_able.hpp"
+#line 45 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/count_able.hpp"
 //count_able.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/count_able.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/count_able.hpp"
 template<class T>
 [[nodiscard]]inline size_t the_number_of(type_info_t<T>)noexcept;
 template<class T>
@@ -5295,11 +5875,11 @@ template<class T>
 
 //file_end
 
-#line 61 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/invoke.hpp"
+#line 46 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/invoke.hpp"
 //invoke.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/invoke.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/invoke.hpp"
 template<typename T>
 struct invoke_t{
 	/*!
@@ -5363,11 +5943,11 @@ constexpr invoke_t<T>invoke{};
 
 //file_end
 
-#line 62 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/maybe_fail_reference.hpp"
+#line 47 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/maybe_fail_reference.hpp"
 //maybe_fail_reference.hpp
 //at namespace elc::defs::base
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/maybe_fail_reference.hpp"
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/maybe_fail_reference.hpp"
 template<typename T>
 class maybe_fail_reference{
 	T*_ref_to;
@@ -5383,17 +5963,12 @@ public:
 
 //file_end
 
-#line 63 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/base_defs/_body.hpp"
+#line 48 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/_body.hpp"
 
 //file_end
 
-		#line 53 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+		#line 67 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
 	}
-
-	//由于vcruntime的type_info在全局定义,这里需要额外声明使用base::type_info.
-	#if defined(_VCRUNTIME_H)
-		using base::type_info;
-	#endif
 
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
 //_undefs.hpp
@@ -5547,12 +6122,12 @@ public:
 
 //file_end
 
-	#line 61 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
+	#line 70 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/_body.hpp"
 }
 
 //file_end
 
-	#line 50 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+	#line 51 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 #endif
 
 //file_end
@@ -6083,14 +6658,14 @@ namespace rand_n{
 			[[nodiscard]]force_inline T operator()()const noexcept{return inclusive();}
 			[[nodiscard]]force_inline operator T()const noexcept{return operator()();}
 			[[nodiscard]]force_inline T exclusive()const noexcept{
-				T ret;
-				do ret=_seed.gen_randbit<T>()&(T{1}<<_bitnum)-1;while(ret>=_diff);
-				return ret+_min;
+				T aret;
+				do aret=_seed.gen_randbit<T>()&(T{1}<<_bitnum)-1;while(aret>=_diff);
+				return aret+_min;
 			}
 			[[nodiscard]]force_inline T inclusive()const noexcept{
-				T ret;
-				do ret=_seed.gen_randbit<T>()&(T{1}<<_bitnum)-1;while(ret>_diff);
-				return ret+_min;
+				T aret;
+				do aret=_seed.gen_randbit<T>()&(T{1}<<_bitnum)-1;while(aret>_diff);
+				return aret+_min;
 			}
 		};
 		struct between_floating_t{
