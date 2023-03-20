@@ -28954,7 +28954,7 @@ public:
 			return *this<=>to_unsigned_t<T>(other);
 		}else{
 			if constexpr(is_basic_type<T>)
-				if(_data.size_in_byte()>sizeof(T))//根据位数快速判断大小
+				if(_data.size_in_byte()-sizeof(base_type)>sizeof(T))//根据位数快速判断大小
 					return strong_ordering::greater;
 			auto i=_data.begin();
 			const auto end=_data.end();
@@ -29717,7 +29717,7 @@ public:
 	[[nodiscard]]friend size_t get_bitnum(const ubigint& x)noexcept{
 		auto&data=x._data;
 		if(data.empty())return 0;
-		return data.size()*bitnum_of(base_type)-::std::countl_zero(data.back());
+		return data.size()*bitnum_of(base_type)-countl_zero(data.back());
 	}
 	//memory_usage
 	[[nodiscard]]force_inline size_t memory_usage()const noexcept{
@@ -32546,7 +32546,7 @@ namespace to_string_n{
 					const auto info_threshold = to_size_t(ceil(log(info_threshold_base, radix)));
 					aret.pre_alloc_before_begin(info_threshold);
 				}
-				elseif constexpr(is_big_type<T>){
+				if constexpr(is_big_type<T>){
 					//大整数类型可以通过分治法来提高效率
 					constexpr auto partition_method_threshold=max(type_info<size_t>);
 					if(num>partition_method_threshold){
@@ -32563,17 +32563,21 @@ namespace to_string_n{
 						auto&low = result.mod;
 						return to_string(move(high)) + to_string(move(low)).pad_left(_repres.get_char(0), len);
 					}
+					else
+						return to_string(num.convert_to<size_t>());
 				}
-				push_and_disable_msvc_warning(4244);
-				do{//do-while是为了保证至少有一位"0"
-					auto res=divmod(move(num),radix);
-					const auto index=to_size_t(move(res.mod));
-					const auto ch=_repres.get_char(index);
-					aret.push_front(ch);
-					num=move(res.quot);
-				}while(num);
-				pop_msvc_warning();
-				return aret;
+				else{
+					push_and_disable_msvc_warning(4244);
+					do{//do-while是为了保证至少有一位"0"
+						auto res=divmod(move(num),radix);
+						const auto index=to_size_t(move(res.mod));
+						const auto ch=_repres.get_char(index);
+						aret.push_front(ch);
+						num=move(res.quot);
+					}while(num);
+					pop_msvc_warning();
+					return aret;
+				}
 			}
 		}
 	private:
@@ -32793,23 +32797,27 @@ namespace to_string_n{
 							return {};
 						return move(high)*move(base)+move(low);
 					}
+					else
+						return from_string_get_unsigneded<size_t>(str,state);
 				}
-				push_and_disable_msvc_warning(4267);
-				T aret={};
-				const auto end=str.end();
-				for(auto i=str.begin();i!=end;++i){
-					aret*=radix;
-					const char_t ch=*i;
-					if(_repres.is_valid_char(ch))
-						aret+=_repres.get_index(ch);
-					else{//error
-						state.set_error();
-						state.set_has_invalid_char();
-						return {};
+				else{
+					push_and_disable_msvc_warning(4267);
+					T aret={};
+					const auto end=str.end();
+					for(auto i=str.begin();i!=end;++i){
+						aret*=radix;
+						const char_t ch=*i;
+						if(_repres.is_valid_char(ch))
+							aret+=_repres.get_index(ch);
+						else{//error
+							state.set_error();
+							state.set_has_invalid_char();
+							return {};
+						}
 					}
+					return aret;
+					pop_msvc_warning();
 				}
-				return aret;
-				pop_msvc_warning();
 			}
 		}
 	public:
