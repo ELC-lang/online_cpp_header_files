@@ -2860,7 +2860,7 @@ TYPE_MAPPER(uint_fast64_t)
 		private:
 			//nothrow
 			template<class T>
-			static inline constexpr bool nothrow_helper()noexcept{				
+			static inline constexpr bool nothrow_helper()noexcept{
 				typedef decltype(to_arithmetic_base(declvalue(T))) to_type;
 				if constexpr(able<T>)
 					return type_info<T>.can_nothrow_convert_to<to_type>;
@@ -5064,7 +5064,7 @@ namespace range_n{
 	/// bitmark提供了一种快速进行四种泛搜索的实现，前提是构建中的pattern中的每一项的usigned表示都在一个字节（表长）内。
 	/// 若bitmark构建失败，程序应当使用正在进行的泛搜索的朴素实现版本。
 	template<typename T>
-	struct bitmark_for_finds {
+	struct bitmark_for_finds{
 		typedef unsigned char index_type;
 		bool _bitmark[number_of_possible_values_per<index_type>]{};
 
@@ -5233,7 +5233,7 @@ namespace range_n{
 	/// bitmark提供了一种快速进行反索引的实现，前提是构建中的pattern中的每一项的usigned表示都在一个字节（表长）内。
 	/// 若bitmark构建失败，程序应当使用正在进行的反索引的朴素实现版本。
 	template<typename T>
-	struct bitmark_for_quick_unindex {
+	struct bitmark_for_quick_unindex{
 		typedef unsigned char index_type;
 		size_t _bitmark[number_of_possible_values_per<index_type>]{};
 
@@ -5321,14 +5321,14 @@ using range_n::find_last_not_of;
 //at namespace elc::defs::base
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/string_view.hpp"
 //仅是声明
-namespace constexpr_str_n {
+namespace constexpr_str_n{
 	template<typename char_T>
 	struct constexpr_str_t;
 }
 using constexpr_str_n::constexpr_str_t;
 //重载range操作
 //仅是声明以及size_t包装
-namespace range_n {
+namespace range_n{
 	template<typename T>
 	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range);
 	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
@@ -5654,7 +5654,7 @@ namespace constexpr_str_n{
 		}
 	};
 	template<constexpr_str_t_literal_helper v>
-	struct literal_result_provider {
+	struct literal_result_provider{
 		distinctive static constexpr auto value = v.get_constexpr_str_t();
 	};
 	//别问，问就是傻逼c++
@@ -5674,7 +5674,7 @@ using constexpr_str_n::empty_constexpr_str_of;
 using constexpr_str_n::operator ""_constexpr_str;
 
 //重载range操作
-namespace range_n {
+namespace range_n{
 	template<typename T>
 	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
 		return pattern.match_pattern.match(range);

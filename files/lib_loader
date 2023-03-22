@@ -2898,7 +2898,7 @@ TYPE_MAPPER(uint_fast64_t)
 		private:
 			//nothrow
 			template<class T>
-			static inline constexpr bool nothrow_helper()noexcept{				
+			static inline constexpr bool nothrow_helper()noexcept{
 				typedef decltype(to_arithmetic_base(declvalue(T))) to_type;
 				if constexpr(able<T>)
 					return type_info<T>.can_nothrow_convert_to<to_type>;
@@ -5102,7 +5102,7 @@ namespace range_n{
 	/// bitmark提供了一种快速进行四种泛搜索的实现，前提是构建中的pattern中的每一项的usigned表示都在一个字节（表长）内。
 	/// 若bitmark构建失败，程序应当使用正在进行的泛搜索的朴素实现版本。
 	template<typename T>
-	struct bitmark_for_finds {
+	struct bitmark_for_finds{
 		typedef unsigned char index_type;
 		bool _bitmark[number_of_possible_values_per<index_type>]{};
 
@@ -5271,7 +5271,7 @@ namespace range_n{
 	/// bitmark提供了一种快速进行反索引的实现，前提是构建中的pattern中的每一项的usigned表示都在一个字节（表长）内。
 	/// 若bitmark构建失败，程序应当使用正在进行的反索引的朴素实现版本。
 	template<typename T>
-	struct bitmark_for_quick_unindex {
+	struct bitmark_for_quick_unindex{
 		typedef unsigned char index_type;
 		size_t _bitmark[number_of_possible_values_per<index_type>]{};
 
@@ -5359,14 +5359,14 @@ using range_n::find_last_not_of;
 //at namespace elc::defs::base
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/string_view.hpp"
 //仅是声明
-namespace constexpr_str_n {
+namespace constexpr_str_n{
 	template<typename char_T>
 	struct constexpr_str_t;
 }
 using constexpr_str_n::constexpr_str_t;
 //重载range操作
 //仅是声明以及size_t包装
-namespace range_n {
+namespace range_n{
 	template<typename T>
 	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range);
 	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
@@ -5692,7 +5692,7 @@ namespace constexpr_str_n{
 		}
 	};
 	template<constexpr_str_t_literal_helper v>
-	struct literal_result_provider {
+	struct literal_result_provider{
 		distinctive static constexpr auto value = v.get_constexpr_str_t();
 	};
 	//别问，问就是傻逼c++
@@ -5712,7 +5712,7 @@ using constexpr_str_n::empty_constexpr_str_of;
 using constexpr_str_n::operator ""_constexpr_str;
 
 //重载range操作
-namespace range_n {
+namespace range_n{
 	template<typename T>
 	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
 		return pattern.match_pattern.match(range);
@@ -9291,7 +9291,7 @@ inline namespace convert_impl{
 	}
 }
 template<typename in_char_t, typename out_char_t>
-struct code_convert_result {
+struct code_convert_result{
 	bool _success;
 	string_view_t<in_char_t> _processed_input;
 	string_view_t<out_char_t> _processed_output;
@@ -14890,7 +14890,7 @@ namespace function_n{
 	class base_function_t;
 
 	template<class T>
-	struct is_function_t_helper {
+	struct is_function_t_helper{
 		constexpr static bool value = false;
 	};
 	template<class T, bool promise_nothrow_at_destruct>
@@ -20611,7 +20611,7 @@ protected:
 	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form(size_t begin)noexcept override final{
 		if(begin >= _used_size)
 			return _to->get_the_largest_complete_data_block_begin_form(begin-_used_size);
-		else {
+		else{
 			const char_T* head_begin = _m.end() - _used_size;
 			const char_T* head_end	 = _m.end();
 			const char_T* ret_begin	 = begin+head_begin;
@@ -20927,7 +20927,7 @@ protected:
 	[[nodiscard]]virtual range_t<const char_T*> get_the_largest_complete_data_block_begin_form(size_t begin)noexcept override final{
 		if(begin < _to_size)
 			return _to->get_the_largest_complete_data_block_begin_form(begin);
-		else {
+		else{
 			begin-=_to_size;
 			return{_m.begin()+begin,note::size(_used_size-begin)};
 		}
@@ -21286,7 +21286,7 @@ struct erased_string_data_t final:base_string_data_t<char_T>,instance_struct<era
 		else
 			return base_t::get_substr_data(begin,size);
 	}
-	virtual void be_replace_as(ptr_t a)noexcept(clear_nothrow)override final {
+	virtual void be_replace_as(ptr_t a)noexcept(clear_nothrow)override final{
 		if(type_info<this_t> == typeid(*a)){
 			const auto p = down_cast<this_t*>(a.get());
 			if(_erase_pos==p->_erase_pos && _erase_size==p->_erase_size && _to!=p->_to)
@@ -21825,7 +21825,7 @@ protected:
 			return _insert_data->get_the_largest_complete_data_block_begin_form(index-_insert_pos);
 		elseif(index>=_insert_pos+_insert_size)
 			return _to->get_the_largest_complete_data_block_begin_form(index-_insert_size);
-		else {
+		else{
 			auto aret=_to->get_the_largest_complete_data_block_begin_form(index);
 			if(aret.size()+index > _insert_pos)
 				aret = {aret.begin(), note::size(_insert_pos-index)};
@@ -23068,8 +23068,8 @@ protected:
 
 		if(!isok)
 			state |= stream_t::badbit;
-		else {
-			try {
+		else{
+			try{
 				if((os.flags() & stream_t::adjustfield) != stream_t::left){
 					for(; 0 < pad; --pad){// pad on left
 						if(traits_t::eq_int_type(traits_t::eof(), os.rdbuf()->sputc(os.fill()))){
