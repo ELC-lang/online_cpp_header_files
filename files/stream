@@ -4342,10 +4342,10 @@ namespace array_like_n{
 		[[nodiscard]]constexpr T&operator[](size_t pos)noexcept{return begin()[pos];}
 		[[nodiscard]]constexpr const T&operator[](size_t pos)const noexcept{return remove_const(*this)[pos];}
 
-		[[nodiscard]]constexpr auto operator<=>(this_t a)noexcept(compare.nothrow<T>){
+		[[nodiscard]]constexpr auto operator<=>(this_t a)const noexcept(compare.nothrow<T>){
 			return compare(_begin,_size,a._begin,a._size);
 		}
-		[[nodiscard]]constexpr auto operator==(this_t a)noexcept(equal.nothrow<T>){
+		[[nodiscard]]constexpr auto operator==(this_t a)const noexcept(equal.nothrow<T>){
 			return equal(_begin,_size,a._begin,a._size);
 		}
 	};
@@ -26124,7 +26124,7 @@ public:
 		}
 	}
 	//调试用，返回一个可以输出到流的内部结构查看器
-	[[nodiscard]]auto get_data_viewr()const noexcept{
+	[[nodiscard]]auto get_data_viewer()const noexcept{
 		return lambda_with_catch(this)(auto&stream)noexcept->auto&{
 			for(auto& i: _data)
 				stream << i << U' ';
@@ -26153,7 +26153,7 @@ private:
 	[[nodiscard]]static size_t get_safety_add_buf_size(data_view_type a,data_view_type b)noexcept{
 		return a.size()+get_safety_add_buf_size_diff(a,b);
 	}
-	[[nodiscard]]static size_t get_safety_add_buf_size_with_not_copmared_buf(data_view_type a,data_view_type b)noexcept{
+	[[nodiscard]]static size_t get_safety_add_buf_size_with_not_compared_buf(data_view_type a,data_view_type b)noexcept{
 		if(a.size()<b.size())
 			swap(a,b);
 		return get_safety_add_buf_size(a,b);
@@ -26412,13 +26412,13 @@ private:
 			buf+=zeros;
 		}
 		array_t<base_type> tmp(note::size(a.size()+1));
-		size_t muti_sacle=0;
-		while(muti_sacle!=b.size()){
-			if(b[muti_sacle]){
-				muti_with_base_no_zero_check(tmp.data(),a,b[muti_sacle]);
-				add_to_base(buf+muti_sacle,get_shrinked_data_view_of_data(tmp));
+		size_t muti_scale=0;
+		while(muti_scale!=b.size()){
+			if(b[muti_scale]){
+				muti_with_base_no_zero_check(tmp.data(),a,b[muti_scale]);
+				add_to_base(buf+muti_scale,get_shrinked_data_view_of_data(tmp));
 			}
-			muti_sacle++;
+			muti_scale++;
 		}
 	}
 	[[nodiscard]]static data_type muti_base(data_view_type a,data_view_type b)noexcept{
@@ -26474,6 +26474,7 @@ private:
 		const calc_type divisor=calc_type(b.back());
 		calc_type left=dividend/(divisor+1);
 		calc_type right=min(calc_type(dividend/divisor),(calc_type)max(type_info<base_type>));
+		if(right==0)return 0;//a/b<=right==0
 		base_type last_work_able=0;
 		//left<=a/b<=right
 		tryto=get_shrinked_data_view_of_data(tryto.data(),tryto.size());
@@ -26494,8 +26495,7 @@ private:
 			else//tryto==myview：测试值合适
 				break;
 		}
-		if(last_work_able==0)
-			return 0;
+		if(last_work_able==0)return 0;
 		muti_with_base(buf.data(),b,last_work_able);
 		sub_with_base(a,get_shrinked_data_view_of_data(buf));
 		return last_work_able;
@@ -26578,7 +26578,7 @@ private:
 			auto a_view=get_data_view_of_data(a);
 			apply_shrink_of_end_zeros(a_view,zeros);
 			data_type quot = div_base_no_zero_check(a_view, b);
-			auto ori_b_view=unshrink_of_end_zeros(b,zeros);
+			const auto ori_b_view=unshrink_of_end_zeros(b,zeros);
 			sub_with_base(a,fast_muti_base(quot,ori_b_view));//already shrink_to_fit ed
 			return {ubigint{move(quot)},ubigint{move(a)}};
 		}
@@ -26688,7 +26688,7 @@ public:
 		const auto this_view = get_data_view();
 		const auto other_view = other.get_data_view();
 		const auto origin_size = this_view.size();
-		const auto new_size = get_safety_add_buf_size_with_not_copmared_buf(this_view,other_view);
+		const auto new_size = get_safety_add_buf_size_with_not_compared_buf(this_view,other_view);
 		const auto size_diff = new_size - origin_size;
 		if(size_diff){
 			_data.resize(new_size);
