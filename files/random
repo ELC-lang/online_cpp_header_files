@@ -2201,6 +2201,20 @@ namespace math{
 			return table.end();
 		}
 	};
+	//阶乘快速计算
+	template<unsigned_integer_type T>
+	[[nodiscard]]constexpr inline auto factorial(unsigned n,unsigned start=1u)noexcept{
+		constexpr size_t threshold=1<<4;
+		if (n < threshold) {
+			T s = 1u;
+			unsigned end = start + n;
+			while(start < end)
+				s *= start++;
+			return s;
+		}
+		unsigned m = (n+1u)/2;
+		return factorial<T>(m,start)*factorial<T>(n-m,start+m);
+	}
 }
 using namespace math::concepts;
 
@@ -2268,6 +2282,7 @@ using math::get_prime_factorization;
 using math::prime_factorization_table_t;
 using math::unique_prime_factorization_table_t;
 using math::gcd;
+using math::factorial;
 
 //file_end
 
@@ -4467,9 +4482,12 @@ namespace bit{
 			else
 				return countl_one(high);
 		}
-		else
-			//默认通用实现return countl_zero(T(~v));，不如下面这个（虽然只能用于char）
-			return v&0x80?countl_one(T(v<<1))+1:0;
+		else{
+			//默认通用实现
+			//return countl_zero(T(~v));，或者
+			constexpr T first_bit = T(1)<<(bitnum_of(T)-1);
+			return v&first_bit?countl_one(T(v<<1))+1:0;
+		}
 	}
 	/// countr_zero
 	template<unsigned_basic_integer_type T>

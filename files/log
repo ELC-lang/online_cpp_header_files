@@ -2281,6 +2281,20 @@ namespace math{
 			return table.end();
 		}
 	};
+	//阶乘快速计算
+	template<unsigned_integer_type T>
+	[[nodiscard]]constexpr inline auto factorial(unsigned n,unsigned start=1u)noexcept{
+		constexpr size_t threshold=1<<4;
+		if (n < threshold) {
+			T s = 1u;
+			unsigned end = start + n;
+			while(start < end)
+				s *= start++;
+			return s;
+		}
+		unsigned m = (n+1u)/2;
+		return factorial<T>(m,start)*factorial<T>(n-m,start+m);
+	}
 }
 using namespace math::concepts;
 
@@ -2348,6 +2362,7 @@ using math::get_prime_factorization;
 using math::prime_factorization_table_t;
 using math::unique_prime_factorization_table_t;
 using math::gcd;
+using math::factorial;
 
 //file_end
 
@@ -4547,9 +4562,12 @@ namespace bit{
 			else
 				return countl_one(high);
 		}
-		else
-			//默认通用实现return countl_zero(T(~v));，不如下面这个（虽然只能用于char）
-			return v&0x80?countl_one(T(v<<1))+1:0;
+		else{
+			//默认通用实现
+			//return countl_zero(T(~v));，或者
+			constexpr T first_bit = T(1)<<(bitnum_of(T)-1);
+			return v&first_bit?countl_one(T(v<<1))+1:0;
+		}
 	}
 	/// countr_zero
 	template<unsigned_basic_integer_type T>
@@ -6615,8 +6633,9 @@ public:
 //file_end
 
 	#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
-	#line 47 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
-	#if defined(ELC_USING__aligned_malloc)
+	//overhead默认启用（即使windows下可以通过_aligned_msize获取块大小），参见https://developercommunity.visualstudio.com/t/_aligned_realloc-does-not-reduce-block-s/10334132
+	#define ELC_USING_OVERHEADED_ALLOC
+	#if SYSTEM_TYPE != windows
 		#if defined(_DEBUG)
 			#include <crtdbg.h>
 		#else
@@ -6624,11 +6643,809 @@ public:
 		#endif
 	#else
 		#include <cstdlib>
-		//如果msvc
+	#endif
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+//base_defs
+//at namespace ::
+/*@
+未完成的elc解释器include文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/ELC-lang/ELC
+*/
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/pre_checks.hpp"
+//pre_checks.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/pre_checks.hpp"
+//__cplusplus needs 20+
+#if !defined(__cplusplus)||__cplusplus<202002L
+	//if msvc, check _MSVC_LANG
+	#if defined(_MSVC_LANG) && _MSVC_LANG>=202002L
+		//ok
+	#else
+		#error "elc files needs c++20 or higher"
+	#endif
+#endif
+
+//check if the compiler is msvc
+#if defined(_MSC_VER)
+	//check if _CPPRTTI
+	#if !defined(_CPPRTTI)
+		#error "elc files needs rtti"
+	#endif
+	//check _MSC_VER at last 1932
+	#if _MSC_VER<1932
+		#error "elc files needs at last msvc 19.32 or higher, keep moving!"
+	#endif
+#endif
+
+//file_end
+
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+#line 54 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+
+//file_end
+
+	#line 52 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
+	/// @brief alloc相关基础函数
+	namespace elc::APIs::alloc{
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+//_defs.hpp
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+//undefs at "_undefs.hpp"
+
+//set ELC_WARNING_LEVEL default to 4(max)
+#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(push,ELC_WARNING_LEVEL)
+	#pragma warning(disable:4099)//class与struct混用警告diss
+	#pragma warning(disable:4584)//重复子类警告diss
+	#pragma warning(disable:4250)//域控制继承警告diss
+	#pragma warning(disable:26432)//不完全默认方法警告diss
+	#pragma warning(disable:26435)//virtual override方法警告diss
+	#pragma warning(disable:26481)//容器安利diss
+	#pragma warning(disable:26446)//gsl::at安利diss
+	#pragma warning(disable:26434)//方法覆盖警告diss
+	#pragma warning(disable:26429)//gsl::not_null安利diss
+	#pragma warning(disable:26471)//对void*进行static_cast安利diss
+	#pragma warning(disable:26474)//隐式指针转换显式cast警告diss
+	#pragma warning(disable:26473)//相同指针显式cast警告diss
+	#pragma warning(disable:26456)//隐藏非虚运算符警告diss
+	#pragma warning(disable:26485)//数组作指针警告diss
+	#pragma warning(disable:26490)//reinterpret_cast警告diss
+	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
+	#pragma warning(disable:26482)//非常数数组索引警告diss
+	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
+#endif
+#if defined(_MSC_VER)
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
+	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
+	#define push_msvc_warning() __pragma(warning(push))
+	#define pop_msvc_warning() __pragma(warning(pop))
+	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
+#else
+	//#define suppress_msvc_warning(...)
+	#define disable_msvc_warning(...)
+	#define push_msvc_warning()
+	#define pop_msvc_warning()
+	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
+	#pragma push_macro("elc")
+	#undef elc
+#endif
+//
+#if defined(ELC_VOID_NAME)
+	#undef void
+#endif
+//
+#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
+	#undef rand
+#endif
+
+// #define often_noexcept
+#define noexcept_as(...) noexcept(noexcept((__VA_ARGS__)))//dnmd C艹标准就是没有noexcept_as_auto
+#define noexcept_as_auto MAGIC//哦现在有了
+#define constexpr_as(...) MAGIC constexpr//( •̀ ω •́ )✌
+#define constexpr_as_auto MAGIC MAGIC constexpr//✌( •̀ ω •́ )✌
+
+#define using_method_from_base_t(name,...) \
+template<class...Args> requires was_not_an_ill_form(declvalue(base_t).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(base_t::name(declvalue(Args)...))\
+{\
+	return base_t::name(forward<Args>(rest)...);\
+}\
+
+#define using_method_from_value(name,value_name,...) \
+template<class...Args> requires was_not_an_ill_form(re_declvalue(value_name).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(declvalue(Args)...))\
+{\
+	return value_name.name(forward<Args>(rest)...);\
+}\
+
+#define floop while(__builtin_is_my_dick_still_there())
+#if defined(_MSC_VER) && _MSC_VER>=1935
+	//https://developercommunity.visualstudio.com/t/10193638
+	#define enable_adl(name) template<typename=void>void name()noexcept=delete
+#else
+	#define enable_adl(name) void name()noexcept=delete
+#endif
+
+#define re_declvalue(...) (declvalue(decltype(__VA_ARGS__)))
+#define re_decltype(...) (decltype(declvalue(__VA_ARGS__)))
+
+#define declvalue(...) (::std::declval<__VA_ARGS__>())
+
+/*! 实例化到此将引发错误 */
+#define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发警告 */
+#define template_warning(reason) template_warning_helper<T>(reason)
+
+//for type_info
+#define type_info_of(...) base_type_info_t(typeid(__VA_ARGS__))
+#define type_name_of(...) (type_info_of(__VA_ARGS__).get_name())
+
+#define is_common_attribute(name) public attribute<T,name<T>>
+#define is_special_attribute(name) public attribute<T,name>
+
+#define has_attribute(...) template_name has_attribute_helper<__VA_ARGS__>()
+#define not_has_attribute(...) template_name not_has_has_attribute_helper<__VA_ARGS__>()
+
+//for float_size_t
+#define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
+//bitnum_of
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
+
+//for attribute
+#define def_common_attribute_with_nothing(name) \
+template<typename T>\
+class name{}\
+
+#define def_special_attribute_with_nothing(name) \
+class name{}\
+
+#define common_attribute_t template<class>class
+#define special_attribute_t class
+
+/*!
+若参数的布尔值为零，那么此模板不会实例化
+
+为什么不用cpp20的constraints？
+1.不能类内定义
+2.不能作为模板参数
+一句话总结：c艹标准会sb
+*/
+#define enable_if(...) class enable_state= ::std::enable_if_t<__VA_ARGS__>
+/*! 默认参与模板候选 */
+#define enabled_by_default class enable_state=void
+/*! 默认不参与模板候选 */
+#define disabled_by_default class enable_state= ::std::enable_if_t<false>
+/*! 若参数为病式，那么此模板不会实例化 */
+#define enable_if_not_ill_form(...) class enable_state= ::std::void_t<decltype(__VA_ARGS__)>
+/*!用于模板声明 */
+#define enable_flag class enable_state
+
+#define was_an_ill_form(...) (!was_not_an_ill_form(__VA_ARGS__))
+#define was_an_ill_form_with_parameter(...) (!was_not_an_ill_form_with_parameter(__VA_ARGS__))
+#define was_not_an_ill_form(...) (bool(requires{__VA_ARGS__;}))
+#define was_not_an_ill_form_and_noexcept(...) (bool(requires{__VA_ARGS__;{__VA_ARGS__}noexcept;}))
+#define was_not_an_ill_form_with_parameter(...) (bool(requires __VA_ARGS__ ))
+
+/*! 让lambda递归更加美观 */
+#define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
+/*! 让lambda递归更加美观 */
+#define get_recursive_lambda_caller(name) \
+exlambda(auto&&...Args){\
+	return name(name,Args...);\
+}
+/*! 让lambda定义更加美观 */
+#define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
+/*! 让lambda定义更加美观 */
+#define lambda_with_catch(...) [__VA_ARGS__]
+/*! 让lambda定义更加美观 */
+#define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
+//recursive_lambda_self_referential_reserved_symbolname
+#define lambda_RLSRRS _my_jb_super_sb_name_
+
+#define MAGIC//ahh,ko no tenno da!
+
+/*! 装饰性语法糖 */
+#define nothing
+
+/*! aya风格语法糖 */
+#define elseif else if
+/*! aya风格语法糖 */
+#define _big_than_ >
+/*! aya风格语法糖 */
+#define _small_than_ <
+
+#if defined(_MSC_VER)
+	#define not !
+	#define and &&
+	#define or ||
+#endif
+
+/*! 进入名称空间，并不是很美观 */
+#define INTER_NAMESPACE(NAMESPACENAME) namespace NAMESPACENAME{
+/*! 退出名称空间，并不是很美观 */
+#define BREAK_NAMESPACE }
+
+/*! template说明符 */
+#define template_name template
+/*! template说明符 */
+#define type_name class
+
+#if defined(DEBUG) || defined(_DEBUG)
+	#define not_in_debug 0
+	#define in_debug 1
+#else
+	#define not_in_debug 1
+	#define in_debug 0
+#endif
+
+#define es U""
+#define ec(ch) U ## ch
+
+#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
+	#define ELC_TEST_EVENTNAME(name) stest_eventer _the_stest_eventer__(L""name)
+#else
+	#define ELC_TEST_EVENTNAME(name)
+#endif
+
+#define override_instance_struct \
+protected:\
+	virtual void abstract_method_unget_this()noexcept_as(instance_struct<this_t>::abstract_method_unget_this())override{instance_struct<this_t>::abstract_method_unget_this();}\
+	virtual void* _abstract_method_copy_get_this()noexcept_as(instance_struct<this_t>::_abstract_method_copy_get_this())override{return instance_struct<this_t>::_abstract_method_copy_get_this();}\
+	virtual void* _abstract_method_get_resize_this(size_t size)noexcept_as(instance_struct<this_t>::instance_struct<this_t>::_abstract_method_get_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_resize_this(size);}\
+	virtual void* _abstract_method_get_forward_resize_this(size_t size)noexcept_as(instance_struct<this_t>::_abstract_method_get_forward_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_forward_resize_this(size);}\
+	virtual size_t abstract_method_get_size_of_get_for_this()noexcept override{return instance_struct<this_t>::abstract_method_get_size_of_get_for_this();}
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define distinctive __declspec(dllexport)
+#else
+	#define distinctive
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define force_inline __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+	#define force_inline __attribute__((always_inline)) inline
+#else
+	#define force_inline inline
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define with_no_vtable __declspec(novtable)
+#else
+	#define with_no_vtable
+#endif
+
+#define in_consteval (::std::is_constant_evaluated())
+
+#define no_vtable_struct struct with_no_vtable
+#define no_vtable_class class with_no_vtable
+
+//#define get_elc_defs using namespace ::elc::defs
+
+//file_end
+
+		#line 55 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
+
+		using namespace ::elc::defs;//remove_const||byte
+		#if defined(ELC_USING_OVERHEADED_ALLOC)
+			//overhead
+			#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc/default_method/overhead.hpp"
+//overhead.hpp
+//at namespace elc::APIs::alloc
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc/default_method/overhead.hpp"
+namespace overhead_n{
+	using namespace ::elc::defs;
+	constexpr size_t overhead_get_align(size_t align)noexcept{
+		return max(align,alignof(size_t));//保证最高对齐需求
+	}
+	constexpr size_t overhead_get_offset_value(size_t align)noexcept{
+		align=overhead_get_align(align);
+		return (size_t(sizeof(size_t)/align)+bool(sizeof(size_t)%align))*align;//等同于sizeof(size_t)-sizeof(size_t)%align+(sizeof(size_t)%align?align:0)
+		//暨，偏移量既要大于sizeof(size_t)以装下overhead，又要是align的整数倍以保证T实例的对齐被满足
+	}
+	constexpr size_t correct_size(size_t size,size_t align)noexcept{
+		return size+overhead_get_offset_value(align);
+	}
+	constexpr size_t correct_align(size_t align)noexcept{
+		return overhead_get_align(align);
+	}
+	inline pointer correct_pointer(pointer a,size_t align){
+		return apply_off_set(a,overhead_get_offset_value(align));
+	}
+	inline pointer recorrect_pointer(pointer a,size_t align){
+		return unapply_off_set(a,overhead_get_offset_value(align));
+	}
+	inline const_pointer recorrect_pointer(const_pointer a, size_t align){
+		return unapply_off_set(a,overhead_get_offset_value(align));
+	}
+	inline void set_overhead(pointer a,size_t size){
+		*reinterpret_cast<size_t*>(a)=size;
+	}
+	inline size_t get_overhead(const_pointer a){
+		return*reinterpret_cast<const size_t*>(a);
+	}
+}
+
+//file_end
+
+			#line 59 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
+		#endif
+
+		//operate_source_location & source_location_guard
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc/debug_info/source_location_guard.hpp"
+//source_location_guard.hpp
+//at namespace elc::APIs::alloc
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc/debug_info/source_location_guard.hpp"
+#if defined(_MSC_VER)
+	#if defined(ELC_MEMORY_ALLOC_LOCATION_RECORD)
+		#pragma detect_mismatch("ELC_MEMORY_ALLOC_LOCATION_RECORD","true")
+	#else
+		#pragma detect_mismatch("ELC_MEMORY_ALLOC_LOCATION_RECORD","false")
+	#endif
+#endif
+#if defined(ELC_MEMORY_ALLOC_LOCATION_RECORD)
+	distinctive inline ::std::stacktrace_entry operate_source_frame;
+	distinctive inline struct source_location_info_t{
+		const char*_file=nullptr;
+		uint_least32_t _line=0;
+		const char*file()noexcept{
+			if(!_file){
+				try{
+					static ::std::string file_cache;
+					file_cache=operate_source_frame.source_file();
+					_file=file_cache.c_str();
+				}
+				catch(...){
+				}
+			}
+			return _file;
+		}
+		uint_least32_t line()noexcept{
+			if(!_line){
+				try{
+					_line=operate_source_frame.source_line();
+				}
+				catch(...){
+				}
+			}
+			return _line;
+		}
+		void clear()noexcept{
+			_file=nullptr;
+			_line=0;
+		}
+	}operate_source_location;
+	struct source_location_guard{
+		bool _is_set=false;
+		source_location_guard(size_t lookup=0)noexcept{
+			if(!operate_source_frame){
+				::std::stacktrace stack = ::std::stacktrace::current(/*skip*/lookup+2,/*max_depth*/1);
+				if(stack.size()){
+					operate_source_frame = stack[0];
+					_is_set				 = true;
+				}
+			}
+		}
+		~source_location_guard()noexcept{
+			if(_is_set){
+				operate_source_frame = ::std::stacktrace_entry{};
+				operate_source_location.clear();
+			}
+		}
+	};
+#else
+	struct source_location_guard{
+		constexpr source_location_guard([[maybe_unused]]size_t lookup=0)noexcept{}
+	};
+	distinctive inline struct source_location_info_t{
+		constexpr const char*file()noexcept{return nullptr;}
+		constexpr uint_least32_t line()noexcept{return 0;}
+	}operate_source_location;
+#endif
+
+//file_end
+
+		#line 62 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
+
+		//BLOCK: Counting memory allocations
 		#if defined(_MSC_VER)
-			//没有aligned_alloc，注入一个
-			#define _aligned_alloc_FUCKING_Defined_
-			#line 244 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
+			#if defined(ELC_TEST_COUNT_MEMORY_ALLOC)
+				#pragma detect_mismatch("ELC_TEST_COUNT_MEMORY_ALLOC","true")
+			#else
+				#pragma detect_mismatch("ELC_TEST_COUNT_MEMORY_ALLOC","false")
+			#endif
+		#endif
+
+		#if defined(ELC_TEST_COUNT_MEMORY_ALLOC)
+			[[nodiscard]]inline size_t get_size_of_alloc(const byte*p,size_t align)noexcept;
+			namespace count_info{
+				distinctive inline size_t alloc_count=0;
+				distinctive inline size_t free_count=0;
+				distinctive inline size_t alloc_size=0;
+				distinctive inline size_t free_size=0;
+				distinctive inline size_t memory_using=0;
+				distinctive inline size_t memory_using_max=0;
+				inline void update_memory_using(ptrdiff_t diff)noexcept{
+					memory_using+=diff;
+					if(memory_using>memory_using_max)
+						memory_using_max=memory_using;
+				}
+				inline void clear()noexcept{
+					alloc_count=0;
+					free_count=0;
+					alloc_size=0;
+					free_size=0;
+					memory_using=0;
+					memory_using_max=0;
+				}
+			}
+		#endif
+		//BLOCK_END
+
+		#if defined(ELC_MEMORY_ALLOC_LOCATION_RECORD) && defined(ELC_SPEED_TEST)
+			#error "ELC_MEMORY_ALLOC_LOCATION_RECORD and ELC_SPEED_TEST can't be defined at the same time."
+		#endif
+
+		inline constexpr bool use_debug_alloc_lib=
+			#if in_debug && !defined(ELC_SPEED_TEST)
+				true
+			#else
+				false
+			#endif
+		;
+
+		#if SYSTEM_TYPE != windows
+			struct default_operators_provider_t{
+				static void* aligned_alloc(size_t align,size_t size)noexcept{
+					return ::std::aligned_alloc(align,size);
+				}
+				static void aligned_free(void*ptr,[[maybe_unused]]size_t align)noexcept{
+					::std::free(ptr);
+				}
+				static void* aligned_realloc(void*ptr,size_t size,[[maybe_unused]]size_t align)noexcept{
+					return ::std::realloc(ptr,size);
+				}
+				static size_t aligned_blocksize([[maybe_unused]]const void*ptr,[[maybe_unused]]size_t align)noexcept{
+					return 0;//无法获取，所以依赖overhead
+				}
+			};
+		#else
+			struct default_operators_provider_t{
+				static void* aligned_alloc(size_t align,size_t size)noexcept{
+					if constexpr(use_debug_alloc_lib)
+						return _aligned_malloc_dbg(size,align,operate_source_location.file(),operate_source_location.line());
+					else
+						return _aligned_malloc(size,align);
+				}
+				static void aligned_free(void*ptr,[[maybe_unused]]size_t align)noexcept{
+					if constexpr(use_debug_alloc_lib)
+						_aligned_free_dbg(ptr);
+					else
+						_aligned_free(ptr);
+				}
+				static void* aligned_realloc(void*ptr,size_t size,size_t align)noexcept{
+					if constexpr(use_debug_alloc_lib)
+						return _aligned_realloc_dbg(ptr,size,align,operate_source_location.file(),operate_source_location.line());
+					else
+						return _aligned_realloc(ptr,size,align);
+				}
+				static size_t aligned_blocksize(const void*ptr,size_t align)noexcept{
+					if constexpr(use_debug_alloc_lib)
+						return _aligned_msize_dbg(remove_const(ptr),align,0);
+					else
+						return _aligned_msize(remove_const(ptr),align,0);
+				}
+			};
+		#endif
+		
+		#if defined(ELC_USING_OVERHEADED_ALLOC)
+			template<class base_operators>
+			struct overheaded_operators_provider_t{
+				static void* aligned_alloc(size_t align,size_t size)noexcept{
+					using namespace overhead_n;
+					void*tmp=base_operators::aligned_alloc(correct_align(align),correct_size(size,align));
+					if(tmp){
+						set_overhead(tmp,size);
+						return correct_pointer(tmp,align);
+					}
+					else
+						return nullptr;
+				}
+				static void aligned_free(void*ptr,size_t align)noexcept{
+					using namespace overhead_n;
+					base_operators::aligned_free(recorrect_pointer(ptr,align),correct_align(align));
+				}
+				static void* aligned_realloc(void*ptr,size_t size,size_t align)noexcept{
+					using namespace overhead_n;
+					void*tmp=base_operators::aligned_realloc(recorrect_pointer(ptr,align),correct_size(size,align),correct_align(align));
+					if(tmp){
+						set_overhead(tmp,size);
+						return correct_pointer(tmp,align);
+					}
+					else
+						return nullptr;
+				}
+				static size_t aligned_blocksize(const void*ptr,size_t align)noexcept{
+					using namespace overhead_n;
+					return get_overhead(recorrect_pointer(ptr,align));
+				}
+			};
+		#endif
+
+		typedef
+		#if defined(ELC_USING_OVERHEADED_ALLOC)
+			overheaded_operators_provider_t<default_operators_provider_t>
+		#else
+			default_operators_provider_t
+		#endif
+		alloc_operators_provider;
+		/*!
+		aligned_alloc 内存分配函数，需提供对齐需求
+		return空指针被允许
+		size被保证不为0
+		*/
+		[[nodiscard]]inline byte*aligned_alloc(size_t align,size_t size)noexcept{
+			push_and_disable_msvc_warning(26494);//未初始化警告diss
+			void* aret;//返回值放这里
+			pop_msvc_warning();
+
+			aret=alloc_operators_provider::aligned_alloc(align,size);
+
+			#if defined(ELC_TEST_COUNT_MEMORY_ALLOC)
+				if(aret){
+					count_info::alloc_count++;
+					count_info::alloc_size+=size;
+					count_info::update_memory_using(size);
+				}
+			#endif
+
+			return(byte*)aret;
+		}
+		/*!
+		realloc 重新规划分配的大小
+		return空指针被允许，但ptr值必须保持有效以保证gc后再次realloc有效
+		new_size被保证不为0
+		align维持不变
+		但只允许在扩大数据块时可选的移动数据块
+		*/
+		[[nodiscard]]inline byte*realloc(byte*ptr,size_t nsize,size_t align)noexcept{
+			#if defined(ELC_TEST_COUNT_MEMORY_ALLOC)
+				const auto osize=get_size_of_alloc(ptr,align);
+			#endif
+			push_and_disable_msvc_warning(26494);//未初始化警告diss
+			void* aret;//返回值放这里
+			pop_msvc_warning();
+
+			aret=alloc_operators_provider::aligned_realloc(ptr,nsize,align);
+
+			#if defined(ELC_TEST_COUNT_MEMORY_ALLOC)
+				if(aret){
+					count_info::alloc_size+=nsize-osize;
+					count_info::update_memory_using(nsize-osize);
+				}
+			#endif
+
+			return(byte*)aret;
+		}
+		/*!
+		free 释放所分配的内存
+		传入需获取大小的数据块起始点与对齐
+		*/
+		inline void free(byte*p,size_t align)noexcept{
+			#if defined(ELC_TEST_COUNT_MEMORY_ALLOC)
+				const auto size=get_size_of_alloc(p,align);
+				count_info::free_count++;
+				count_info::free_size+=size;
+				count_info::update_memory_using(-ptrdiff_t(size));
+			#endif
+
+			alloc_operators_provider::aligned_free(p,align);
+		}
+		/*!
+		get_size_of_alloc 获取数据块的大小
+		传入需获取大小的数据块起始点与对齐
+		*/
+		[[nodiscard]]inline size_t get_size_of_alloc(const byte*p,[[maybe_unused]]size_t align)noexcept{
+			return alloc_operators_provider::aligned_blocksize(p,align);
+		}
+
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
+//_undefs.hpp
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
+//defs at "_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(pop)
+#endif
+//#undef suppress_msvc_warning
+#undef disable_msvc_warning
+#undef push_msvc_warning
+#undef pop_msvc_warning
+#undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
+	#pragma pop_macro("elc")
+#endif
+
+//
+#if defined(ELC_VOID_NAME)
+	#define void the_void
+#endif
+//
+#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
+	#define rand the_rand
+#endif
+
+// #undef often_noexcept
+#undef noexcept_as
+#undef noexcept_as_auto
+#undef constexpr_as
+#undef constexpr_as_auto
+
+#undef using_method_from_base_t
+#undef using_method_from_value
+
+#undef floop
+#undef enable_adl
+
+#undef re_declvalue
+#undef re_decltype
+
+#undef declvalue
+
+#undef template_error
+#undef template_warning
+
+#undef type_info_of
+#undef type_name_of
+
+#undef is_common_attribute
+#undef is_special_attribute
+
+#undef has_attribute
+#undef not_has_attribute
+
+#undef float_size_of
+#undef bitnum_of
+
+#undef def_common_attribute_with_nothing
+#undef def_special_attribute_with_nothing
+
+#undef common_attribute_t
+#undef special_attribute_t
+
+#undef enable_if
+#undef enabled_by_default
+#undef disabled_by_default
+#undef enable_if_not_ill_form
+#undef enable_flag
+
+#undef was_an_ill_form
+#undef was_an_ill_form_with_parameter
+#undef was_not_an_ill_form
+#undef was_not_an_ill_form_and_noexcept
+#undef was_not_an_ill_form_with_parameter
+
+#undef recursive_lambda
+#undef get_recursive_lambda_caller
+#undef lambda
+#undef exlambda
+#undef lambda_with_catch
+#undef self_recursion
+#undef lambda_RLSRRS
+
+#undef MAGIC
+
+#undef nothing
+
+#undef elseif
+#undef _big_than_
+#undef _small_than_
+
+#if defined(_MSC_VER)
+	#undef not
+	#undef and
+	#undef or
+#endif
+
+#undef INTER_NAMESPACE
+#undef BREAK_NAMESPACE
+
+#undef szie
+#undef form
+
+#undef template_name
+#undef type_name
+
+#undef not_in_debug
+
+#undef es
+#undef ec
+
+#undef ELC_TEST_EVENTNAME
+
+#undef override_instance_struct
+
+#undef distinctive
+
+#undef force_inline
+
+#undef with_no_vtable
+
+#undef in_consteval
+
+#undef no_vtable_struct
+#undef no_vtable_class
+
+//#undef get_elc_defs
+
+//file_end
+
+		#line 266 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
+	}
+	//
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
+//undef_decl_system_type.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
+//copy&rewrite from steve02081504/evest.h
+#undef linux
+#undef windows
+#undef other
+#undef SYSTEM_TYPE
+#undef ERROR_MSG_UNABLE_OS
+
+//file_end
+
+	#line 269 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
+#endif
 
 //file_end
 
