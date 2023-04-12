@@ -3743,9 +3743,9 @@ namespace float_infos{
 				return tmp.v;
 			}
 		}
-		//自浮点数获取精确数部分，舍去指数和符号位
+		//自浮点数获取原生精确数部分，舍去指数和符号位
 		template<basic_float_type T>
-		force_inline constexpr auto get_precision(T v)noexcept{
+		force_inline constexpr auto get_native_precision(T v)noexcept{
 			using namespace float_infos;
 			auto tmp=get_float_data(v);
 			tmp&=precision_mask<T>;
@@ -3767,9 +3767,9 @@ namespace float_infos{
 			tmp>>=precision_base_bit<T>;
 			return exponent_unsigned_type<T>(tmp);
 		}
-		//自浮点数获取指数部分，舍去基数和符号位
+		//自浮点数获取原生指数部分，舍去基数和符号位
 		template<basic_float_type T>
-		force_inline constexpr auto get_exponent(T v)noexcept{
+		force_inline constexpr auto get_native_exponent(T v)noexcept{
 			const auto tmp=base_get_exponent(v);
 			using namespace float_infos;
 			if(tmp==0)return exponent_min<T>;
@@ -3781,6 +3781,29 @@ namespace float_infos{
 			//特殊情况处理（exp=0时，base=0）
 			const auto tmp=base_get_exponent(v);
 			return tmp?get_precision_base(v):float_precision_base_t<T>{};
+		}
+		//自浮点数获取基数
+		template<basic_float_type T>
+		force_inline constexpr auto get_precision(T v)noexcept{
+			return get_native_precision(v)+get_base_num(v);
+		}
+		//自浮点数获取指数
+		template<basic_float_type T>
+		force_inline constexpr auto get_exponent(T v)noexcept{
+			using namespace float_infos;
+			return ptrdiff_t(get_native_exponent(v))-precision_base_bit<T>;
+		}
+		//自浮点数获取基数和指数
+		template<basic_float_type T>
+		force_inline constexpr auto get_precision_and_exponent(T v)noexcept{
+			using namespace float_infos;
+			struct precision_and_exponent_t{
+				float_precision_base_t<T> precision;
+				ptrdiff_t exponent;
+			};
+			const auto precision=get_precision(v);
+			const auto exponent=get_exponent(v);
+			return precision_and_exponent_t{precision,exponent};
 		}
 		//自基数和指数构造浮点数
 		//num=base_num*2^exponent
@@ -3853,10 +3876,9 @@ namespace float_infos{
 	using basic_environment::wchar_t_same_as_char16_t;
 
 	using basic_environment::get_exponent;
-	using basic_environment::get_base_num;
 	using basic_environment::get_precision;
-	using basic_environment::get_precision_base;
 	using basic_environment::float_precision_base_t;
+	using basic_environment::get_precision_and_exponent;
 	using basic_environment::make_float;
 
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
@@ -4004,7 +4026,7 @@ namespace float_infos{
 
 //file_end
 
-	#line 312 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 334 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -26345,6 +26367,14 @@ public:
 		if(used_size!=size)
 			_data.resize(used_size);
 	}
+	template<basic_float_type T>
+	explicit ubigint(T&&value)noexcept{
+		remove_cvref<T> int_part;
+		value=::std::modf(value,&int_part);
+		const auto info=get_precision_and_exponent(int_part);
+		*this=ubigint(info.precision);
+		*this<<=info.exponent;
+	}
 	template<typename T> requires(unsigned_integer_type<T>)
 	[[nodiscard]]bool is_safe_convert_to()const noexcept{
 		constexpr auto min_value=min(type_info<T>);
@@ -27343,7 +27373,7 @@ public:
 	[[nodiscard]]friend size_t get_bitnum(const ubigint& x)noexcept{
 		auto&data=x._data;
 		if(data.empty())return 0;
-		return data.size()*get_bitnum(data.back());
+		return data.size()*bitnum_of(base_type)-countl_zero(data.back());
 	}
 	//memory_usage
 	[[nodiscard]]force_inline size_t memory_usage()const noexcept{
@@ -27417,6 +27447,8 @@ public:
 		_is_negative = false;
 		return *this;
 	}
+	template<basic_float_type T>
+	explicit bigint(T&&value)noexcept:_num(abs(value)),_is_negative(is_negative(value)){}
 
 	~bigint() = default;
 public:
@@ -27918,7 +27950,9 @@ public:
 				constexpr size_t max_numerator = 1u<<7;
 				while(numerator<max_numerator){
 					const auto denominator = to_size_t(numerator/fraction_part);
-					if(is_close(T(numerator)/denominator,fraction_part)){//近似相等即可
+					if(is_close(T(numerator)/denominator,fraction_part))//近似相等即可
+					if(gcd(numerator,denominator)==1)//不进行重复检查
+					{
 						const auto numerator_backup=numerator;
 						//补正整数部分
 						numerator += to_size_t(integer_part*denominator);
@@ -27937,17 +27971,14 @@ public:
 		}
 		//其余情况
 		{
-			const auto exponent = get_exponent(num);
-			const auto base_num = get_base_num(num);
-			const auto precision = get_precision(num);
-			constexpr auto precision_base = get_precision_base<T>();
-			_numerator = base_num + precision;
-			_denominator = precision_base;
-			if(exponent){
-				if(exponent>0)
-					_numerator<<=exponent;
+			const auto info=get_precision_and_exponent(num);
+			_numerator = info.precision;
+			_denominator = 1u;
+			if(info.exponent){
+				if(info.exponent>0)
+					_numerator<<=info.exponent;
 				else
-					_denominator<<=abs(exponent);
+					_denominator<<=abs(info.exponent);
 			}
 		}
 		simplify();
@@ -28089,9 +28120,6 @@ public:
 	//friend trunc
 	[[nodiscard]]friend ubigint trunc(const ubigfloat& a)noexcept{
 		return a._numerator/a._denominator;
-	}
-	[[nodiscard]]explicit operator ubigint()noexcept{
-		return trunc(*this);
 	}
 	//friend split
 	[[nodiscard]]friend auto split(const ubigfloat& a)noexcept{
@@ -28375,6 +28403,19 @@ public:
 		ubigint uexp=abs(move(exp));
 		return math::pow(move(aret),move(uexp));
 	}
+	//强转
+	[[nodiscard]]explicit operator ubigint()const&noexcept{
+		return trunc(*this);
+	}
+	[[nodiscard]]explicit operator ubigint()&&noexcept{
+		return trunc(move(*this));
+	}
+	[[nodiscard]]explicit operator bigint()const&noexcept{
+		return this->operator ubigint();
+	}
+	[[nodiscard]]explicit operator bigint()&&noexcept{
+		return move(*this).operator ubigint();
+	}
 };
 //pow of bigint
 [[nodiscard]]inline ubigint pow(ubigint base,ubigint exp)noexcept{
@@ -28568,9 +28609,6 @@ public:
 	//friend trunc
 	[[nodiscard]]friend bigint trunc(const bigfloat& a)noexcept{
 		return copy_as_negative(trunc(a._num),a._is_negative);
-	}
-	[[nodiscard]]explicit operator bigint()noexcept{
-		return trunc(*this);
 	}
 	//friend split
 	[[nodiscard]]friend auto split(const bigfloat& a)noexcept{
@@ -29087,6 +29125,19 @@ public:
 		const bool sign=is_negative(base)&&is_odd(exp);
 		auto uret=pow(abs(base),abs(exp));
 		return {move(uret),sign};
+	}
+	//强转
+	[[nodiscard]]explicit operator bigint()const&noexcept{
+		return copy_as_negative(ubigint(_num),_is_negative);
+	}
+	[[nodiscard]]explicit operator bigint()&&noexcept{
+		return copy_as_negative(ubigint(move(_num)),_is_negative);
+	}
+	[[nodiscard]]explicit operator ubigint()const&noexcept{
+		return ubigint(_num);
+	}
+	[[nodiscard]]explicit operator ubigint()&&noexcept{
+		return ubigint(move(_num));
 	}
 };
 
@@ -30073,6 +30124,8 @@ namespace to_string_n{
 			if(!numerator)
 				return _repres.get_char(0);
 			auto& denominator=get_denominator_as_ref(num);
+			if(denominator==1u)
+				return to_string(move(numerator));
 			const auto radix=_repres.get_radix();
 			{
 				auto denominator_backup=denominator;//备份denominator用于在发现此为无限小数时继续输出（省去还原计算）
@@ -30112,16 +30165,8 @@ namespace to_string_n{
 					numerator=move(result.quot);
 				}
 			}
-			{
-				auto result=divmod(numerator,radix);
-				while(result.quot&&!(result.mod)){
-					numerator=move(result.quot);
-					++exp;
-					result=divmod(numerator,radix);
-				}
-			}
 			//先获取numerator和exp的字符串表示
-			aret=to_string(move(numerator));
+			aret=to_string_and_add_exp(move(numerator),exp);
 			auto exp_str=to_string(exp);
 			if(exp<0){
 				//首先计算需要的前置0的个数
@@ -30178,60 +30223,106 @@ namespace to_string_n{
 		template<integer_type T>//适用于任何c++整数类型以及elc的bigint和ubigint
 		[[nodiscard]]string to_string(T num)const noexcept{
 			if constexpr(type_info<T> == type_info<bool>)
-				return to_string(union_cast<unsigned_specific_size_t<sizeof(bool)>>(num));
+				return to_string(union_cast<unsigned_specific_size_t<sizeof(bool)>>(move(num)));
 			elseif constexpr(is_signed<T>){
 				if(is_negative(num))
-					return _repres.get_negative_sign()+to_string(abs(num));
+					return _repres.get_negative_sign()+to_string(abs(move(num)));
 				else
-					return to_string(abs(num));
+					return to_string(abs(move(num)));
 			}
-			else{
-				string aret;
-				const auto radix=_repres.get_radix();
-				if constexpr(is_basic_type<T>){
-					//基本类型有最大值，可以预分配足够的空间来提高效率
-					constexpr auto info_threshold_base = pow(BIT_POSSIBILITY, bitnum_of(T));
-					const auto info_threshold = to_size_t(ceil(log(info_threshold_base, radix)));
-					aret.pre_alloc_before_begin(info_threshold);
-				}
-				if constexpr(is_big_type<T>){
-					//大整数类型可以通过分治法来提高效率
-					constexpr auto partition_method_threshold=max(type_info<size_t>);
-					if(num>partition_method_threshold){
-						T base{radix};
-						size_t len=1;//计算余数部分要补的前导0
-						//计算分割点
-						while(base.memory_usage()*3 < num.memory_usage()){
-							len *= 2;
-							base *= base;
-						}
-						//算出分割后的高位和低位
-						auto result = divmod(num, base);
-						auto&high = result.quot;
-						auto&low = result.mod;
-						return to_string(move(high)) + to_string(move(low)).pad_left(_repres.get_char(0), len);
-					}
-					else
-						return to_string(num.convert_to<size_t>());
-				}
-				else{
-					push_and_disable_msvc_warning(4244);
-					do{//do-while是为了保证至少有一位"0"
-						auto res=divmod(move(num),radix);
-						const auto index=to_size_t(move(res.mod));
-						const auto ch=_repres.get_char(index);
-						aret.push_front(ch);
-						num=move(res.quot);
-					}while(num);
-					pop_msvc_warning();
-					return aret;
-				}
-			}
+			else
+				return to_string_unsigneded(move(num));
 		}
 	private:
-		template<float_type T>
+		template<unsigned_integer_type T>//适用于任何c++无符号整数类型以及elc的ubigint
 		[[nodiscard]]string to_string_unsigneded(T num)const noexcept{
 			return to_string_base<T>(move(num));
+		}
+		template<unsigned_integer_type T>//适用于任何c++无符号整数类型以及elc的ubigint
+		[[nodiscard]]string to_string_with_exp(T num)const noexcept{
+			ptrdiff_t exp;
+			auto aret=to_string_and_set_exp(move(num),exp);
+			if(exp){
+				auto exp_str=to_string(exp);
+				//exp只会是正数（因为num是无符号）
+				if(size_t(exp)>exp_str.size()+1){
+					aret+=_repres.get_exponent_separator();
+					aret+=exp_str;
+				}
+				else//否则，补0
+					aret.push_back(_repres.get_char(0),exp);
+			}
+			return aret;
+		}
+		template<unsigned_integer_type T>//适用于任何c++无符号整数类型以及elc的ubigint
+		[[nodiscard]]string to_string_and_set_exp(T num,ptrdiff_t&exp)const noexcept{
+			exp=0;
+			return to_string_and_add_exp(move(num),exp);
+		}
+		template<unsigned_integer_type T>//适用于任何c++无符号整数类型以及elc的ubigint
+		[[nodiscard]]string to_string_and_add_exp(T num,ptrdiff_t&exp)const noexcept{
+			const auto radix=_repres.get_radix();
+			do{
+				auto result=divmod(num,radix);
+				if(result.mod)
+					break;
+				num=move(result.quot);
+				++exp;
+			}while(num);
+			return to_string_base(move(num));
+		}
+		template<unsigned_integer_type T>//适用于任何c++无符号整数类型以及elc的ubigint
+		[[nodiscard]]string to_string_base(T num)const noexcept{
+			string aret;
+			const auto radix=_repres.get_radix();
+			if constexpr(is_basic_type<T>){
+				//基本类型有最大值，可以预分配足够的空间来提高效率
+				constexpr auto info_threshold_base = pow(BIT_POSSIBILITY, bitnum_of(T));
+				const auto info_threshold = to_size_t(ceil(log(info_threshold_base, radix)));
+				aret.pre_alloc_before_begin(info_threshold);
+			}
+			if constexpr(is_big_type<T>){
+				//大整数类型可以通过分治法来提高效率
+				constexpr auto partition_method_threshold=max(type_info<size_t>);
+				if(num>partition_method_threshold){
+					T base{radix};
+					size_t len=1;//计算余数部分要补的前导0
+					//计算分割点
+					while(base.memory_usage()*3 < num.memory_usage()){
+						len *= 2;
+						base *= base;
+					}
+					//算出分割后的高位和低位
+					auto result = divmod(num, base);
+					auto&high = result.quot;
+					auto&low = result.mod;
+					return to_string(move(high)) + to_string(move(low)).pad_left(_repres.get_char(0), len);
+				}
+				else
+					return to_string(num.convert_to<size_t>());
+			}
+			else{
+				push_and_disable_msvc_warning(4244);
+				do{//do-while是为了保证至少有一位"0"
+					auto res=divmod(move(num),radix);
+					const auto index=to_size_t(move(res.mod));
+					const auto ch=_repres.get_char(index);
+					aret.push_front(ch);
+					num=move(res.quot);
+				}while(num);
+				pop_msvc_warning();
+				return aret;
+			}
+		}
+		template<float_type T>
+		[[nodiscard]]string to_string_unsigneded(T num)const noexcept{
+			//首先，判断exp大小
+			const auto exp = get_exponent(num);
+			//如果exp>=0，那么转换到大整数然后to_string_with_exp
+			if(exp>=0)
+				return to_string_with_exp((ubigint)num);
+			else
+				return to_string_base<T>(move(num));
 		}
 	public:
 		template<basic_float_type T>

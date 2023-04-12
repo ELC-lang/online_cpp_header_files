@@ -3704,9 +3704,9 @@ namespace float_infos{
 				return tmp.v;
 			}
 		}
-		//自浮点数获取精确数部分，舍去指数和符号位
+		//自浮点数获取原生精确数部分，舍去指数和符号位
 		template<basic_float_type T>
-		force_inline constexpr auto get_precision(T v)noexcept{
+		force_inline constexpr auto get_native_precision(T v)noexcept{
 			using namespace float_infos;
 			auto tmp=get_float_data(v);
 			tmp&=precision_mask<T>;
@@ -3728,9 +3728,9 @@ namespace float_infos{
 			tmp>>=precision_base_bit<T>;
 			return exponent_unsigned_type<T>(tmp);
 		}
-		//自浮点数获取指数部分，舍去基数和符号位
+		//自浮点数获取原生指数部分，舍去基数和符号位
 		template<basic_float_type T>
-		force_inline constexpr auto get_exponent(T v)noexcept{
+		force_inline constexpr auto get_native_exponent(T v)noexcept{
 			const auto tmp=base_get_exponent(v);
 			using namespace float_infos;
 			if(tmp==0)return exponent_min<T>;
@@ -3742,6 +3742,29 @@ namespace float_infos{
 			//特殊情况处理（exp=0时，base=0）
 			const auto tmp=base_get_exponent(v);
 			return tmp?get_precision_base(v):float_precision_base_t<T>{};
+		}
+		//自浮点数获取基数
+		template<basic_float_type T>
+		force_inline constexpr auto get_precision(T v)noexcept{
+			return get_native_precision(v)+get_base_num(v);
+		}
+		//自浮点数获取指数
+		template<basic_float_type T>
+		force_inline constexpr auto get_exponent(T v)noexcept{
+			using namespace float_infos;
+			return ptrdiff_t(get_native_exponent(v))-precision_base_bit<T>;
+		}
+		//自浮点数获取基数和指数
+		template<basic_float_type T>
+		force_inline constexpr auto get_precision_and_exponent(T v)noexcept{
+			using namespace float_infos;
+			struct precision_and_exponent_t{
+				float_precision_base_t<T> precision;
+				ptrdiff_t exponent;
+			};
+			const auto precision=get_precision(v);
+			const auto exponent=get_exponent(v);
+			return precision_and_exponent_t{precision,exponent};
 		}
 		//自基数和指数构造浮点数
 		//num=base_num*2^exponent
@@ -3814,10 +3837,9 @@ namespace float_infos{
 	using basic_environment::wchar_t_same_as_char16_t;
 
 	using basic_environment::get_exponent;
-	using basic_environment::get_base_num;
 	using basic_environment::get_precision;
-	using basic_environment::get_precision_base;
 	using basic_environment::float_precision_base_t;
+	using basic_environment::get_precision_and_exponent;
 	using basic_environment::make_float;
 
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
@@ -3965,7 +3987,7 @@ namespace float_infos{
 
 //file_end
 
-	#line 312 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 334 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -17644,6 +17666,14 @@ public:
 		if(used_size!=size)
 			_data.resize(used_size);
 	}
+	template<basic_float_type T>
+	explicit ubigint(T&&value)noexcept{
+		remove_cvref<T> int_part;
+		value=::std::modf(value,&int_part);
+		const auto info=get_precision_and_exponent(int_part);
+		*this=ubigint(info.precision);
+		*this<<=info.exponent;
+	}
 	template<typename T> requires(unsigned_integer_type<T>)
 	[[nodiscard]]bool is_safe_convert_to()const noexcept{
 		constexpr auto min_value=min(type_info<T>);
@@ -18642,7 +18672,7 @@ public:
 	[[nodiscard]]friend size_t get_bitnum(const ubigint& x)noexcept{
 		auto&data=x._data;
 		if(data.empty())return 0;
-		return data.size()*get_bitnum(data.back());
+		return data.size()*bitnum_of(base_type)-countl_zero(data.back());
 	}
 	//memory_usage
 	[[nodiscard]]force_inline size_t memory_usage()const noexcept{
@@ -18716,6 +18746,8 @@ public:
 		_is_negative = false;
 		return *this;
 	}
+	template<basic_float_type T>
+	explicit bigint(T&&value)noexcept:_num(abs(value)),_is_negative(is_negative(value)){}
 
 	~bigint() = default;
 public:
@@ -19217,7 +19249,9 @@ public:
 				constexpr size_t max_numerator = 1u<<7;
 				while(numerator<max_numerator){
 					const auto denominator = to_size_t(numerator/fraction_part);
-					if(is_close(T(numerator)/denominator,fraction_part)){//近似相等即可
+					if(is_close(T(numerator)/denominator,fraction_part))//近似相等即可
+					if(gcd(numerator,denominator)==1)//不进行重复检查
+					{
 						const auto numerator_backup=numerator;
 						//补正整数部分
 						numerator += to_size_t(integer_part*denominator);
@@ -19236,17 +19270,14 @@ public:
 		}
 		//其余情况
 		{
-			const auto exponent = get_exponent(num);
-			const auto base_num = get_base_num(num);
-			const auto precision = get_precision(num);
-			constexpr auto precision_base = get_precision_base<T>();
-			_numerator = base_num + precision;
-			_denominator = precision_base;
-			if(exponent){
-				if(exponent>0)
-					_numerator<<=exponent;
+			const auto info=get_precision_and_exponent(num);
+			_numerator = info.precision;
+			_denominator = 1u;
+			if(info.exponent){
+				if(info.exponent>0)
+					_numerator<<=info.exponent;
 				else
-					_denominator<<=abs(exponent);
+					_denominator<<=abs(info.exponent);
 			}
 		}
 		simplify();
@@ -19388,9 +19419,6 @@ public:
 	//friend trunc
 	[[nodiscard]]friend ubigint trunc(const ubigfloat& a)noexcept{
 		return a._numerator/a._denominator;
-	}
-	[[nodiscard]]explicit operator ubigint()noexcept{
-		return trunc(*this);
 	}
 	//friend split
 	[[nodiscard]]friend auto split(const ubigfloat& a)noexcept{
@@ -19674,6 +19702,19 @@ public:
 		ubigint uexp=abs(move(exp));
 		return math::pow(move(aret),move(uexp));
 	}
+	//强转
+	[[nodiscard]]explicit operator ubigint()const&noexcept{
+		return trunc(*this);
+	}
+	[[nodiscard]]explicit operator ubigint()&&noexcept{
+		return trunc(move(*this));
+	}
+	[[nodiscard]]explicit operator bigint()const&noexcept{
+		return this->operator ubigint();
+	}
+	[[nodiscard]]explicit operator bigint()&&noexcept{
+		return move(*this).operator ubigint();
+	}
 };
 //pow of bigint
 [[nodiscard]]inline ubigint pow(ubigint base,ubigint exp)noexcept{
@@ -19867,9 +19908,6 @@ public:
 	//friend trunc
 	[[nodiscard]]friend bigint trunc(const bigfloat& a)noexcept{
 		return copy_as_negative(trunc(a._num),a._is_negative);
-	}
-	[[nodiscard]]explicit operator bigint()noexcept{
-		return trunc(*this);
 	}
 	//friend split
 	[[nodiscard]]friend auto split(const bigfloat& a)noexcept{
@@ -20386,6 +20424,19 @@ public:
 		const bool sign=is_negative(base)&&is_odd(exp);
 		auto uret=pow(abs(base),abs(exp));
 		return {move(uret),sign};
+	}
+	//强转
+	[[nodiscard]]explicit operator bigint()const&noexcept{
+		return copy_as_negative(ubigint(_num),_is_negative);
+	}
+	[[nodiscard]]explicit operator bigint()&&noexcept{
+		return copy_as_negative(ubigint(move(_num)),_is_negative);
+	}
+	[[nodiscard]]explicit operator ubigint()const&noexcept{
+		return ubigint(_num);
+	}
+	[[nodiscard]]explicit operator ubigint()&&noexcept{
+		return ubigint(move(_num));
 	}
 };
 
