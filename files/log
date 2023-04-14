@@ -1558,6 +1558,18 @@ namespace math{
 		template<typename T>
 		concept is_float_type=float_type<T>;
 
+		//浮点数类型：指数记录法
+		template<typename T>
+		concept exponent_float_type=is_float_type<T> && arithmetic_type_info_prover<remove_cvref<T>>::is_exponent_float_type;
+		template<typename T>
+		concept is_exponent_float_type=exponent_float_type<T>;
+
+		//浮点数类型：分数记录法
+		template<typename T>
+		concept fraction_float_type=is_float_type<T> && arithmetic_type_info_prover<remove_cvref<T>>::is_fraction_float_type;
+		template<typename T>
+		concept is_fraction_float_type=fraction_float_type<T>;
+
 		/// 基础浮点数类型概念
 		template<typename T>
 		concept basic_float_type=float_type<T> && basic_type<T>;
@@ -1667,6 +1679,18 @@ namespace math{
 			return v!=v;
 		else
 			return false;
+	}
+	//isInf
+	template<basic_type T>
+	[[nodiscard]]force_inline constexpr bool isInf(const T&v)noexcept{
+		if constexpr(has_inf<T>)
+			return v==std::numeric_limits<T>::infinity() || v==-std::numeric_limits<T>::infinity();
+		else
+			return false;
+	}
+	template<arithmetic_type T> requires(!has_inf<T>)
+	[[nodiscard]]force_inline constexpr bool isInf(const T&)noexcept{
+		return false;
 	}
 	/*! 符号位查询 */
 	template<arithmetic_type T>
@@ -1958,13 +1982,13 @@ namespace math{
 	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
 	template<arithmetic_type T>
 	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
-		#line 470 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 494 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
-		#line 482 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 506 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		for(T c=5u;c<=b;c+=6u)//遍历判断是否能被因数分解——不会有人看不懂吧?
 			if((!mod(a,c))||(!mod(a,(c+2u))))
 				return false;
-		#line 491 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 515 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return true;
 	}
 	/*! 判断某数是否是素数 */
@@ -1977,10 +2001,10 @@ namespace math{
 
 		if(b<4)
 			return true;//1和0也是prime,我不管.
-		#line 513 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 537 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		if(mod(mod(b,6)-1u,4u))
 			return false;
-		#line 518 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 542 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return is_prime_num_no_pre_check(b);
 	}
 	/// 求小于或等于某数的素数
@@ -2039,13 +2063,13 @@ namespace math{
 	/// 已知当前array的size，求下一个合适的提前分配大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_array(size_T size)noexcept{
-		#line 579 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 603 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return size_T(size*magic_number::gold_of_resize);
 	}
 	/// 已知当前hash table的size，求下一个合适的桶大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_hash(size_T size)noexcept{
-		#line 588 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 612 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return size_T(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
 	}
 	pop_msvc_warning();
@@ -2307,6 +2331,10 @@ namespace bit{
 	[[nodiscard]]force_inline constexpr size_t countl_one(const T v)noexcept;
 	template<unsigned_basic_integer_type T>
 	[[nodiscard]]force_inline constexpr size_t countr_one(const T v)noexcept;
+	template<unsigned_basic_integer_type T>
+	[[nodiscard]]force_inline constexpr size_t get_bitnum(const T v)noexcept;
+	template<signed_basic_integer_type T>
+	[[nodiscard]]force_inline constexpr size_t get_bitnum(const T v)noexcept;
 }
 using namespace bit;//干净的符号导出！
 
@@ -2345,6 +2373,7 @@ using math::get_rounding;
 using math::rounding_auto_setter;
 using math::is_close;
 using math::isNaN;
+using math::isInf;
 using math::abs;
 using math::exp;
 using math::log;
@@ -3797,7 +3826,6 @@ namespace float_infos{
 		//自浮点数获取基数和指数
 		template<basic_float_type T>
 		force_inline constexpr auto get_precision_and_exponent(T v)noexcept{
-			using namespace float_infos;
 			struct precision_and_exponent_t{
 				float_precision_base_t<T> precision;
 				ptrdiff_t exponent;
@@ -3851,6 +3879,46 @@ namespace float_infos{
 				return get_float_from_data<T>(data);
 			}
 		}
+		//若可以，将浮点数分解为两数之商
+		template<basic_float_type T,size_t max_numerator = 1u<<7,size_t max_denominator = 1u<<17>
+		force_inline constexpr auto to_divide(T v)noexcept{
+			struct divide_t{
+				T numerator;
+				size_t denominator;
+			private:
+				bool _success;
+			public:
+				constexpr divide_t(T numerator,size_t denominator)noexcept:_success(true),numerator(numerator),denominator(denominator){}
+				constexpr divide_t()noexcept:_success(false),numerator(0),denominator(0){}
+				[[nodiscard]]constexpr bool success()const noexcept{
+					return _success;
+				}
+				[[nodiscard]]constexpr explicit operator bool()const noexcept{
+					return success();
+				}
+			};
+			T integer_part;
+			const auto fraction_part=std::modf(v,&integer_part);
+			if(fraction_part==0)return divide_t{integer_part,1u};
+			//开始测试分数
+			size_t numerator=1;
+			while(numerator<max_numerator){
+				const auto denominator = to_size_t(numerator/fraction_part);
+				if(denominator<=max_denominator)//忽略分母过大的情况
+				if(is_close(T(numerator)/denominator,fraction_part))//近似相等即可
+				if(gcd(numerator,denominator)==1)//不进行重复检查
+				{
+					//补正整数部分
+					const auto numerator_with_inter = integer_part*denominator+numerator;
+					//检查是否能够转换回
+					const auto f_test = T(numerator_with_inter)/denominator;
+					if(f_test==fraction_part)
+						return divide_t{numerator_with_inter,denominator};
+				}
+				numerator++;
+			}
+			return divide_t{};
+		}
 	}
 	using basic_environment::BIT_POSSIBILITY;
 
@@ -3881,6 +3949,7 @@ namespace float_infos{
 	using basic_environment::float_precision_base_t;
 	using basic_environment::get_precision_and_exponent;
 	using basic_environment::make_float;
+	using basic_environment::to_divide;
 
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
 //_undefs.hpp
@@ -4027,7 +4096,7 @@ namespace float_infos{
 
 //file_end
 
-	#line 334 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 374 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -4333,6 +4402,9 @@ namespace math{
 		static constexpr bool is_big_type=false;
 		//bool：是否是浮点类型
 		static constexpr bool is_float_type=::std::is_floating_point_v<T>;
+		//浮点数类型：是指数记录法还是分数记录法
+		static constexpr bool is_exponent_float_type=is_float_type;
+		static constexpr bool is_fraction_float_type=false;
 		//bool：是否是整数类型
 		static constexpr bool is_integer_type=::std::is_integral_v<T>;
 		//bool：是否是有符号类型
@@ -19181,11 +19253,11 @@ protected:\
 	namespace stream_n{
 		using namespace numerical_representation_n;
 
-		const auto&default_numerical_representation=decimal;
-		const auto&default_bool_representation=common_bool_representation;
+		inline const auto&default_numerical_representation=decimal;
+		inline const auto&default_bool_representation=common_bool_representation;
 
 		template<text_stream stream_T>
-		decltype(auto)get_numerical_representation_of(stream_T&&stream)noexcept{
+		inline decltype(auto)get_numerical_representation_of(stream_T&&stream)noexcept{
 			if constexpr was_not_an_ill_form(stream.get_numerical_representation())
 				return stream.get_numerical_representation();
 			else
@@ -19193,7 +19265,7 @@ protected:\
 		}
 
 		template<text_stream stream_T>
-		decltype(auto)get_bool_representation_of(stream_T&&stream)noexcept{
+		inline decltype(auto)get_bool_representation_of(stream_T&&stream)noexcept{
 			if constexpr was_not_an_ill_form(stream.get_bool_representation())
 				return stream.get_bool_representation();
 			else
@@ -19203,18 +19275,18 @@ protected:\
 		//arithmetic output only for text_ostream
 		template<arithmetic_type T,text_ostream stream_T> requires(type_info<remove_cvref<T>> != type_info<char_t> &&
 																   type_info<remove_cvref<T>> != type_info<bool>)
-		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(noexcept_text_ostream<stream_T>){
+		inline decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(noexcept_text_ostream<stream_T>){
 			return stream << to_string(forward<T>(data),get_numerical_representation_of(stream));
 		}
 
 		template<typename T,text_ostream stream_T> requires(!::std::is_arithmetic_v<remove_cvref<T>> &&
 															to_arithmetic.able<remove_cvref<T>>)
-		decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(noexcept_text_ostream<stream_T> && to_arithmetic.nothrow<T>) {
+		inline decltype(auto)operator<<(stream_T&&stream,T&&data)noexcept(noexcept_text_ostream<stream_T> && to_arithmetic.nothrow<T>) {
 			return stream << to_arithmetic(forward<T>(data));
 		}
 
 		template<typename T,text_ostream stream_T> requires(type_info<T> == type_info<bool>)
-		decltype(auto)operator<<(stream_T&&stream,T data)noexcept(noexcept_text_ostream<stream_T>){
+		inline decltype(auto)operator<<(stream_T&&stream,T data)noexcept(noexcept_text_ostream<stream_T>){
 			const auto&representation=get_bool_representation_of(stream);
 			if(data==true)
 				stream << representation.get_true();
@@ -19228,14 +19300,14 @@ protected:\
 		//arithmetic input only for text_istream
 		template<arithmetic_type T,text_istream stream_T> requires(type_info<remove_cvref<T>> != type_info<char_t> &&
 																   type_info<remove_cvref<T>> != type_info<bool>)
-		decltype(auto)operator>>(stream_T&&stream,T&data)noexcept(noexcept_text_istream<stream_T>){
+		inline decltype(auto)operator>>(stream_T&&stream,T&data)noexcept(noexcept_text_istream<stream_T>){
 			string temp;
 			stream >> temp;
 			data=from_string_get<T>(temp,get_numerical_representation_of(stream));
 			return stream;
 		}
 		template<typename T,text_istream stream_T> requires(type_info<T> == type_info<bool>)
-		decltype(auto)operator>>(stream_T&&stream,T&data)noexcept(noexcept_text_istream<stream_T>){
+		inline decltype(auto)operator>>(stream_T&&stream,T&data)noexcept(noexcept_text_istream<stream_T>){
 			string temp;
 			stream >> temp;
 			const auto&representation=get_bool_representation_of(stream);
@@ -19257,7 +19329,7 @@ protected:\
 
 		//T* output only for text_ostream
 		template<typename T,text_ostream stream_T>
-		decltype(auto)operator<<(stream_T&&stream,T*data)noexcept(noexcept_text_ostream<stream_T>){
+		inline decltype(auto)operator<<(stream_T&&stream,T*data)noexcept(noexcept_text_ostream<stream_T>){
 			//output name of type at first
 			stream << type_info<T>.get_name();
 			if constexpr(::std::is_polymorphic_v<T> && !::std::is_final_v<T>){//RTTI
