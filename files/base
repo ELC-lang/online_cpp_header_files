@@ -1649,7 +1649,10 @@ namespace math{
 	template<arithmetic_type T,arithmetic_type U>
 	[[nodiscard]]force_inline constexpr T safe_arithmetic_cast(U x)noexcept{
 		if constexpr(basic_float_type<U> && unsigned_type<T>)
-			return (T)(intmax_t)x;
+			if(is_negative(x))
+				return (T)(intmax_t)x;
+			else
+				return (T)(uintmax_t)x;
 		else
 			return (T)x;
 	}
@@ -1903,13 +1906,13 @@ namespace math{
 	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
 	template<arithmetic_type T>
 	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
-		#line 494 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 497 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
-		#line 506 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 509 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		for(T c=5u;c<=b;c+=6u)//遍历判断是否能被因数分解——不会有人看不懂吧?
 			if((!mod(a,c))||(!mod(a,(c+2u))))
 				return false;
-		#line 515 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 518 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return true;
 	}
 	/*! 判断某数是否是素数 */
@@ -1922,10 +1925,10 @@ namespace math{
 
 		if(b<4)
 			return true;//1和0也是prime,我不管.
-		#line 537 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 540 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		if(mod(mod(b,6)-1u,4u))
 			return false;
-		#line 542 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 545 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return is_prime_num_no_pre_check(b);
 	}
 	/// 求小于或等于某数的素数
@@ -1984,13 +1987,13 @@ namespace math{
 	/// 已知当前array的size，求下一个合适的提前分配大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_array(size_T size)noexcept{
-		#line 603 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 606 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return size_T(size*magic_number::gold_of_resize);
 	}
 	/// 已知当前hash table的size，求下一个合适的桶大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_hash(size_T size)noexcept{
-		#line 612 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 615 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return size_T(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
 	}
 	pop_msvc_warning();
