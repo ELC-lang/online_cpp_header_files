@@ -592,6 +592,11 @@ static void destroy(T*a)noexcept{
 		template_error("Please overload the function the_destroy in the namespace where this type is defined.");
 }
 
+constexpr struct do_nothing_t{
+	template<class...Args>
+	void operator()(Args&&...)noexcept{}
+}do_nothing;
+
 //file_end
 
 #line 37 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
@@ -1343,7 +1348,7 @@ public:
 		[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const noexcept requires able<const T,const T>{
 			auto maxlest=l.begin();
 			for(const auto&i:l){
-				auto v=compare(*maxlest,i);
+				const auto v=compare(*maxlest,i);
 				if(v<0)
 					maxlest=&i;
 			}
@@ -1690,8 +1695,11 @@ namespace math{
 		if constexpr(basic_float_type<U> && unsigned_type<T>)
 			if(is_negative(x))
 				return (T)(intmax_t)x;
-			else
+			else{
+				push_and_disable_msvc_warning(26467);//x已非负
 				return (T)(uintmax_t)x;
+				pop_msvc_warning();
+			}
 		else
 			return (T)x;
 	}
@@ -1945,13 +1953,13 @@ namespace math{
 	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
 	template<arithmetic_type T>
 	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
-		#line 497 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 500 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
-		#line 509 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 512 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		for(T c=5u;c<=b;c+=6u)//遍历判断是否能被因数分解——不会有人看不懂吧?
 			if((!mod(a,c))||(!mod(a,(c+2u))))
 				return false;
-		#line 518 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 521 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return true;
 	}
 	/*! 判断某数是否是素数 */
@@ -1964,10 +1972,10 @@ namespace math{
 
 		if(b<4)
 			return true;//1和0也是prime,我不管.
-		#line 540 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 543 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		if(mod(mod(b,6)-1u,4u))
 			return false;
-		#line 545 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 548 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return is_prime_num_no_pre_check(b);
 	}
 	/// 求小于或等于某数的素数
@@ -2026,13 +2034,13 @@ namespace math{
 	/// 已知当前array的size，求下一个合适的提前分配大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_array(size_T size)noexcept{
-		#line 606 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 609 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return size_T(size*magic_number::gold_of_resize);
 	}
 	/// 已知当前hash table的size，求下一个合适的桶大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_hash(size_T size)noexcept{
-		#line 615 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 618 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return size_T(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
 	}
 	pop_msvc_warning();
@@ -2998,6 +3006,16 @@ protected:\
 		/// 每个bit（不是字节）的可能性
 		/// 为什么c艹委员会不定义这个？
 		constexpr size_t BIT_POSSIBILITY=2;
+		typedef bool bit_type;
+		[[nodiscard]]constexpr force_inline bool is_rounding_bit(bit_type v)noexcept{
+			if constexpr(BIT_POSSIBILITY==2)
+				return v;
+			else{
+				push_and_disable_msvc_warning(4804);//？
+				return v>=BIT_POSSIBILITY/2;
+				pop_msvc_warning();
+			}
+		}
 
 		#if defined(__SIZEOF_INT128__)
 			#define ELC_BASE_ENV_HAS_INT128
@@ -3080,7 +3098,7 @@ TYPE_MAPPER(unsigned long long)
 
 //file_end
 
-			#line 95 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#line 105 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 			#undef TYPE_MAPPER
 			{}
 		}());
@@ -3101,7 +3119,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-			#line 103 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#line 113 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 			#undef TYPE_MAPPER
 			{}
 		}());
@@ -3219,7 +3237,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 116 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 126 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				return false;
 			}
@@ -3331,7 +3349,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 123 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 133 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				{}
 			}
@@ -3447,7 +3465,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 134 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 144 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				return muti_convertible_count;
 			}
@@ -3716,7 +3734,7 @@ namespace float_infos{
 
 //file_end
 
-		#line 176 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+		#line 186 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 		namespace float_infos{
 			template<basic_float_type T>
 			union float_data_union{
@@ -3884,6 +3902,8 @@ namespace float_infos{
 		}
 	}
 	using basic_environment::BIT_POSSIBILITY;
+	using basic_environment::bit_type;
+	using basic_environment::is_rounding_bit;
 
 	using basic_environment::basic_uintmax_t;
 	using basic_environment::basic_intmax_t;
@@ -4059,7 +4079,7 @@ namespace float_infos{
 
 //file_end
 
-	#line 374 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 386 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -7041,19 +7061,19 @@ namespace overhead_n{
 	constexpr size_t correct_align(size_t align)noexcept{
 		return overhead_get_align(align);
 	}
-	inline pointer correct_pointer(pointer a,size_t align){
+	constexpr inline pointer correct_pointer(pointer a,size_t align)noexcept{
 		return apply_off_set(a,overhead_get_offset_value(align));
 	}
-	inline pointer recorrect_pointer(pointer a,size_t align){
+	constexpr inline pointer recorrect_pointer(pointer a,size_t align)noexcept{
 		return unapply_off_set(a,overhead_get_offset_value(align));
 	}
-	inline const_pointer recorrect_pointer(const_pointer a, size_t align){
+	constexpr inline const_pointer recorrect_pointer(const_pointer a, size_t align)noexcept{
 		return unapply_off_set(a,overhead_get_offset_value(align));
 	}
-	inline void set_overhead(pointer a,size_t size){
+	inline void set_overhead(pointer a,size_t size)noexcept{
 		*reinterpret_cast<size_t*>(a)=size;
 	}
-	inline size_t get_overhead(const_pointer a){
+	inline size_t get_overhead(const_pointer a)noexcept{
 		return*reinterpret_cast<const size_t*>(a);
 	}
 }
@@ -18430,12 +18450,12 @@ public:
 	//friend integer_log
 private:
 	[[nodiscard]]friend size_t integer_log_base(const ubigint& a,ubigint& tester,const ubigint this_lv,const size_t num)noexcept{
-		auto next_lv=this_lv*this_lv;
 		size_t aret=0;
-		if(next_lv<a)
-			aret=integer_log_base(a,tester,next_lv,num*2);
-		else
-			return 0;
+		{
+			auto next_lv=this_lv*this_lv;
+			if(next_lv<a)
+				aret=integer_log_base(a,tester,next_lv,num*2);
+		}
 		floop{
 			auto tmp=tester*this_lv;
 			if(tmp>a)return aret;
@@ -18444,9 +18464,8 @@ private:
 		}
 	}
 public:
-	[[nodiscard]]friend size_t integer_log(const ubigint& a,const ubigint& b)noexcept{
-		if(a<b)return 0u;
-		if(a==b)return 1u;
+	template<unsigned_integer_type T>
+	[[nodiscard]]friend size_t integer_log(const ubigint& a,const T& b)noexcept{
 		ubigint tester=1u;
 		return integer_log_base(a,tester,b,1u);
 	}
@@ -18777,6 +18796,13 @@ public:
 			++i;
 		}
 		return aret;
+	}
+	//bit_at
+	[[nodiscard]]bit_type bit_at(size_t n)noexcept{
+		const auto reslut=divmod(n,bitnum_of(base_type));
+		const auto index=reslut.quot;
+		if(index>=_data.size())return false;
+		return _data[index]&(1u<<reslut.mod);
 	}
 	//friend get_bitnum
 	[[nodiscard]]friend size_t get_bitnum(const ubigint& x)noexcept{
@@ -19428,7 +19454,10 @@ public:
 				const auto bitnum_now=get_bitnum(_numerator);
 				const ptrdiff_t diff=bitnum_now-precision_base_bitnum;
 				if(diff>0){
+					const auto rounding=is_rounding_bit(_numerator.bit_at(diff-1));//视情况进位
 					_numerator>>=diff;
+					if(rounding)
+						++_numerator;
 					exp+=diff;
 				}
 			}
@@ -19820,6 +19849,10 @@ template<unsigned_basic_integer_type T>
 template<unsigned_basic_integer_type T>
 [[nodiscard]]inline ubigfloat pow(T base,bigint exp)noexcept{
 	return pow(ubigint(base),move(exp));
+}
+template<signed_basic_integer_type T>
+[[nodiscard]]inline ubigfloat pow(ubigint base,T exp)noexcept{
+	return pow(move(base),bigint(exp));
 }
 //operator +-*= of ubigint and ubigfloat
 [[nodiscard]]inline ubigfloat operator+(const ubigint& lhs,const ubigfloat& rhs)noexcept{

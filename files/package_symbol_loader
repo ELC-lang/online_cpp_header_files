@@ -631,6 +631,11 @@ static void destroy(T*a)noexcept{
 		template_error("Please overload the function the_destroy in the namespace where this type is defined.");
 }
 
+constexpr struct do_nothing_t{
+	template<class...Args>
+	void operator()(Args&&...)noexcept{}
+}do_nothing;
+
 //file_end
 
 #line 37 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/_body.hpp"
@@ -1382,7 +1387,7 @@ public:
 		[[nodiscard]]constexpr auto operator()(::std::initializer_list<T>l)const noexcept requires able<const T,const T>{
 			auto maxlest=l.begin();
 			for(const auto&i:l){
-				auto v=compare(*maxlest,i);
+				const auto v=compare(*maxlest,i);
 				if(v<0)
 					maxlest=&i;
 			}
@@ -1729,8 +1734,11 @@ namespace math{
 		if constexpr(basic_float_type<U> && unsigned_type<T>)
 			if(is_negative(x))
 				return (T)(intmax_t)x;
-			else
+			else{
+				push_and_disable_msvc_warning(26467);//x已非负
 				return (T)(uintmax_t)x;
+				pop_msvc_warning();
+			}
 		else
 			return (T)x;
 	}
@@ -1984,13 +1992,13 @@ namespace math{
 	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
 	template<arithmetic_type T>
 	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
-		#line 497 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 500 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
-		#line 509 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 512 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		for(T c=5u;c<=b;c+=6u)//遍历判断是否能被因数分解——不会有人看不懂吧?
 			if((!mod(a,c))||(!mod(a,(c+2u))))
 				return false;
-		#line 518 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 521 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return true;
 	}
 	/*! 判断某数是否是素数 */
@@ -2003,10 +2011,10 @@ namespace math{
 
 		if(b<4)
 			return true;//1和0也是prime,我不管.
-		#line 540 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 543 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		if(mod(mod(b,6)-1u,4u))
 			return false;
-		#line 545 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 548 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return is_prime_num_no_pre_check(b);
 	}
 	/// 求小于或等于某数的素数
@@ -2065,13 +2073,13 @@ namespace math{
 	/// 已知当前array的size，求下一个合适的提前分配大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_array(size_T size)noexcept{
-		#line 606 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 609 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return size_T(size*magic_number::gold_of_resize);
 	}
 	/// 已知当前hash table的size，求下一个合适的桶大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_hash(size_T size)noexcept{
-		#line 615 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 618 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return size_T(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
 	}
 	pop_msvc_warning();
@@ -3037,6 +3045,16 @@ protected:\
 		/// 每个bit（不是字节）的可能性
 		/// 为什么c艹委员会不定义这个？
 		constexpr size_t BIT_POSSIBILITY=2;
+		typedef bool bit_type;
+		[[nodiscard]]constexpr force_inline bool is_rounding_bit(bit_type v)noexcept{
+			if constexpr(BIT_POSSIBILITY==2)
+				return v;
+			else{
+				push_and_disable_msvc_warning(4804);//？
+				return v>=BIT_POSSIBILITY/2;
+				pop_msvc_warning();
+			}
+		}
 
 		#if defined(__SIZEOF_INT128__)
 			#define ELC_BASE_ENV_HAS_INT128
@@ -3119,7 +3137,7 @@ TYPE_MAPPER(unsigned long long)
 
 //file_end
 
-			#line 95 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#line 105 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 			#undef TYPE_MAPPER
 			{}
 		}());
@@ -3140,7 +3158,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-			#line 103 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+			#line 113 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 			#undef TYPE_MAPPER
 			{}
 		}());
@@ -3258,7 +3276,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 116 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 126 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				return false;
 			}
@@ -3370,7 +3388,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 123 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 133 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				{}
 			}
@@ -3486,7 +3504,7 @@ TYPE_MAPPER(uint_fast64_t)
 
 //file_end
 
-				#line 134 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+				#line 144 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 				#undef TYPE_MAPPER
 				return muti_convertible_count;
 			}
@@ -3755,7 +3773,7 @@ namespace float_infos{
 
 //file_end
 
-		#line 176 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+		#line 186 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 		namespace float_infos{
 			template<basic_float_type T>
 			union float_data_union{
@@ -3923,6 +3941,8 @@ namespace float_infos{
 		}
 	}
 	using basic_environment::BIT_POSSIBILITY;
+	using basic_environment::bit_type;
+	using basic_environment::is_rounding_bit;
 
 	using basic_environment::basic_uintmax_t;
 	using basic_environment::basic_intmax_t;
@@ -4098,7 +4118,7 @@ namespace float_infos{
 
 //file_end
 
-	#line 374 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 386 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -7080,19 +7100,19 @@ namespace overhead_n{
 	constexpr size_t correct_align(size_t align)noexcept{
 		return overhead_get_align(align);
 	}
-	inline pointer correct_pointer(pointer a,size_t align){
+	constexpr inline pointer correct_pointer(pointer a,size_t align)noexcept{
 		return apply_off_set(a,overhead_get_offset_value(align));
 	}
-	inline pointer recorrect_pointer(pointer a,size_t align){
+	constexpr inline pointer recorrect_pointer(pointer a,size_t align)noexcept{
 		return unapply_off_set(a,overhead_get_offset_value(align));
 	}
-	inline const_pointer recorrect_pointer(const_pointer a, size_t align){
+	constexpr inline const_pointer recorrect_pointer(const_pointer a, size_t align)noexcept{
 		return unapply_off_set(a,overhead_get_offset_value(align));
 	}
-	inline void set_overhead(pointer a,size_t size){
+	inline void set_overhead(pointer a,size_t size)noexcept{
 		*reinterpret_cast<size_t*>(a)=size;
 	}
-	inline size_t get_overhead(const_pointer a){
+	inline size_t get_overhead(const_pointer a)noexcept{
 		return*reinterpret_cast<const size_t*>(a);
 	}
 }
@@ -30020,12 +30040,12 @@ public:
 	//friend integer_log
 private:
 	[[nodiscard]]friend size_t integer_log_base(const ubigint& a,ubigint& tester,const ubigint this_lv,const size_t num)noexcept{
-		auto next_lv=this_lv*this_lv;
 		size_t aret=0;
-		if(next_lv<a)
-			aret=integer_log_base(a,tester,next_lv,num*2);
-		else
-			return 0;
+		{
+			auto next_lv=this_lv*this_lv;
+			if(next_lv<a)
+				aret=integer_log_base(a,tester,next_lv,num*2);
+		}
 		floop{
 			auto tmp=tester*this_lv;
 			if(tmp>a)return aret;
@@ -30034,9 +30054,8 @@ private:
 		}
 	}
 public:
-	[[nodiscard]]friend size_t integer_log(const ubigint& a,const ubigint& b)noexcept{
-		if(a<b)return 0u;
-		if(a==b)return 1u;
+	template<unsigned_integer_type T>
+	[[nodiscard]]friend size_t integer_log(const ubigint& a,const T& b)noexcept{
 		ubigint tester=1u;
 		return integer_log_base(a,tester,b,1u);
 	}
@@ -30367,6 +30386,13 @@ public:
 			++i;
 		}
 		return aret;
+	}
+	//bit_at
+	[[nodiscard]]bit_type bit_at(size_t n)noexcept{
+		const auto reslut=divmod(n,bitnum_of(base_type));
+		const auto index=reslut.quot;
+		if(index>=_data.size())return false;
+		return _data[index]&(1u<<reslut.mod);
 	}
 	//friend get_bitnum
 	[[nodiscard]]friend size_t get_bitnum(const ubigint& x)noexcept{
@@ -31018,7 +31044,10 @@ public:
 				const auto bitnum_now=get_bitnum(_numerator);
 				const ptrdiff_t diff=bitnum_now-precision_base_bitnum;
 				if(diff>0){
+					const auto rounding=is_rounding_bit(_numerator.bit_at(diff-1));//视情况进位
 					_numerator>>=diff;
+					if(rounding)
+						++_numerator;
 					exp+=diff;
 				}
 			}
@@ -31410,6 +31439,10 @@ template<unsigned_basic_integer_type T>
 template<unsigned_basic_integer_type T>
 [[nodiscard]]inline ubigfloat pow(T base,bigint exp)noexcept{
 	return pow(ubigint(base),move(exp));
+}
+template<signed_basic_integer_type T>
+[[nodiscard]]inline ubigfloat pow(ubigint base,T exp)noexcept{
+	return pow(move(base),bigint(exp));
 }
 //operator +-*= of ubigint and ubigfloat
 [[nodiscard]]inline ubigfloat operator+(const ubigint& lhs,const ubigfloat& rhs)noexcept{
@@ -32706,10 +32739,11 @@ protected:
 	[[nodiscard]]virtual array_like_view_t<const size_t>get_unique_prime_factorization_table_of_radix()const noexcept=0;
 public:
 	//根据分母部分获取弥补分母到radix的幂的乘数并返回，若是有限小数将分母部分置1并递增exp值
-	[[nodiscard]]ubigint get_denominator_complement(ubigint&denominator,ptrdiff_t&exp)const noexcept{
+	template<unsigned_integer_type T>
+	[[nodiscard]]T get_denominator_complement(T&denominator,ptrdiff_t&exp)const noexcept{
 		const auto table=get_unique_prime_factorization_table_of_radix();
 		const auto radix=get_radix();
-		ubigint aret=1u;
+		T aret=1u;
 		for(const auto i:table){
 			const auto i_complement=radix/i;
 			auto result=divmod(denominator,i);
@@ -33101,9 +33135,8 @@ namespace to_string_n{
 	private:
 		//基础部分
 		[[nodiscard]]constexpr string build_expression_str(string base,ptrdiff_t exp)const noexcept{
-			//将exp转换为字符串，它可能是负的所以别调用to_string_unsigneded
-			auto exp_str=to_string(exp);
 			if(exp<0){
+				auto exp_str=to_string(exp);
 				//首先计算需要的前置0的个数
 				const auto need_zero=size_t(max.for_type<ptrdiff_t>(0,-exp+1-base.size()));
 				if(need_zero>exp_str.size()){//选取最短表达
@@ -33296,7 +33329,7 @@ namespace to_string_n{
 			return to_string_base(move(num));
 		}
 		template<float_type T,unsigned_integer_type num_t>
-		[[nodiscard]]inline void apply_info_threshold(num_t&num,ptrdiff_t&exp)const noexcept{
+		[[nodiscard]]inline void apply_info_threshold(num_t&num,ptrdiff_t&exp,const T&check_num)const noexcept{
 			if constexpr(is_basic_type<T>){//若T是基础类型
 				const auto radix=_repres.get_radix();
 				//根据basic_environment::float_infos::precision_base<T>*2*radix计算阈值
@@ -33318,13 +33351,40 @@ namespace to_string_n{
 						exp+=diff;
 					}
 				}
-				//更新exp并舍入num直到num小于info_threshold_num
-				while(num>info_threshold_num){
-					++exp;
+				//舍入相关
+				const auto rounding_threshold=radix/2;
+				auto rounding=exlambda(bool skip_zeros,auto backup_updater)noexcept{
 					auto result=divmod(move(num),radix);
-					if(result.mod>=radix/2)//舍入
+					if(skip_zeros)//处理多余的0
+						if(!result.mod){
+							backup_updater(assign(num,move(result.quot)),++exp);
+							result=divmod(move(num),radix);
+						}
+					if(result.mod>=rounding_threshold)//舍入
 						++result.quot;
 					num=move(result.quot);
+					++exp;
+				};
+				//更新exp并舍入num直到num小于info_threshold_num
+				while(num>info_threshold_num)
+					rounding(false,do_nothing);
+				//额外的舍入检查为了更精确的处理
+				if(num>info_threshold_base){
+					auto num_backup=num;auto exp_backup=exp;
+					auto backup_updater=exlambda(const auto&new_num,const auto&new_exp)noexcept{
+						num_backup=new_num;exp_backup=new_exp;
+					};
+					floop{
+						//首先进行舍入
+						rounding(true,backup_updater);
+						//然后判断是否需要继续
+						auto tmp_bigfloat=num*pow((ubigint)radix,exp);
+						if(tmp_bigfloat.convert_to<T>()==check_num)
+							backup_updater(num,exp);
+						else
+							break;
+					}
+					num=num_backup;exp=exp_backup;
 				}
 			}
 		}
@@ -33332,22 +33392,33 @@ namespace to_string_n{
 		[[nodiscard]]string to_string_base(T num)const noexcept{
 			//首先，猜测分数
 			{
-				const auto divide_info=to_divide(num);
+				auto divide_info=to_divide(num);
 				if(divide_info){
-					if(divide_info.denominator!=1u){//分母不为1：正规分数
-						//呃，这里我们需要稍微处理一下numerator，考虑到其类型是T，而不是什么整数类型
-						//若numerator小于size_t的最大值，那么我们就可以直接转换为size_t
-						//否则，我们就需要转换为ubigint
-						string aret;
-						if(divide_info.numerator<=max(type_info<size_t>))
-							aret=to_string_with_exp(to_size_t(divide_info.numerator));
-						else
-							aret=to_string_with_exp((ubigint)divide_info.numerator);
-						return aret+_repres.get_fractional_separator()+to_string_unsigneded(divide_info.denominator);
+					auto&numerator=divide_info.numerator;
+					auto&denominator=divide_info.denominator;
+					if(denominator!=1u){//分母不为1：正规分数
+						ptrdiff_t exp=0;
+						const auto complete=_repres.get_denominator_complement(denominator,exp);
+						//现在denominator是1？若不是则说明这是一个无限小数
+						//若无限小数，以分数形式输出
+						if(denominator!=1u){
+							//先恢复denominator
+							denominator*=complete;
+							//呃，这里我们需要稍微处理一下numerator，考虑到其类型是T，而不是什么整数类型
+							//若numerator小于size_t的最大值，那么我们就可以直接转换为size_t
+							//否则，我们就需要转换为ubigint
+							string aret;
+							if(numerator<=max(type_info<size_t>))
+								aret=to_string_with_exp(to_size_t(numerator));
+							else
+								aret=to_string_with_exp((ubigint)numerator);
+							return aret+_repres.get_fractional_separator()+to_string_unsigneded(denominator);
+						}
+						//否则我们下落到以小数形式输出
 					}
 					//整数部分可以在这里处理，但是若进入ubigint处理会出现不必要的计算
-					if(divide_info.numerator<=max(type_info<size_t>))
-						return to_string_with_exp(to_size_t(divide_info.numerator));
+					elseif(numerator<=max(type_info<size_t>))
+						return to_string_with_exp(to_size_t(numerator));
 					//所以在下面再处理特大整数的情况
 				}
 			}
@@ -33378,9 +33449,11 @@ namespace to_string_n{
 					exp=new_exp;
 				}
 				//根据类型需求对number进行截断
-				apply_info_threshold<T>(number,exp);
-				//然后将number转换为字符串就着exp输出
-				return build_expression_str(to_string_unsigneded(number),exp);
+				apply_info_threshold<T>(number,exp,num);
+				//先获取number的字符串
+				auto tmp=to_string_and_add_exp(move(number),exp);
+				//然后就着exp输出
+				return build_expression_str(tmp,exp);
 			}
 			else{
 				//可惜没有额外的优化
@@ -33436,7 +33509,7 @@ namespace to_string_n{
 				numerator*=complete;
 			}
 			//根据类型需求对numerator进行截断
-			apply_info_threshold<T>(numerator,exp);
+			apply_info_threshold<T>(numerator,exp,num);
 			//先获取numerator的字符串
 			auto tmp=to_string_and_add_exp(move(numerator),exp);
 			//然后就着exp输出
