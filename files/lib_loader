@@ -30669,7 +30669,7 @@ namespace to_string_n{
 						else
 							break;
 					}
-					num=num_backup;exp=exp_backup;
+					num=move(num_backup);exp=move(exp_backup);
 				}
 			}
 		}
@@ -30786,8 +30786,8 @@ namespace to_string_n{
 				//若无限小数，以分数形式输出
 				if(denominator!=1){
 					auto fractional_separator=_repres.get_fractional_separator();
-					swap(denominator_backup,denominator);
-					clear_backup();
+					denominator=move(denominator_backup);
+					clear_backup();//考虑到右值赋值的实现很可能是swap，这个调用是有意义的
 					return to_string(move(numerator))+fractional_separator+to_string(move(denominator));
 				}
 				clear_backup();
@@ -30912,7 +30912,7 @@ namespace to_string_n{
 			if constexpr(::std::numeric_limits<T>::has_infinity)
 				if(str==_repres.get_inf())
 					return ::std::numeric_limits<T>::infinity();
-			//由于基本类型的浮点数转换实现有损，所以这里直接转换为ubigfloat再转换为T
+			//由于基本类型的浮点数转换实现有损，所以这里直接转换为ubigfloat再转换为T：安全、大范围、稳健（尽管速度慢）
 			return from_string_get_base<ubigfloat>(move(str),state).convert_to<T>();
 		}
 	public:
