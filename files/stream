@@ -132,6 +132,9 @@
 	#if __has_include(<stdfloat>)
 		#include <stdfloat>
 	#endif
+	#if __has_include(<intrin.h>)
+		#include <intrin.h>
+	#endif
 	#if defined(__clang__)||defined(__GNUC__)
 		#include <cxxabi.h>
 	#endif
@@ -1748,6 +1751,12 @@ namespace math{
 		else
 			return divmod_result{a/b,a%b};
 	}
+	//ceil_div
+	template<arithmetic_type T,arithmetic_type U>
+	[[nodiscard]]force_inline constexpr auto ceil_div(const T&a,const U&b)noexcept{
+		const auto info=divmod(a,b);
+		return info.quot+(info.mod?1u:0u);
+	}
 
 	/*! 设置浮点舍入 */
 	template<typename T>
@@ -1953,13 +1962,13 @@ namespace math{
 	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
 	template<arithmetic_type T>
 	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
-		#line 500 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 506 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
-		#line 512 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 518 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		for(T c=5u;c<=b;c+=6u)//遍历判断是否能被因数分解——不会有人看不懂吧?
 			if((!mod(a,c))||(!mod(a,(c+2u))))
 				return false;
-		#line 521 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 527 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return true;
 	}
 	/*! 判断某数是否是素数 */
@@ -1972,10 +1981,10 @@ namespace math{
 
 		if(b<4)
 			return true;//1和0也是prime,我不管.
-		#line 543 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 549 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		if(mod(mod(b,6)-1u,4u))
 			return false;
-		#line 548 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 554 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return is_prime_num_no_pre_check(b);
 	}
 	/// 求小于或等于某数的素数
@@ -2034,13 +2043,13 @@ namespace math{
 	/// 已知当前array的size，求下一个合适的提前分配大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_array(size_T size)noexcept{
-		#line 609 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 615 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return size_T(size*magic_number::gold_of_resize);
 	}
 	/// 已知当前hash table的size，求下一个合适的桶大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_hash(size_T size)noexcept{
-		#line 618 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
+		#line 624 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part1/math.hpp"
 		return size_T(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
 	}
 	pop_msvc_warning();
@@ -2339,6 +2348,7 @@ using math::mod;
 using math::is_odd;
 using math::is_even;
 using math::divmod;
+using math::ceil_div;
 using math::set_rounding;
 using math::get_rounding;
 using math::rounding_auto_setter;
@@ -2730,7 +2740,12 @@ namespace literal_support{
 //_body.hpp
 #line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 namespace elc::defs{
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_defs.hpp"
+//_defs.hpp
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_defs.hpp"
+//undefs at "_undefs.hpp"
+
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //_defs.hpp
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
@@ -3000,12 +3015,58 @@ protected:\
 
 //file_end
 
+#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_defs.hpp"
+
+// 定义一个宏来检测是否支持GCC内置函数
+#if defined(__GNUC__) || defined(__clang__)
+	#define HAS_GCC_BUILTINS 1
+#else
+	#define HAS_GCC_BUILTINS 0
+#endif
+
+// 定义一个宏来检测是否支持MSVC内置函数
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define HAS_MSVC_INTRINSICS 1
+#else
+	#define HAS_MSVC_INTRINSICS 0
+#endif
+
+// 定义一个宏来检测是否支持x86汇编
+#if defined(__i386__) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
+	#define HAS_X86_ASM 1
+#else
+	#define HAS_X86_ASM 0
+#endif
+
+// 定义一个宏来检测是否支持x86-64汇编
+#if defined(__x86_64__) || defined(_M_X64)
+	#define HAS_X86_64_ASM 1
+#else
+	#define HAS_X86_64_ASM 0
+#endif
+
+// 定义一个宏来检测是否支持ARM汇编
+#if defined(__arm__) || defined(_M_ARM)
+	#define HAS_ARM_ASM 1
+#else
+	#define HAS_ARM_ASM 0
+#endif
+
+// 定义一个宏来检测是否支持ARM64汇编
+#if defined(__aarch64__)
+	#define HAS_ARM64_ASM 1
+#else
+	#define HAS_ARM64_ASM 0
+#endif
+
+//file_end
+
 	#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 
 	namespace basic_environment{
 		/// 每个bit（不是字节）的可能性
 		/// 为什么c艹委员会不定义这个？
-		constexpr size_t BIT_POSSIBILITY=2;
+		constexpr size_t BIT_POSSIBILITY=1<<1;
 		typedef bool bit_type;
 		[[nodiscard]]constexpr force_inline bool is_rounding_bit(bit_type v)noexcept{
 			if constexpr(BIT_POSSIBILITY==2)
@@ -3507,6 +3568,184 @@ TYPE_MAPPER(uint_fast64_t)
 		//判断wchar_t是否和char16_t相同
 		inline constexpr bool wchar_t_same_as_char16_t=sizeof(wchar_t)==sizeof(char16_t);
 
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/add_sub_carry.hpp"
+//add_sub_carry.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/add_sub_carry.hpp"
+// 定义一个函数或者一个宏来实现无符号整数的add carry功能
+#if HAS_MSVC_INTRINSICS
+	template<unsigned_basic_integer_type T>
+	force_inline bool _msvc_builtin_add_carry(bool c_in, T a, T b, T&out)noexcept{
+		if constexpr(sizeof(T) == 8)
+			return _addcarry_u64(c_in, a, b, &out);
+		elseif constexpr(sizeof(T) == 4)
+			return _addcarry_u32(c_in, a, b, &out);
+		elseif constexpr(sizeof(T) == 2)
+			return _addcarry_u16(c_in, a, b, &out);
+		elseif constexpr(sizeof(T) == 1)
+			return _addcarry_u8(c_in, a, b, &out);
+	}
+	template<unsigned_basic_integer_type T>
+	force_inline bool _msvc_builtin_sub_borrow(bool b_in, T a, T b, T&out)noexcept{
+		if constexpr(sizeof(T) == 8)
+			return _subborrow_u64(b_in, a, b, &out);
+		elseif constexpr(sizeof(T) == 4)
+			return _subborrow_u32(b_in, a, b, &out);
+		elseif constexpr(sizeof(T) == 2)
+			return _subborrow_u16(b_in, a, b, &out);
+		elseif constexpr(sizeof(T) == 1)
+			return _subborrow_u8(b_in, a, b, &out);
+	}
+#endif
+template<unsigned_basic_integer_type T>
+constexpr force_inline bool add_carry(T a, T b, T& c)noexcept{
+	if(!in_consteval){
+		#if HAS_GCC_BUILTINS
+			return __builtin_add_overflow(a, b, &c);
+		#elif HAS_MSVC_INTRINSICS
+			return _msvc_builtin_add_carry(0, a, b, c);
+		#elif HAS_X86_ASM
+			//x86/x86-64
+			__asm__ (
+				"add %2, %1\n\t"
+				"setc %0\n\t"
+				: "=r"(c)
+				: "r"(a), "r"(b)
+			);
+			return c;
+		#elif HAS_ARM_ASM || HAS_ARM64_ASM
+			//arm/arm64
+			__asm__ (
+				"adds %1, %1, %2\n\t"
+				"adc %0, xzr, xzr\n\t"
+				: "=r"(c)
+				: "r"(a), "r"(b)
+			);
+			return c;
+		#endif
+	}
+	c = a + b;
+	return c < a;
+}
+template<unsigned_basic_integer_type T>
+constexpr force_inline T add_carry(T a, T b, bool& is_overflow)noexcept{
+	#if HAS_MSVC_INTRINSICS
+		if(!in_consteval){
+			T c;is_overflow=_msvc_builtin_add_carry(is_overflow, a, b, c);
+			return c;
+		}
+		else
+	#endif
+	{
+		T c=a+is_overflow;
+		if(c){
+			is_overflow=add_carry(c,b,c);
+			return c;
+		}
+		else{
+			//现在我们得知a+is_overflow的结果为0:
+			//若is_overflow为true，溢出确实发生了，我们需要将is_overflow设置为true，所以什么都不用管
+			//若is_overflow为false，溢出没有发生，我们需要将is_overflow设置为false，我们仍然什么都不用管
+			return b;
+		}
+	}
+}
+template<unsigned_basic_integer_type T>
+constexpr force_inline T add_carry(T a, bool& is_overflow)noexcept{
+	#if HAS_MSVC_INTRINSICS
+		if(!in_consteval){
+			T c;is_overflow=_msvc_builtin_add_carry(is_overflow, a, T{}, c);
+			return c;
+		}
+		else
+	#endif
+	{
+		T c=a+is_overflow;
+		if(c)//若c为0，保持is_overflow不变（原理见上）
+			is_overflow=false;
+		return c;
+	}
+}
+// 定义一个函数或者一个宏来实现无符号整数的sub borrow功能
+template<unsigned_basic_integer_type T>
+constexpr force_inline bool sub_borrow(T a, T b, T& c)noexcept{
+	if(!in_consteval){
+		#if HAS_GCC_BUILTINS
+			return __builtin_sub_overflow(a, b, &c);
+		#elif HAS_MSVC_INTRINSICS
+			return _msvc_builtin_sub_borrow(0, a, b, c);
+		#elif HAS_X86_ASM
+			//x86/x86-64
+			__asm__ (
+				"sub %2, %1\n\t"
+				"setc %0\n\t"
+				: "=r"(c)
+				: "r"(a), "r"(b)
+			);
+			return c;
+		#elif HAS_ARM_ASM || HAS_ARM64_ASM
+			//arm/arm64
+			__asm__ (
+				"subs %1, %1, %2\n\t"
+				"sbc %0, xzr, xzr\n\t"
+				: "=r"(c)
+				: "r"(a), "r"(b)
+			);
+			return c;
+		#endif
+	}
+	c = a - b;
+	return c > a;
+}
+template<unsigned_basic_integer_type T>
+constexpr force_inline T sub_borrow(T a, T b, bool& is_underflow)noexcept{
+	#if HAS_MSVC_INTRINSICS
+		if(!in_consteval){
+			T c;is_underflow=_msvc_builtin_sub_borrow(is_underflow, a, b, c);
+			return c;
+		}
+		else
+	#endif
+	{
+		T c=b+is_underflow;
+		if(c){
+			is_underflow=sub_borrow(a,c,c);
+			return c;
+		}
+		else{
+			//现在我们得知b+is_underflow的结果为0:
+			//若is_underflow为true，溢出肯定该发生，我们需要将is_underflow设置为true，所以什么都不用管
+			//若is_underflow为false，溢出不会发生，我们需要将is_underflow设置为false，我们仍然什么都不用管
+			return a;
+		}
+	}
+}
+template<unsigned_basic_integer_type T>
+constexpr force_inline T sub_borrow(T a, bool& is_underflow)noexcept{
+	#if HAS_MSVC_INTRINSICS
+		if(!in_consteval){
+			T c;is_underflow=_msvc_builtin_sub_borrow(is_underflow, a, T{}, c);
+			return c;
+		}
+		else
+	#endif
+	{
+		T c=a-is_underflow;
+		if(c)
+			is_underflow=!a;//若a为0，说明溢出发生了，反之亦然
+		else
+			//现在我们得知a-is_underflow的结果为0:
+			//若is_underflow为true，溢出没有发生，我们需要将is_underflow设置为false
+			//若is_underflow为false，溢出也没有发生（没有发生有效的减法运算）
+			is_underflow=false;
+		return c;
+	}
+}
+
+
+//file_end
+
+		#line 186 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+
 		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/float_info.hpp"
 //float_info.hpp
 #line 46 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/float_info.hpp"
@@ -3734,7 +3973,7 @@ namespace float_infos{
 
 //file_end
 
-		#line 186 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+		#line 188 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 		namespace float_infos{
 			template<basic_float_type T>
 			union float_data_union{
@@ -3927,6 +4166,9 @@ namespace float_infos{
 	using basic_environment::wchar_t_same_as_char_t;
 	using basic_environment::wchar_t_same_as_char16_t;
 
+	using basic_environment::add_carry;
+	using basic_environment::sub_borrow;
+
 	using basic_environment::get_exponent;
 	using basic_environment::get_precision;
 	using basic_environment::float_precision_base_t;
@@ -3934,7 +4176,12 @@ namespace float_infos{
 	using basic_environment::make_float;
 	using basic_environment::to_divide;
 
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_undefs.hpp"
+//_undefs.hpp
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_undefs.hpp"
+//defs at "_defs.hpp"
+
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
 //_undefs.hpp
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
 //defs at "_defs.hpp"
@@ -4079,7 +4326,18 @@ namespace float_infos{
 
 //file_end
 
-	#line 386 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+#line 33 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_undefs.hpp"
+
+#undef HAS_GCC_BUILTINS
+#undef HAS_MSVC_INTRINSICS
+#undef HAS_X86_ASM
+#undef HAS_X86_64_ASM
+#undef HAS_ARM_ASM
+#undef HAS_ARM64_ASM
+
+//file_end
+
+	#line 391 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -6661,7 +6919,7 @@ public:
 
 //file_end
 
-	#line 53 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+	#line 56 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 #endif
 
 //file_end
@@ -6759,7 +7017,7 @@ public:
 //file_end
 
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
-#line 54 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+#line 57 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 
 //file_end
 
@@ -7601,7 +7859,7 @@ namespace elc{
 //file_end
 
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
-#line 54 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+#line 57 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 
 //file_end
 
@@ -11123,7 +11381,7 @@ protected:\
 //file_end
 
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
-#line 54 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+#line 57 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
 
 //file_end
 
@@ -26630,7 +26888,7 @@ public:
 	ubigint(const zero_t&)noexcept:ubigint(){}
 	template<unsigned_basic_integer_type T>
 	ubigint(T value)noexcept{
-		constexpr auto size = sizeof(T)/sizeof(base_type)+((sizeof(T)%sizeof(base_type))?1:0);
+		constexpr auto size = ceil_div(sizeof(T),sizeof(base_type));
 		_data.resize(size);
 		auto i=_data.begin();
 		while(value){
@@ -26840,21 +27098,10 @@ private:
 		const auto end_size = b.size();
 		auto other_begin = b.begin();
 
-		for(size_t i=0;i<end_size;++i){
-			calc_type result = calc_type(*buf)+calc_type(*other_begin)+calc_type(is_overflows);
-			is_overflows = static_cast<bool>(result>>bitnum_of(base_type));
-			*buf = base_type(result);
-
-			++buf;
-			++other_begin;
-		}
-		while(is_overflows){
-			calc_type result = calc_type(*buf)+calc_type(is_overflows);
-			is_overflows = static_cast<bool>(result>>bitnum_of(base_type));
-			*buf = base_type(result);
-
-			++buf;
-		}
+		for(size_t i=0;i<end_size;++i)
+			*buf++ = add_carry(*buf,*other_begin++,is_overflows);
+		while(is_overflows)
+			*buf++ = add_carry(*buf,is_overflows);
 	}
 	static void add_to_base(base_type*buf,const data_type&b)noexcept{
 		add_to_base(buf,get_data_view_of_data(b));
@@ -26867,23 +27114,20 @@ private:
 		calc_t tmp=num;
 		base_type*intr=buf.begin();
 		const auto end=buf.end();
-		bool is_overflows = false;
+		bool is_overflows = 0;
 		while(intr!=end && tmp){
-			calc_t result = calc_t(*intr)+tmp+calc_t(is_overflows);
-			is_overflows = result <= tmp;
-			tmp = result>>bitnum_of(base_type);
-			*intr=base_type(result);
-			++intr;
+			tmp=add_carry(calc_t(*intr),tmp,is_overflows);
+			*intr++=base_type(tmp);
+			tmp>>=bitnum_of(base_type);
 		}
 		if(tmp){
 			{
 				const auto intr_pos=intr-buf.begin();
-				buf.resize(buf.size()+sizeof(tmp));
+				buf.resize(buf.size()+ceil_div(sizeof(tmp),sizeof(base_type)));
 				intr=buf.begin()+intr_pos;
 			}
 			while(tmp){
-				*intr=base_type(tmp)+calc_t(is_overflows);
-				is_overflows = is_overflows && *intr==0;
+				*intr=add_carry(base_type(tmp),is_overflows);
 				tmp>>=bitnum_of(base_type);
 				++intr;
 			}
@@ -26935,27 +27179,10 @@ private:
 		const auto end_size = b.size();
 		auto other_begin = b.begin();
 
-		for(size_t i=0;i<end_size;++i){
-			auto t_a=calc_type(*buf);
-			auto t_b=calc_type(*other_begin)+calc_type(is_overflows);
-			is_overflows=t_a<t_b;
-			if(is_overflows)
-				t_a+=base_type_mod;
-			*buf = base_type(t_a-t_b);
-
-			++other_begin;
-			++buf;
-		}
-		while(is_overflows){
-			auto t_a=calc_type(*buf);
-			auto t_b=calc_type(is_overflows);
-			is_overflows=!t_a;
-			if(is_overflows)
-				t_a+=base_type_mod;
-			*buf = base_type(t_a-t_b);
-
-			++buf;
-		}
+		for(size_t i=0;i<end_size;++i)
+			*buf++ = sub_borrow(*buf,*other_begin++,is_overflows);
+		while(is_overflows)
+			*buf++ = sub_borrow(*buf,is_overflows);
 	}
 	static void sub_with_base(base_type*buf,const data_type&b)noexcept{
 		sub_with_base(buf,get_data_view_of_data(b));
