@@ -2091,7 +2091,7 @@ namespace math{
 			[[nodiscard]]constexpr container_t to()const noexcept{
 				container_t aret{};
 				//思路：获取小于等于m的所有素数，依次除以m，若能整除则将素数加入结果，否则跳过，直到m为1.
-				T i=T{2},m=abs(_m);
+				T i=T{2u},m=abs(_m);
 				while(m!=1){
 					while(!(m%i)){
 						aret.push_back(i);
@@ -2118,7 +2118,7 @@ namespace math{
 				[[nodiscard]]constexpr container_t to()const noexcept{
 					container_t aret{};
 					//思路：获取小于等于m的所有素数，依次除以m，若能整除则将素数加入结果，否则跳过，直到m为1.
-					T i=T{2},m=abs(_m);
+					T i=T{2u},m=abs(_m);
 					while(m!=1){
 						if(!(m%i)){
 							aret.push_back(i);
@@ -2141,7 +2141,7 @@ namespace math{
 				return unique_t{_m};
 			}
 		};
-		template<class T> requires ::std::is_arithmetic_v<T>
+		template<arithmetic_type T>
 		[[nodiscard]]constexpr force_inline auto operator()(T m)const noexcept{
 			return result_t<T>{m};
 		}
@@ -3572,38 +3572,38 @@ TYPE_MAPPER(uint_fast64_t)
 		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/add_sub_carry.hpp"
 //add_sub_carry.hpp
 #line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/add_sub_carry.hpp"
-// 定义一个函数或者一个宏来实现无符号整数的add carry功能
 #if HAS_MSVC_INTRINSICS
 	template<unsigned_basic_integer_type T>
-	force_inline bool _msvc_builtin_add_carry(bool c_in, T a, T b, T&out)noexcept{
+	force_inline bool _msvc_builtin_add_carry(bool c_in, T a, T b, T*out)noexcept{
 		if constexpr(sizeof(T) == 8)
-			return _addcarry_u64(c_in, a, b, &out);
+			return _addcarry_u64(c_in, a, b, out);
 		elseif constexpr(sizeof(T) == 4)
-			return _addcarry_u32(c_in, a, b, &out);
+			return _addcarry_u32(c_in, a, b, out);
 		elseif constexpr(sizeof(T) == 2)
-			return _addcarry_u16(c_in, a, b, &out);
+			return _addcarry_u16(c_in, a, b, out);
 		elseif constexpr(sizeof(T) == 1)
-			return _addcarry_u8(c_in, a, b, &out);
+			return _addcarry_u8(c_in, a, b, out);
 	}
 	template<unsigned_basic_integer_type T>
-	force_inline bool _msvc_builtin_sub_borrow(bool b_in, T a, T b, T&out)noexcept{
+	force_inline bool _msvc_builtin_sub_borrow(bool b_in, T a, T b, T*out)noexcept{
 		if constexpr(sizeof(T) == 8)
-			return _subborrow_u64(b_in, a, b, &out);
+			return _subborrow_u64(b_in, a, b, out);
 		elseif constexpr(sizeof(T) == 4)
-			return _subborrow_u32(b_in, a, b, &out);
+			return _subborrow_u32(b_in, a, b, out);
 		elseif constexpr(sizeof(T) == 2)
-			return _subborrow_u16(b_in, a, b, &out);
+			return _subborrow_u16(b_in, a, b, out);
 		elseif constexpr(sizeof(T) == 1)
-			return _subborrow_u8(b_in, a, b, &out);
+			return _subborrow_u8(b_in, a, b, out);
 	}
 #endif
+// add carry
 template<unsigned_basic_integer_type T>
 constexpr force_inline bool add_carry(T a, T b, T& c)noexcept{
 	if(!in_consteval){
 		#if HAS_GCC_BUILTINS
 			return __builtin_add_overflow(a, b, &c);
 		#elif HAS_MSVC_INTRINSICS
-			return _msvc_builtin_add_carry(0, a, b, c);
+			return _msvc_builtin_add_carry(0, a, b, &c);
 		#elif HAS_X86_ASM
 			//x86/x86-64
 			__asm__ (
@@ -3631,7 +3631,7 @@ template<unsigned_basic_integer_type T>
 constexpr force_inline T add_carry(T a, T b, bool& is_overflow)noexcept{
 	#if HAS_MSVC_INTRINSICS
 		if(!in_consteval){
-			T c;is_overflow=_msvc_builtin_add_carry(is_overflow, a, b, c);
+			T c;is_overflow=_msvc_builtin_add_carry(is_overflow, a, b, &c);
 			return c;
 		}
 		else
@@ -3654,7 +3654,7 @@ template<unsigned_basic_integer_type T>
 constexpr force_inline T add_carry(T a, bool& is_overflow)noexcept{
 	#if HAS_MSVC_INTRINSICS
 		if(!in_consteval){
-			T c;is_overflow=_msvc_builtin_add_carry(is_overflow, a, T{}, c);
+			T c;is_overflow=_msvc_builtin_add_carry(is_overflow, a, T{}, &c);
 			return c;
 		}
 		else
@@ -3666,14 +3666,14 @@ constexpr force_inline T add_carry(T a, bool& is_overflow)noexcept{
 		return c;
 	}
 }
-// 定义一个函数或者一个宏来实现无符号整数的sub borrow功能
+// sub borrow
 template<unsigned_basic_integer_type T>
 constexpr force_inline bool sub_borrow(T a, T b, T& c)noexcept{
 	if(!in_consteval){
 		#if HAS_GCC_BUILTINS
 			return __builtin_sub_overflow(a, b, &c);
 		#elif HAS_MSVC_INTRINSICS
-			return _msvc_builtin_sub_borrow(0, a, b, c);
+			return _msvc_builtin_sub_borrow(0, a, b, &c);
 		#elif HAS_X86_ASM
 			//x86/x86-64
 			__asm__ (
@@ -3701,7 +3701,7 @@ template<unsigned_basic_integer_type T>
 constexpr force_inline T sub_borrow(T a, T b, bool& is_underflow)noexcept{
 	#if HAS_MSVC_INTRINSICS
 		if(!in_consteval){
-			T c;is_underflow=_msvc_builtin_sub_borrow(is_underflow, a, b, c);
+			T c;is_underflow=_msvc_builtin_sub_borrow(is_underflow, a, b, &c);
 			return c;
 		}
 		else
@@ -3724,21 +3724,18 @@ template<unsigned_basic_integer_type T>
 constexpr force_inline T sub_borrow(T a, bool& is_underflow)noexcept{
 	#if HAS_MSVC_INTRINSICS
 		if(!in_consteval){
-			T c;is_underflow=_msvc_builtin_sub_borrow(is_underflow, a, T{}, c);
+			T c;is_underflow=_msvc_builtin_sub_borrow(is_underflow, a, T{}, &c);
 			return c;
 		}
 		else
 	#endif
 	{
-		T c=a-is_underflow;
-		if(c)
-			is_underflow=!a;//若a为0，说明溢出发生了，反之亦然
+		if(is_underflow){
+			is_underflow=!a;
+			return a-1;
+		}
 		else
-			//现在我们得知a-is_underflow的结果为0:
-			//若is_underflow为true，溢出没有发生，我们需要将is_underflow设置为false
-			//若is_underflow为false，溢出也没有发生（没有发生有效的减法运算）
-			is_underflow=false;
-		return c;
+			return a;
 	}
 }
 
@@ -4055,6 +4052,9 @@ namespace float_infos{
 			const auto exponent=get_exponent(v);
 			return precision_and_exponent_t{precision,exponent};
 		}
+		//阈值
+		template<basic_float_type T>
+		constexpr auto threshold_precision_bit=float_infos::precision_base_bit<T>+1;
 		//自基数和指数构造浮点数
 		//num=base_num*2^exponent
 		template<basic_float_type T>
@@ -4065,7 +4065,7 @@ namespace float_infos{
 			//需要注意的是，这里的基数是包含1的，所以转换目标是base_num>>precision_base_bit为1
 			{
 				const auto tmp=countl_zero(base_num);
-				constexpr auto need_shift=bitnum_of(base_num)-precision_base_bit<T>-1;
+				constexpr auto need_shift=bitnum_of(base_num)-threshold_precision_bit<T>;
 				const ptrdiff_t shift=tmp-need_shift;
 				if(shift>0){
 					base_num<<=shift;
@@ -4338,7 +4338,7 @@ namespace float_infos{
 
 //file_end
 
-	#line 391 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 394 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -7311,7 +7311,7 @@ namespace overhead_n{
 	}
 	constexpr size_t overhead_get_offset_value(size_t align)noexcept{
 		align=overhead_get_align(align);
-		return (size_t(sizeof(size_t)/align)+bool(sizeof(size_t)%align))*align;//等同于sizeof(size_t)-sizeof(size_t)%align+(sizeof(size_t)%align?align:0)
+		return ceil_div(sizeof(size_t),align)*align;//等同于sizeof(size_t)-sizeof(size_t)%align+(sizeof(size_t)%align?align:0)
 		//暨，偏移量既要大于sizeof(size_t)以装下overhead，又要是align的整数倍以保证T实例的对齐被满足
 	}
 	constexpr size_t correct_size(size_t size,size_t align)noexcept{
@@ -7508,7 +7508,7 @@ namespace overhead_n{
 				}
 			};
 		#endif
-		
+
 		#if defined(ELC_USING_OVERHEADED_ALLOC)
 			template<class base_operators>
 			struct overheaded_operators_provider_t{
@@ -26143,14 +26143,14 @@ protected:
 		[[nodiscard]]const floating_arec_t operator[](float_t index)const noexcept requires floating_arec_able{ return{remove_const(this),index}; }
 
 		//泛型arec.
-		template<typename T> requires ::std::is_arithmetic_v<T>
+		template<arithmetic_type T>
 		[[nodiscard]]auto operator[](T index)noexcept{
 			if constexpr(float_type<T>)
 				return operator[](static_cast<float_t>(index));
 			else
 				return operator[](static_cast<size_t>(index));
 		}
-		template<typename T> requires ::std::is_arithmetic_v<T>
+		template<arithmetic_type T>
 		[[nodiscard]]const auto operator[](T index)const noexcept{
 			if constexpr(float_type<T>)
 				return operator[](static_cast<float_t>(index));
@@ -29728,6 +29728,8 @@ public:
 private:
 	typedef array_t<base_type> data_type;
 	static constexpr auto base_type_mod=number_of_possible_values_per<base_type>;
+	template<unsigned_basic_integer_type T>
+	constexpr static size_t base_type_size_of=ceil_div(sizeof(T),sizeof(base_type));
 	data_type _data;
 
 	explicit ubigint(const data_type&data)noexcept:_data(data){}
@@ -29737,14 +29739,24 @@ public:
 	ubigint(const ubigint&)noexcept = default;
 	ubigint(ubigint&&)noexcept = default;
 	ubigint(const zero_t&)noexcept:ubigint(){}
+	ubigint& operator=(const ubigint&)&noexcept = default;
+	ubigint& operator=(ubigint&&)&noexcept = default;
+	ubigint& operator=(const zero_t&)noexcept{
+		_data.clear();
+		return*this;
+	}
+
+	~ubigint() = default;
+public:
 	template<unsigned_basic_integer_type T>
 	ubigint(T value)noexcept{
-		constexpr auto size = ceil_div(sizeof(T),sizeof(base_type));
+		constexpr auto size = base_type_size_of<T>;
 		_data.resize(size);
 		auto i=_data.begin();
 		while(value){
-			*i=base_type(value%base_type_mod);
-			value=T(value/base_type_mod);
+			const auto info=divmod(value,base_type_mod);
+			*i=base_type(info.mod);
+			value=T(info.quot);
 			i++;
 		}
 		const auto used_size=i-_data.begin();
@@ -29759,37 +29771,49 @@ public:
 		*this=ubigint(info.precision);
 		*this<<=info.exponent;
 	}
-	template<typename T> requires(unsigned_integer_type<T>)
+public:
+	template<arithmetic_type T>
 	[[nodiscard]]bool is_safe_convert_to()const noexcept{
-		constexpr auto min_value=min(type_info<T>);
-		constexpr auto max_value=max(type_info<T>);
-		if constexpr(min_value)
-			if(*this<min_value)
-				return false;
-		if(*this>max_value)
-			return false;
+		if constexpr(type_info<T>!=type_info<ubigint>){
+			if constexpr(has_min<T>){
+				constexpr auto min_value=min(type_info<T>);
+				if(min_value)
+					if(*this<min_value)
+						return false;
+			}
+			if constexpr(has_max<T>){
+				constexpr auto max_value=max(type_info<T>);
+				if(*this>max_value)
+					return false;
+			}
+		}
 		return true;
 	}
-	template<typename T> requires(unsigned_integer_type<T>)
+	template<arithmetic_type T>
 	[[nodiscard]]T convert_to()const noexcept{
-		T value=0;
-		auto i=_data.rbegin();
-		while(i!=_data.rend()){
-			value=T(value*base_type_mod);
-			value+=*i++;
+		if constexpr(type_info<T>!=type_info<ubigint>){
+			T value=0;
+			auto i=_data.rbegin();
+			while(i!=_data.rend()){
+				value=T(value*base_type_mod);
+				value+=*i++;
+			}
+			return value;
 		}
-		return value;
+		else
+			return *this;
 	}
 
-	ubigint& operator=(const ubigint&)&noexcept = default;
-	ubigint& operator=(ubigint&&)&noexcept = default;
-	ubigint& operator=(const zero_t&)noexcept{
-		_data.clear();
-		return*this;
+	//explicit operator T
+	template<arithmetic_type T>
+	[[nodiscard]]explicit operator T()&&noexcept{
+		return move(*this).convert_to<T>();
 	}
-
-	~ubigint() = default;
-
+	template<arithmetic_type T>
+	[[nodiscard]]explicit operator T()const&noexcept{
+		return convert_to<T>();
+	}
+public:
 	//rand所需
 	friend void apply_basetype_to_head(ubigint&x,base_type value)noexcept{
 		x._data.push_back(value);
@@ -29880,8 +29904,8 @@ public:
 			return *this<=>to_unsigned_t<T>(other);
 		}else{
 			if constexpr(is_basic_type<T>)
-				if(_data.size_in_byte()>sizeof(T)+sizeof(base_type))//根据位数快速判断大小
-					return strong_ordering::greater;
+				if(auto tmp=_data.size()<=>base_type_size_of<T>;tmp!=0)//根据位数快速判断大小
+					return tmp;
 			auto i=_data.begin();
 			const auto end=_data.end();
 			while(i!=end){
@@ -30865,26 +30889,40 @@ public:
 		return tmp;
 	}
 public:
-	template<typename T> requires basic_integer_type<T>
+	template<arithmetic_type T>
 	[[nodiscard]]bool is_safe_convert_to()const noexcept{
-		constexpr auto min_value=min(type_info<T>);
-		constexpr auto max_value=max(type_info<T>);
-		if constexpr(min_value)
-			if(*this<min_value)
-				return false;
-		if(*this>max_value)
-			return false;
+		if constexpr(type_info<T>!=type_info<bigint>){
+			if constexpr(has_min<T>){
+				constexpr auto min_value=min(type_info<T>);
+				if(min_value)
+					if(*this<min_value)
+						return false;
+			}
+			if constexpr(has_max<T>){
+				constexpr auto max_value=max(type_info<T>);
+				if(*this>max_value)
+					return false;
+			}
+		}
 		return true;
 	}
-	template<typename T> requires basic_integer_type<T>
+	template<arithmetic_type T>
 	[[nodiscard]]T convert_to()const noexcept{
 		if constexpr(signed_type<T>){
-			typedef to_unsigned_t<T> UT;
-			UT tmp=_num.convert_to<UT>();
-			return _is_negative?-(T)tmp:(T)tmp;
+			using math::copy_as_negative;//貌似msvc在这里有bug
+			return copy_as_negative(move(_num).convert_to<to_unsigned_t<T>>(),_is_negative);
 		}
 		else
 			return _num.convert_to<T>();
+	}
+	//explicit operator T
+	template<arithmetic_type T>
+	[[nodiscard]]explicit operator T()&&noexcept{
+		return move(*this).convert_to<T>();
+	}
+	template<arithmetic_type T>
+	[[nodiscard]]explicit operator T()const&noexcept{
+		return convert_to<T>();
 	}
 public:
 	[[nodiscard]]bigint operator-()const&noexcept{
@@ -31343,28 +31381,34 @@ public:
 		simplify();
 	}
 public:
-	template<typename T> requires ::std::is_arithmetic_v<T>
+	template<arithmetic_type T>
 	[[nodiscard]]bool is_safe_convert_to()const noexcept{
-		constexpr auto min_value=min(type_info<T>);
-		constexpr auto max_value=max(type_info<T>);
-		if constexpr(min_value)
-			if(*this<min_value)
-				return false;
-		if(*this>max_value)
-			return false;
+		if constexpr(type_info<T>!=type_info<ubigfloat>){
+			if constexpr(has_min<T>){
+				constexpr auto min_value=min(type_info<T>);
+				if(min_value)
+					if(*this<min_value)
+						return false;
+			}
+			if constexpr(has_max<T>){
+				constexpr auto max_value=max(type_info<T>);
+				if(*this>max_value)
+					return false;
+			}
+		}
 		if constexpr(integer_type<T>)
 			if(_numerator%_denominator)
 				return false;
 		return true;
 	}
-	template<typename T> requires ::std::is_arithmetic_v<T>
+	template<arithmetic_type T>
 	[[nodiscard]]T convert_to()&&noexcept{//只对于右值，便于编写。
 		//左值版本只需要创建一个临时变量，然后调用右值版本即可。
-		if constexpr(basic_integer_type<T>)
-			return trunc(*this).convert_to<T>();
-		else{//浮点数
+		if constexpr(integer_type<T>)
+			return trunc(move(*this)).convert_to<T>();
+		elseif constexpr(type_info<T>!=type_info<ubigfloat>){//浮点数
 			if(!_denominator)
-				if constexpr(::std::numeric_limits<T>::has_infinity)
+				if constexpr(has_inf<T>)
 					return ::std::numeric_limits<T>::infinity();
 				else
 					return ::std::numeric_limits<T>::max();
@@ -31399,7 +31443,7 @@ public:
 			{
 				//对多余的精度进行舍入，仍然，这是可能有损的
 				const auto bitnum_now=get_bitnum(_numerator);
-				const ptrdiff_t diff=bitnum_now-precision_base_bitnum;
+				const ptrdiff_t diff=bitnum_now-basic_environment::threshold_precision_bit<T>;
 				if(diff>0){
 					const auto rounding=is_rounding_bit(_numerator.bit_at(diff-1));//视情况进位
 					_numerator>>=diff;
@@ -31418,13 +31462,24 @@ public:
 				return make_float<T>(num,exp);
 			}
 		}
+		else
+			return move(*this);
 	}
-	template<typename T> requires ::std::is_arithmetic_v<T>
+	template<arithmetic_type T>
 	[[nodiscard]]T convert_to()const&noexcept{
-		if constexpr(basic_integer_type<T>)
+		if constexpr(integer_type<T>)
 			return trunc(*this).convert_to<T>();
 		else
 			return ubigfloat(*this).convert_to<T>();
+	}
+	//explicit operator T
+	template<arithmetic_type T>
+	[[nodiscard]]explicit operator T()&&noexcept{
+		return move(*this).convert_to<T>();
+	}
+	template<arithmetic_type T>
+	[[nodiscard]]explicit operator T()const&noexcept{
+		return convert_to<T>();
 	}
 private:
 	ubigfloat(ubigint&& numerator, ubigint&& denominator)noexcept:
@@ -31483,14 +31538,23 @@ public:
 	[[nodiscard]]friend ubigint trunc(const ubigfloat& a)noexcept{
 		return a._numerator/a._denominator;
 	}
+	[[nodiscard]]friend ubigint trunc(ubigfloat&& a)noexcept{
+		return move(a._numerator)/move(a._denominator);
+	}
 	//friend split
+	template<class=void>
+	struct split_result_t_base{
+		ubigint integer;
+		ubigfloat fraction;
+	};
+	typedef split_result_t_base<> split_result_t;
 	[[nodiscard]]friend auto split(const ubigfloat& a)noexcept{
-		struct result_t{
-			ubigint integer;
-			ubigfloat fraction;
-		};
 		const auto result=divmod(a._numerator,a._denominator);
-		return result_t{result.quot,ubigfloat{result.mod,a._denominator}};
+		return split_result_t{move(result.quot),ubigfloat{move(result.mod),a._denominator}};
+	}
+	[[nodiscard]]friend auto split(ubigfloat&& a)noexcept{
+		const auto result=divmod(move(a._numerator),a._denominator);
+		return split_result_t{move(result.quot),ubigfloat{move(result.mod),move(a._denominator)}};
 	}
 	//friend trunc_with_sub
 	[[nodiscard]]friend ubigint trunc_with_sub(ubigfloat& a)noexcept{
@@ -31501,6 +31565,9 @@ public:
 	//friend to_size_t
 	[[nodiscard]]friend size_t to_size_t(const ubigfloat& a)noexcept{
 		return to_size_t(trunc(a));
+	}
+	[[nodiscard]]friend size_t to_size_t(ubigfloat&& a)noexcept{
+		return to_size_t(trunc(move(a)));
 	}
 	//operator+
 	[[nodiscard]]ubigfloat operator+(const ubigfloat& other)const&noexcept{
@@ -31889,31 +31956,39 @@ public:
 	bigfloat(const ubigint& other)noexcept:_num(other){}
 	bigfloat(ubigint&& other)noexcept:_num(move(other)){}
 
-	template<typename T> requires ::std::is_arithmetic_v<T>
+	template<arithmetic_type T>
 	bigfloat(T num)noexcept:_num(abs(num)),_is_negative(is_negative(num)){}
 public:
-	template<typename T> requires ::std::is_arithmetic_v<T>
+	template<arithmetic_type T>
 	[[nodiscard]]bool is_safe_convert_to()const noexcept{
-		constexpr auto min_value=min(type_info<T>);
-		constexpr auto max_value=max(type_info<T>);
-		if constexpr(min_value)
-			if(*this<min_value)
-				return false;
-		if(*this>max_value)
-			return false;
-		if constexpr(integer_type<T>)
-			if(trunc(*this)!=*this)
-				return false;
-		return true;
+		return _num.is_safe_convert_to<to_unsigned_t<T>>();
 	}
-	template<typename T> requires ::std::is_arithmetic_v<T>
-	[[nodiscard]]T convert_to()const noexcept{
-		if constexpr(unsigned_type<T>)
-			return _num.convert_to<T>();
-		else{
+	template<arithmetic_type T>
+	[[nodiscard]]T convert_to()&&noexcept{
+		if constexpr(signed_type<T>){
+			using math::copy_as_negative;//貌似msvc在这里有bug
+			return copy_as_negative(move(_num).convert_to<to_unsigned_t<T>>(),_is_negative);
+		}
+		else
+			return move(_num).convert_to<T>();
+	}
+	template<arithmetic_type T>
+	[[nodiscard]]T convert_to()const&noexcept{
+		if constexpr(signed_type<T>){
 			using math::copy_as_negative;//貌似msvc在这里有bug
 			return copy_as_negative(_num.convert_to<to_unsigned_t<T>>(),_is_negative);
 		}
+		else
+			return _num.convert_to<T>();
+	}
+	//explicit operator T
+	template<arithmetic_type T>
+	[[nodiscard]]explicit operator T()&&noexcept{
+		return move(*this).convert_to<T>();
+	}
+	template<arithmetic_type T>
+	[[nodiscard]]explicit operator T()const&noexcept{
+		return convert_to<T>();
 	}
 private:
 	bigfloat(ubigfloat&& number, bool is_negative)noexcept:

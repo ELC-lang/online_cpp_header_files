@@ -2090,7 +2090,7 @@ namespace math{
 			[[nodiscard]]constexpr container_t to()const noexcept{
 				container_t aret{};
 				//思路：获取小于等于m的所有素数，依次除以m，若能整除则将素数加入结果，否则跳过，直到m为1.
-				T i=T{2},m=abs(_m);
+				T i=T{2u},m=abs(_m);
 				while(m!=1){
 					while(!(m%i)){
 						aret.push_back(i);
@@ -2117,7 +2117,7 @@ namespace math{
 				[[nodiscard]]constexpr container_t to()const noexcept{
 					container_t aret{};
 					//思路：获取小于等于m的所有素数，依次除以m，若能整除则将素数加入结果，否则跳过，直到m为1.
-					T i=T{2},m=abs(_m);
+					T i=T{2u},m=abs(_m);
 					while(m!=1){
 						if(!(m%i)){
 							aret.push_back(i);
@@ -2140,7 +2140,7 @@ namespace math{
 				return unique_t{_m};
 			}
 		};
-		template<class T> requires ::std::is_arithmetic_v<T>
+		template<arithmetic_type T>
 		[[nodiscard]]constexpr force_inline auto operator()(T m)const noexcept{
 			return result_t<T>{m};
 		}
@@ -3571,38 +3571,38 @@ TYPE_MAPPER(uint_fast64_t)
 		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/add_sub_carry.hpp"
 //add_sub_carry.hpp
 #line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/add_sub_carry.hpp"
-// 定义一个函数或者一个宏来实现无符号整数的add carry功能
 #if HAS_MSVC_INTRINSICS
 	template<unsigned_basic_integer_type T>
-	force_inline bool _msvc_builtin_add_carry(bool c_in, T a, T b, T&out)noexcept{
+	force_inline bool _msvc_builtin_add_carry(bool c_in, T a, T b, T*out)noexcept{
 		if constexpr(sizeof(T) == 8)
-			return _addcarry_u64(c_in, a, b, &out);
+			return _addcarry_u64(c_in, a, b, out);
 		elseif constexpr(sizeof(T) == 4)
-			return _addcarry_u32(c_in, a, b, &out);
+			return _addcarry_u32(c_in, a, b, out);
 		elseif constexpr(sizeof(T) == 2)
-			return _addcarry_u16(c_in, a, b, &out);
+			return _addcarry_u16(c_in, a, b, out);
 		elseif constexpr(sizeof(T) == 1)
-			return _addcarry_u8(c_in, a, b, &out);
+			return _addcarry_u8(c_in, a, b, out);
 	}
 	template<unsigned_basic_integer_type T>
-	force_inline bool _msvc_builtin_sub_borrow(bool b_in, T a, T b, T&out)noexcept{
+	force_inline bool _msvc_builtin_sub_borrow(bool b_in, T a, T b, T*out)noexcept{
 		if constexpr(sizeof(T) == 8)
-			return _subborrow_u64(b_in, a, b, &out);
+			return _subborrow_u64(b_in, a, b, out);
 		elseif constexpr(sizeof(T) == 4)
-			return _subborrow_u32(b_in, a, b, &out);
+			return _subborrow_u32(b_in, a, b, out);
 		elseif constexpr(sizeof(T) == 2)
-			return _subborrow_u16(b_in, a, b, &out);
+			return _subborrow_u16(b_in, a, b, out);
 		elseif constexpr(sizeof(T) == 1)
-			return _subborrow_u8(b_in, a, b, &out);
+			return _subborrow_u8(b_in, a, b, out);
 	}
 #endif
+// add carry
 template<unsigned_basic_integer_type T>
 constexpr force_inline bool add_carry(T a, T b, T& c)noexcept{
 	if(!in_consteval){
 		#if HAS_GCC_BUILTINS
 			return __builtin_add_overflow(a, b, &c);
 		#elif HAS_MSVC_INTRINSICS
-			return _msvc_builtin_add_carry(0, a, b, c);
+			return _msvc_builtin_add_carry(0, a, b, &c);
 		#elif HAS_X86_ASM
 			//x86/x86-64
 			__asm__ (
@@ -3630,7 +3630,7 @@ template<unsigned_basic_integer_type T>
 constexpr force_inline T add_carry(T a, T b, bool& is_overflow)noexcept{
 	#if HAS_MSVC_INTRINSICS
 		if(!in_consteval){
-			T c;is_overflow=_msvc_builtin_add_carry(is_overflow, a, b, c);
+			T c;is_overflow=_msvc_builtin_add_carry(is_overflow, a, b, &c);
 			return c;
 		}
 		else
@@ -3653,7 +3653,7 @@ template<unsigned_basic_integer_type T>
 constexpr force_inline T add_carry(T a, bool& is_overflow)noexcept{
 	#if HAS_MSVC_INTRINSICS
 		if(!in_consteval){
-			T c;is_overflow=_msvc_builtin_add_carry(is_overflow, a, T{}, c);
+			T c;is_overflow=_msvc_builtin_add_carry(is_overflow, a, T{}, &c);
 			return c;
 		}
 		else
@@ -3665,14 +3665,14 @@ constexpr force_inline T add_carry(T a, bool& is_overflow)noexcept{
 		return c;
 	}
 }
-// 定义一个函数或者一个宏来实现无符号整数的sub borrow功能
+// sub borrow
 template<unsigned_basic_integer_type T>
 constexpr force_inline bool sub_borrow(T a, T b, T& c)noexcept{
 	if(!in_consteval){
 		#if HAS_GCC_BUILTINS
 			return __builtin_sub_overflow(a, b, &c);
 		#elif HAS_MSVC_INTRINSICS
-			return _msvc_builtin_sub_borrow(0, a, b, c);
+			return _msvc_builtin_sub_borrow(0, a, b, &c);
 		#elif HAS_X86_ASM
 			//x86/x86-64
 			__asm__ (
@@ -3700,7 +3700,7 @@ template<unsigned_basic_integer_type T>
 constexpr force_inline T sub_borrow(T a, T b, bool& is_underflow)noexcept{
 	#if HAS_MSVC_INTRINSICS
 		if(!in_consteval){
-			T c;is_underflow=_msvc_builtin_sub_borrow(is_underflow, a, b, c);
+			T c;is_underflow=_msvc_builtin_sub_borrow(is_underflow, a, b, &c);
 			return c;
 		}
 		else
@@ -3723,21 +3723,18 @@ template<unsigned_basic_integer_type T>
 constexpr force_inline T sub_borrow(T a, bool& is_underflow)noexcept{
 	#if HAS_MSVC_INTRINSICS
 		if(!in_consteval){
-			T c;is_underflow=_msvc_builtin_sub_borrow(is_underflow, a, T{}, c);
+			T c;is_underflow=_msvc_builtin_sub_borrow(is_underflow, a, T{}, &c);
 			return c;
 		}
 		else
 	#endif
 	{
-		T c=a-is_underflow;
-		if(c)
-			is_underflow=!a;//若a为0，说明溢出发生了，反之亦然
+		if(is_underflow){
+			is_underflow=!a;
+			return a-1;
+		}
 		else
-			//现在我们得知a-is_underflow的结果为0:
-			//若is_underflow为true，溢出没有发生，我们需要将is_underflow设置为false
-			//若is_underflow为false，溢出也没有发生（没有发生有效的减法运算）
-			is_underflow=false;
-		return c;
+			return a;
 	}
 }
 
@@ -4054,6 +4051,9 @@ namespace float_infos{
 			const auto exponent=get_exponent(v);
 			return precision_and_exponent_t{precision,exponent};
 		}
+		//阈值
+		template<basic_float_type T>
+		constexpr auto threshold_precision_bit=float_infos::precision_base_bit<T>+1;
 		//自基数和指数构造浮点数
 		//num=base_num*2^exponent
 		template<basic_float_type T>
@@ -4064,7 +4064,7 @@ namespace float_infos{
 			//需要注意的是，这里的基数是包含1的，所以转换目标是base_num>>precision_base_bit为1
 			{
 				const auto tmp=countl_zero(base_num);
-				constexpr auto need_shift=bitnum_of(base_num)-precision_base_bit<T>-1;
+				constexpr auto need_shift=bitnum_of(base_num)-threshold_precision_bit<T>;
 				const ptrdiff_t shift=tmp-need_shift;
 				if(shift>0){
 					base_num<<=shift;
@@ -4337,7 +4337,7 @@ namespace float_infos{
 
 //file_end
 
-	#line 391 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 394 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -7310,7 +7310,7 @@ namespace overhead_n{
 	}
 	constexpr size_t overhead_get_offset_value(size_t align)noexcept{
 		align=overhead_get_align(align);
-		return (size_t(sizeof(size_t)/align)+bool(sizeof(size_t)%align))*align;//等同于sizeof(size_t)-sizeof(size_t)%align+(sizeof(size_t)%align?align:0)
+		return ceil_div(sizeof(size_t),align)*align;//等同于sizeof(size_t)-sizeof(size_t)%align+(sizeof(size_t)%align?align:0)
 		//暨，偏移量既要大于sizeof(size_t)以装下overhead，又要是align的整数倍以保证T实例的对齐被满足
 	}
 	constexpr size_t correct_size(size_t size,size_t align)noexcept{
@@ -7507,7 +7507,7 @@ namespace overhead_n{
 				}
 			};
 		#endif
-		
+
 		#if defined(ELC_USING_OVERHEADED_ALLOC)
 			template<class base_operators>
 			struct overheaded_operators_provider_t{
