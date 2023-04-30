@@ -5147,7 +5147,7 @@ namespace array_like_n{
 		typedef array_like_view_t<T>base_t;
 		using base_t::base_t;
 
-		[[nodiscard]]constexpr static size_t get_length_of(T*ptr)noexcept{
+		[[nodiscard]]static constexpr size_t get_length_of(T*ptr)noexcept{
 			if(*ptr)return get_length_of(ptr+1)+1;
 			else return 0;
 		}
@@ -15699,14 +15699,14 @@ namespace function_n{
 
 	template<class T>
 	struct is_function_t_helper{
-		constexpr static bool value = false;
+		static constexpr bool value = false;
 	};
 	template<class T, bool promise_nothrow_at_destruct>
 	struct is_function_t_helper<base_function_t<T, promise_nothrow_at_destruct>> {
-		constexpr static bool value = true;
+		static constexpr bool value = true;
 	};
 	template<class T>
-	constexpr static bool is_function_t = is_function_t_helper<T>::value;
+	static constexpr bool is_function_t = is_function_t_helper<T>::value;
 	#if !defined(_MSC_VER)
 	template<class Ret_t,class...Args_t,bool nothrow,bool promise_nothrow_at_destruct>
 	struct base_function_t<Ret_t(Args_t...)noexcept(nothrow),promise_nothrow_at_destruct>:function_data_saver_t<Ret_t(Args_t...)>{
@@ -18007,9 +18007,12 @@ public:
 	#endif
 private:
 	typedef array_t<base_type> data_type;
-	static constexpr auto base_type_mod=number_of_possible_values_per<base_type>;
+	typedef array_like_view_t<const base_type> data_view_type;
+
 	template<unsigned_basic_integer_type T>
-	constexpr static size_t base_type_size_of=ceil_div(sizeof(T),sizeof(base_type));
+	static constexpr size_t base_type_size_of=ceil_div(sizeof(T),sizeof(base_type));
+	static constexpr auto base_type_mod=number_of_possible_values_per<base_type>;
+
 	data_type _data;
 
 	explicit ubigint(const data_type&data)noexcept:_data(data){}
@@ -18099,7 +18102,6 @@ public:
 		x._data.push_back(value);
 	}
 private:
-	typedef array_like_view_t<const base_type> data_view_type;
 	static void shrink_to_fit(data_type&a)noexcept{
 		auto size=a.size();
 		while(size--)
@@ -18208,7 +18210,7 @@ public:
 	}
 private:
 	//operator+-*/%s
-	typedef unsigned_specific_size_fast_t<BIT_POSSIBILITY*sizeof(base_type)> calc_type;
+	typedef unsigned_specific_size_fast_t<2*sizeof(base_type)> calc_type;
 	//+
 	[[nodiscard]]static size_t get_safety_add_buf_size_diff(data_view_type a,data_view_type b)noexcept{
 		//判断进位所需空间
@@ -18247,6 +18249,23 @@ private:
 		if(size_diff)
 			shrink_to_fit(tmp);
 		return tmp;
+	}
+	static void add_to_base(data_type&a,data_view_type b)noexcept{
+		const auto this_view = get_data_view_of_data(a);
+		const auto&other_view = b;
+		const auto origin_size = this_view.size();
+		const auto new_size = get_safety_add_buf_size_with_not_compared_buf(this_view,other_view);
+		const auto size_diff = new_size - origin_size;
+		if(size_diff){
+			a.resize(new_size);
+			copy_assign[size_diff](base_type{0},note::to(a.data()+origin_size));
+		}
+		add_to_base(a.data(),other_view);
+		if(size_diff)
+			shrink_to_fit(a);
+	}
+	static void add_to_base(data_type&a,const data_type&b)noexcept{
+		add_to_base(a,get_data_view_of_data(b));
 	}
 	static void add_to_base(base_type*buf,data_view_type b)noexcept{
 		bool is_overflows = 0;
@@ -18751,18 +18770,7 @@ public:
 	//operator+=
 	ubigint& operator+=(const ubigint& other)&noexcept{
 		//using add_to_base to avoid new alloc
-		const auto this_view = get_data_view();
-		const auto other_view = other.get_data_view();
-		const auto origin_size = this_view.size();
-		const auto new_size = get_safety_add_buf_size_with_not_compared_buf(this_view,other_view);
-		const auto size_diff = new_size - origin_size;
-		if(size_diff){
-			_data.resize(new_size);
-			copy_assign[size_diff](base_type{0},note::to(_data.data()+origin_size));
-		}
-		add_to_base(_data.data(),other_view);
-		if(size_diff)
-			shrink_to_fit();
+		add_to_base(_data,other._data);
 		return*this;
 	}
 	template<unsigned_basic_integer_type T>
@@ -19095,6 +19103,7 @@ INTER_NAMESPACE(bignum_n)
 class bigint;
 [[nodiscard]]bigint copy_as_negative(const ubigint&,bool sign=true)noexcept;
 [[nodiscard]]bigint copy_as_negative(ubigint&&,bool sign=true)noexcept;
+using math::copy_as_negative;//避免可能的符号覆盖
 
 class bigint{
 	ubigint _num;
@@ -19188,10 +19197,8 @@ public:
 	}
 	template<arithmetic_type T>
 	[[nodiscard]]T convert_to()const noexcept{
-		if constexpr(signed_type<T>){
-			using math::copy_as_negative;//貌似msvc在这里有bug
+		if constexpr(signed_type<T>)
 			return copy_as_negative(move(_num).convert_to<to_unsigned_t<T>>(),_is_negative);
-		}
 		else
 			return _num.convert_to<T>();
 	}
@@ -20218,6 +20225,7 @@ INTER_NAMESPACE(bignum_n)
 class bigfloat;
 [[nodiscard]]bigfloat copy_as_negative(const ubigfloat&,bool sign=true)noexcept;
 [[nodiscard]]bigfloat copy_as_negative(ubigfloat&&,bool sign=true)noexcept;
+using math::copy_as_negative;//避免可能的符号覆盖
 
 class bigfloat{
 	ubigfloat _num;
@@ -20245,19 +20253,15 @@ public:
 	}
 	template<arithmetic_type T>
 	[[nodiscard]]T convert_to()&&noexcept{
-		if constexpr(signed_type<T>){
-			using math::copy_as_negative;//貌似msvc在这里有bug
+		if constexpr(signed_type<T>)
 			return copy_as_negative(move(_num).convert_to<to_unsigned_t<T>>(),_is_negative);
-		}
 		else
 			return move(_num).convert_to<T>();
 	}
 	template<arithmetic_type T>
 	[[nodiscard]]T convert_to()const&noexcept{
-		if constexpr(signed_type<T>){
-			using math::copy_as_negative;//貌似msvc在这里有bug
+		if constexpr(signed_type<T>)
 			return copy_as_negative(_num.convert_to<to_unsigned_t<T>>(),_is_negative);
-		}
 		else
 			return _num.convert_to<T>();
 	}

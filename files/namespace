@@ -5186,7 +5186,7 @@ namespace array_like_n{
 		typedef array_like_view_t<T>base_t;
 		using base_t::base_t;
 
-		[[nodiscard]]constexpr static size_t get_length_of(T*ptr)noexcept{
+		[[nodiscard]]static constexpr size_t get_length_of(T*ptr)noexcept{
 			if(*ptr)return get_length_of(ptr+1)+1;
 			else return 0;
 		}
@@ -15738,14 +15738,14 @@ namespace function_n{
 
 	template<class T>
 	struct is_function_t_helper{
-		constexpr static bool value = false;
+		static constexpr bool value = false;
 	};
 	template<class T, bool promise_nothrow_at_destruct>
 	struct is_function_t_helper<base_function_t<T, promise_nothrow_at_destruct>> {
-		constexpr static bool value = true;
+		static constexpr bool value = true;
 	};
 	template<class T>
-	constexpr static bool is_function_t = is_function_t_helper<T>::value;
+	static constexpr bool is_function_t = is_function_t_helper<T>::value;
 	#if !defined(_MSC_VER)
 	template<class Ret_t,class...Args_t,bool nothrow,bool promise_nothrow_at_destruct>
 	struct base_function_t<Ret_t(Args_t...)noexcept(nothrow),promise_nothrow_at_destruct>:function_data_saver_t<Ret_t(Args_t...)>{
@@ -20898,8 +20898,8 @@ public:
 	[[nodiscard]]virtual value be_eval();
 	[[nodiscard]]virtual value be_call(ptr);
 protected:
-	[[nodiscard]]virtual logical_bool equal_with(const_ptr)const noexcept=0;
-	[[nodiscard]]virtual logical_bool eq_with(const_ptr a)const noexcept{return a.get()==this;}//不是a==this：ptr的opertaor==将调用在下方定义的pointer_equal，这会通过eq间接调用eq_with
+	[[nodiscard]]virtual logical_bool was_equal_with(const_ptr)const noexcept=0;
+	[[nodiscard]]virtual logical_bool was_eq_with(const_ptr a)const noexcept{return a.get()==this;}//不是a==this：ptr的opertaor==将调用在下方定义的pointer_equal，这会通过eq间接调用eq_with
 	[[nodiscard]]virtual constexpr size_t equal_level()const noexcept{return 36;}
 	[[nodiscard]]virtual constexpr size_t eq_level()const noexcept{return 36;}
 public:
@@ -20931,31 +20931,31 @@ public:
 	template<typename...Args>
 	inline value operator()(Args&&...rest){return this->be_call(make_list(forward<Args>(rest)...));}
 
-	[[nodiscard]]logical_bool eq(const_ptr a)const noexcept{
+	[[nodiscard]]logical_bool eq_with(const_ptr a)const noexcept{
 		const auto this_eqlv = this->eq_level();
 		const auto arg_eqlv	 = a->eq_level();
 		if(this_eqlv _small_than_ arg_eqlv)
-			return a->eq_with(this);
+			return a->was_eq_with(this);
 		elseif(this_eqlv _big_than_ arg_eqlv)
-			return this->eq_with(a);
+			return this->was_eq_with(a);
 		else
-			return this->eq_with(a)&&a->eq_with(this);
+			return this->was_eq_with(a)&&a->was_eq_with(this);
 	}
-	[[nodiscard]]logical_bool equal(const_ptr a)const noexcept{
+	[[nodiscard]]logical_bool equal_with(const_ptr a)const noexcept{
 		const auto this_equlv = this->equal_level();
 		const auto arg_equlv  = a->equal_level();
 		if(this_equlv _small_than_ arg_equlv)
-			return a->equal_with(this);
+			return a->was_equal_with(this);
 		elseif(this_equlv _big_than_ arg_equlv)
-			return this->equal_with(a);
+			return this->was_equal_with(a);
 		else
-			return this->equal_with(a)&&a->equal_with(this);
+			return this->was_equal_with(a)&&a->was_equal_with(this);
 	}
 
 	[[nodiscard]]ptr operator&()noexcept{return this;}
 	[[nodiscard]]const_ptr operator&()const noexcept{return this;}
 	[[nodiscard]]logical_bool operator==(const this_t&a)const noexcept{
-		return a.equal(this);
+		return a.equal_with(this);
 	}
 protected:
 	friend void the_waiting_for_destroy(node_like* a)noexcept;
@@ -20968,7 +20968,7 @@ protected:
 	return a->operator logical_bool();
 }
 [[nodiscard]]inline logical_bool the_pointer_equal(const node_like*a,const node_like*b)noexcept{
-	return a->eq(b);
+	return a->eq_with(b);
 }
 [[nodiscard]]inline hash_t the_pointer_hash(const node_like*a)noexcept{
 	return a->operator hash_t();
@@ -21265,7 +21265,7 @@ distinctive inline struct void_t final:base_constexpr_t{
 protected:
 	[[nodiscard]]virtual constexpr size_t equal_level()const noexcept override{return max(type_info<size_t>);}
 	[[nodiscard]]virtual constexpr size_t eq_level()const noexcept override{return max(type_info<size_t>);}
-	[[nodiscard]]virtual logical_bool equal_with(const_ptr a)const noexcept override{
+	[[nodiscard]]virtual logical_bool was_equal_with(const_ptr a)const noexcept override{
 		if(this==a)
 			return either;//当void是void时，void不是void
 		else
@@ -21289,7 +21289,7 @@ public:
 distinctive inline struct nil_t final:base_constexpr_t{
 	[[nodiscard]]virtual base_type_info_t get_type_info()const noexcept override{return type_info<nil_t>;}
 protected:
-	[[nodiscard]]virtual logical_bool equal_with(const_ptr a)const noexcept override{return !logical_bool(a);}
+	[[nodiscard]]virtual logical_bool was_equal_with(const_ptr a)const noexcept override{return !logical_bool(a);}
 public:
 	[[nodiscard]]virtual constexpr explicit operator hash_t()const noexcept override{return hash(false);}
 	[[nodiscard]]virtual constexpr explicit operator logical_bool()const noexcept override{return false;}
@@ -21305,7 +21305,7 @@ public:
 distinctive inline struct t_t final:base_constexpr_t{
 	[[nodiscard]]virtual base_type_info_t get_type_info()const noexcept override{return type_info<t_t>;}
 protected:
-	[[nodiscard]]virtual logical_bool equal_with(const_ptr a)const noexcept override{return logical_bool(a);}
+	[[nodiscard]]virtual logical_bool was_equal_with(const_ptr a)const noexcept override{return logical_bool(a);}
 public:
 	[[nodiscard]]virtual constexpr explicit operator hash_t()const noexcept override{return hash(true);}
 	[[nodiscard]]virtual constexpr explicit operator logical_bool()const noexcept override{return true;}
@@ -21336,7 +21336,7 @@ struct common_node:node_like,instance_struct<common_node>{
 
 	[[nodiscard]]virtual base_type_info_t get_type_info()const noexcept override{return type_info<this_t>;}
 protected:
-	[[nodiscard]]virtual logical_bool equal_with(const_ptr a)const noexcept override{
+	[[nodiscard]]virtual logical_bool was_equal_with(const_ptr a)const noexcept override{
 		if(a->get_type_info() != this->get_type_info())
 			return false;
 		const this_t*p=down_cast<const this_t*>(a.get());
@@ -21381,7 +21381,7 @@ struct cons:node_like,instance_struct<cons>{
 
 	[[nodiscard]]virtual base_type_info_t get_type_info()const noexcept override{return type_info<cons>;}
 protected:
-	[[nodiscard]]virtual logical_bool equal_with(const_ptr a)const noexcept override{
+	[[nodiscard]]virtual logical_bool was_equal_with(const_ptr a)const noexcept override{
 		if(a->get_type_info() != this->get_type_info())
 			return false;
 		const this_t*p=down_cast<const this_t*>(a.get());
@@ -21463,7 +21463,7 @@ struct base_binary_function_node:node_like,instance_struct<base_binary_function_
 	[[nodiscard]]virtual base_type_info_t get_type_info()const noexcept override{return type_info<this_t>;}
 	[[nodiscard]]virtual value be_call(ptr arg_list)override{return _func(arg_list);}
 protected:
-	[[nodiscard]]virtual logical_bool equal_with(const_ptr a)const noexcept override{
+	[[nodiscard]]virtual logical_bool was_equal_with(const_ptr a)const noexcept override{
 		if(a->get_type_info() != this->get_type_info())
 			return false;
 		const this_t*p=down_cast<const this_t*>(a.get());
@@ -21529,8 +21529,7 @@ public:
 protected:
 	[[noreturn]] virtual void throw_self_ptr()const override{throw&_m;}
 	[[noreturn]] virtual void throw_self_ptr()override{throw&_m;}
-	[[nodiscard]]virtual logical_bool eq_with(const_ptr a)const noexcept override{
-		using defs::equal;//貌似msvc在这里有bug
+	[[nodiscard]]virtual logical_bool was_eq_with(const_ptr a)const noexcept override{
 		if constexpr(equal.able<T>){
 			if(a->get_type_info() != this->get_type_info())
 				return false;
@@ -21541,10 +21540,10 @@ protected:
 			return _m==p->_m;
 		}
 		else
-			return node_like::eq_with(a);
+			return node_like::was_eq_with(a);
 	}
-	[[nodiscard]]virtual logical_bool equal_with(const_ptr a)const noexcept override{
-		return eq_with(a);
+	[[nodiscard]]virtual logical_bool was_equal_with(const_ptr a)const noexcept override{
+		return was_eq_with(a);
 	}
 private:
 	static constexpr bool arec_nothrow_helper=was_not_an_ill_form(arec_as_value(_m,declvalue(const value&)))?
