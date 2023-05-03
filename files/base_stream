@@ -12757,6 +12757,10 @@ namespace lifetime_n{
 				return base_call(to,from,_size);
 			}
 			template<class T> requires able<T>
+			force_inline T*operator()(const T*from,T*to)const noexcept(nothrow<T>){
+				return base_call(to,from,_size);
+			}
+			template<class T> requires able<T>
 			force_inline T*operator()(note::to_t<T*>to,note::from_t<const T*>from)const noexcept(nothrow<T>){
 				return operator()(to(),from());
 			}
@@ -14344,6 +14348,14 @@ namespace get_n{
 				}
 			}
 			template<typename T> requires(able<T> && copy_construct.able<T>)
+			void operator()(T*&arg,size_t insert_pos,size_t insert_size,const T&initer)const noexcept(nothrow<T>){
+				if(insert_size){
+					const APIs::alloc::source_location_guard slg;
+					alloc_size_grow_with_insert_uninitialized_data(arg,insert_pos,insert_size);
+					copy_construct[insert_size](arg+insert_pos,initer);
+				}
+			}
+			template<typename T> requires(able<T> && copy_construct.able<T>)
 			void operator()(T*&arg,size_t insert_pos,size_t insert_size,const T*insert_data)const noexcept(nothrow<T>){
 				if(insert_size){
 					const APIs::alloc::source_location_guard slg;
@@ -15322,6 +15334,9 @@ namespace array_n{
 		static constexpr bool insert_nothrow = get_resize.insert.nothrow<T>;
 		void insert(size_t index,size_t count)noexcept(insert_nothrow){
 			get_resize.insert(_m,index,count);
+		}
+		void insert(size_t index,size_t count,const T&value)noexcept(insert_nothrow){
+			get_resize.insert(_m,index,count,value);
 		}
 		void insert(size_t index,size_t count,const T*data)noexcept(insert_nothrow){
 			get_resize.insert(_m,index,count,data);
