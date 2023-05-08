@@ -2358,11 +2358,11 @@ namespace literal_support{
 	using integer_iterator_t=conditional<is_big_type<integer_T>,fast_integer_iterator<integer_T,base>,integer_iterator<integer_T,base>>;
 
 	template<unsigned base>
-	void base_checker()noexcept{
+	constexpr void base_checker()noexcept{
 		static_assert(base==16||base==10||base==8||base==2,"base must be 16,10,8 or 2");
 	}
 	template<unsigned base,char c>
-	void char_checker()noexcept{
+	constexpr void char_checker()noexcept{
 		static_assert(c>='0'&&c<='9'||c>='a'&&c<='f'||c>='A'&&c<='F',"invalid char");
 		static_assert(base>hexval(c),"invalid char");
 	}
