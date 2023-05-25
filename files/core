@@ -13356,9 +13356,9 @@ namespace function_base_n{
 
 	template<typename T>
 	[[nodiscard]]constexpr auto function_type_getter_conditional_helper()noexcept{
-		if constexpr(::std::is_function_v<T>)
-			return type_info<T>;
-		elseif constexpr(is_pointer<T> && ::std::is_function_v<::std::remove_pointer_t<T>>)//不支持多级函数指针：懒得写（其实挺简单的），而且function_t若支持多级函数指针的推导指引会很不安全
+		if constexpr(::std::is_function_v<remove_cvref<T>>)
+			return type_info<remove_cvref<T>>;
+		elseif constexpr(is_pointer<T> && ::std::is_function_v<remove_cvref<::std::remove_pointer_t<T>>>)//不支持多级函数指针：懒得写（其实挺简单的），而且function_t若支持多级函数指针的推导指引会很不安全
 			return function_type_getter_conditional_helper<::std::remove_pointer_t<T>>();
 		else
 			return type_info<type_name function_type_getter_helper<decltype(&T::operator())>::type>;
@@ -13377,7 +13377,7 @@ namespace function_base_n{
 	class function_data_wrapper_t;
 	template<class T,bool nothrow,class Ret_t,class...Args_t>
 	struct function_data_wrapper_t<T,Ret_t(Args_t...)noexcept(nothrow)>{
-		static_assert(!::std::is_function_v<T>);
+		static_assert(!::std::is_function_v<remove_cvref<T>>);
 
 		T _value;
 
@@ -13448,9 +13448,9 @@ namespace function_base_n{
 
 	template<typename T>
 	[[nodiscard]]constexpr auto function_type_getter_conditional_helper()noexcept{
-		if constexpr(::std::is_function_v<T>)
-			return type_info<T>;
-		elseif constexpr(is_pointer<T> && ::std::is_function_v<::std::remove_pointer_t<T>>)//不支持多级函数指针：懒得写（其实挺简单的），而且function_t若支持多级函数指针的推导指引会很不安全
+		if constexpr(::std::is_function_v<remove_cvref<T>>)
+			return type_info<remove_cvref<T>>;
+		elseif constexpr(is_pointer<T> && ::std::is_function_v<remove_cvref<::std::remove_pointer_t<T>>>)//不支持多级函数指针：懒得写（其实挺简单的），而且function_t若支持多级函数指针的推导指引会很不安全
 			return function_type_getter_conditional_helper<::std::remove_pointer_t<T>>();
 		else
 			return type_info<type_name function_type_getter_helper<decltype(&T::operator())>::type>;
@@ -13469,7 +13469,7 @@ namespace function_base_n{
 	class function_data_wrapper_t;
 	template<class T,class Ret_t,class...Args_t>
 	struct function_data_wrapper_t<T,Ret_t(Args_t...)noexcept>{
-		static_assert(!::std::is_function_v<T>);
+		static_assert(!::std::is_function_v<remove_cvref<T>>);
 
 		T _value;
 
@@ -13508,7 +13508,7 @@ namespace function_base_n{
 	#line 219 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/tools/function_base.hpp"
 	template<class T,class Ret_t,class...Args_t>
 	struct function_data_wrapper_t<T,Ret_t(Args_t...)>{
-		static_assert(!::std::is_function_v<T>);
+		static_assert(!::std::is_function_v<remove_cvref<T>>);
 
 		T _value;
 
@@ -13516,9 +13516,13 @@ namespace function_base_n{
 		~function_data_wrapper_t()noexcept(destruct.nothrow<T>)=default;
 		Ret_t operator()(Args_t...args)noexcept(invoke<T>.with_return_type<Ret_t>.nothrow<Args_t...>){
 			//BLOCK:constexpr checks
-			if constexpr(!invoke<T>.able<Args_t...>)
+			//if constexpr(!invoke<T>.able<Args_t...>)
+			//workaround of https://developercommunity.visualstudio.com/t/name-lookup-problem-after-update-1740/10189035
+			if constexpr(!::std::is_invocable_v<T,Args_t...>)
 				template_error("this T can\'t becall as args.");
-			if constexpr(!invoke<T>.with_return_type<Ret_t>.able<Args_t...>)
+			//if constexpr(!invoke<T>.with_return_type<Ret_t>.able<Args_t...>)
+			//workaround of https://developercommunity.visualstudio.com/t/name-lookup-problem-after-update-1740/10189035
+			if constexpr(!::std::is_invocable_r_v<Ret_t,T,Args_t...>)
 				template_error("the return type of T was wrong.");
 			//BLOCK_END
 			if constexpr(type_info<Ret_t> != type_info<void>)
@@ -13528,9 +13532,13 @@ namespace function_base_n{
 		}
 		Ret_t operator()(Args_t...args)const noexcept(invoke<const T>.with_return_type<Ret_t>.nothrow<Args_t...>){
 			//BLOCK:constexpr checks
-			if constexpr(!invoke<T>.able<Args_t...>)
+			//if constexpr(!invoke<const T>.able<Args_t...>)
+			//workaround of https://developercommunity.visualstudio.com/t/name-lookup-problem-after-update-1740/10189035
+			if constexpr(!::std::is_invocable_v<const T, Args_t...>)
 				template_error("this T can\'t becall as args.");
-			if constexpr(!invoke<T>.with_return_type<Ret_t>.able<Args_t...>)
+			//if constexpr(!invoke<const T>.with_return_type<Ret_t>.able<Args_t...>)
+			//workaround of https://developercommunity.visualstudio.com/t/name-lookup-problem-after-update-1740/10189035
+			if constexpr(!::std::is_invocable_r_v<Ret_t,const T,Args_t...>)
 				template_error("the return type of T was wrong.");
 			//BLOCK_END
 			if constexpr(type_info<Ret_t> != type_info<void>)
@@ -15676,7 +15684,7 @@ namespace function_n{
 	struct func_data_t<T,Ret_t(Args_t...)>final:
 	type_info_t<func_data_t<T,Ret_t(Args_t...)>>::template_name with_common_attribute<instance_struct>,
 	base_func_data_t<Ret_t(Args_t...)>,function_data_wrapper_t<T,Ret_t(Args_t...)>{
-		static_assert(!::std::is_function_v<T>);
+		static_assert(!::std::is_function_v<remove_cvref<T>>);
 		typedef base_func_data_t<Ret_t(Args_t...)>base_t;
 		typedef func_data_t<T,Ret_t(Args_t...)>this_t;
 		typedef function_data_wrapper_t<T,Ret_t(Args_t...)>data_t;
@@ -15703,7 +15711,9 @@ namespace function_n{
 
 		//func ptr convert
 		virtual func_ptr_t get_func_ptr()const noexcept override final{
-			if constexpr(type_info<const T>.can_convert_to<func_ptr_t>)
+			//if constexpr(type_info<const T>.can_convert_to<func_ptr_t>)
+			//workaround of https://developercommunity.visualstudio.com/t/name-lookup-problem-after-update-1740/10189035
+			if constexpr(::std::is_convertible_v<const T,func_ptr_t>)
 				return static_cast<func_ptr_t>(data_t::get_data());
 			else
 				return nullptr;
@@ -15809,7 +15819,8 @@ namespace function_n{
 		template<class U>
 		using func_data_t=function_n::func_data_t<U,Ret_t(Args_t...)>;
 
-		typedef Ret_t(*func_ptr_t)(Args_t...)noexcept(nothrow);
+		typedef Ret_t func_t(Args_t...)noexcept(nothrow);
+		typedef func_t *func_ptr_t;
 
 		using base_t::ptr_t;
 		using base_t::_m;
@@ -15828,7 +15839,7 @@ namespace function_n{
 				return true;
 			elseif constexpr(is_function_t<T>)
 				return false;
-			elseif constexpr(::std::is_function_v<T>)
+			elseif constexpr(::std::is_function_v<remove_cvref<T>>)
 				return get_data_able_helper<decltype(&declvalue(T))>();
 			elseif constexpr(invoke<T>.with_return_type<Ret_t>.able<Args_t...>)
 				return get<func_data_t<remove_cvref<T>>>.able<T>;
@@ -15843,7 +15854,7 @@ namespace function_n{
 				return true;
 			elseif constexpr(is_function_t<T>)
 				return false;
-			elseif constexpr(::std::is_function_v<T>)
+			elseif constexpr(::std::is_function_v<remove_cvref<T>>)
 				return get_data_nothrow_helper<decltype(&declvalue(T))>();
 			elseif constexpr(invoke<T>.with_return_type<Ret_t>.able<Args_t...>)
 				return get<func_data_t<remove_cvref<T>>>.nothrow<T>;
@@ -15855,7 +15866,7 @@ namespace function_n{
 
 		template<class T> requires get_data_able<T>
 		static auto get_data_from(T&&a)noexcept(get_data_nothrow<T>){
-			if constexpr(::std::is_function_v<T>)
+			if constexpr(::std::is_function_v<remove_cvref<T>>)
 				return get_data_from(&a);
 			elseif constexpr(is_function_t<T>)
 				return a._m;
@@ -15956,7 +15967,8 @@ namespace function_n{
 		template<class U>
 		using func_data_t=function_n::func_data_t<U,Ret_t(Args_t...)>;
 
-		typedef Ret_t(*func_ptr_t)(Args_t...);
+		typedef Ret_t func_t(Args_t...);
+		typedef func_t *func_ptr_t;
 
 		using base_t::ptr_t;
 		using base_t::_m;
@@ -15975,7 +15987,7 @@ namespace function_n{
 				return true;
 			elseif constexpr(is_function_t<T>)
 				return false;
-			elseif constexpr(::std::is_function_v<T>)
+			elseif constexpr(::std::is_function_v<remove_cvref<T>>)
 				return get_data_able_helper<decltype(&declvalue(T))>();
 			elseif constexpr(invoke<T>.with_return_type<Ret_t>.able<Args_t...>)
 				return get<func_data_t<remove_cvref<T>>>.able<T>;
@@ -15990,7 +16002,7 @@ namespace function_n{
 				return true;
 			elseif constexpr(is_function_t<T>)
 				return false;
-			elseif constexpr(::std::is_function_v<T>)
+			elseif constexpr(::std::is_function_v<remove_cvref<T>>)
 				return get_data_nothrow_helper<decltype(&declvalue(T))>();
 			elseif constexpr(invoke<T>.with_return_type<Ret_t>.able<Args_t...>)
 				return get<func_data_t<remove_cvref<T>>>.nothrow<T>;
@@ -16002,7 +16014,7 @@ namespace function_n{
 
 		template<class T> requires get_data_able<T>
 		static auto get_data_from(T&&a)noexcept(get_data_nothrow<T>){
-			if constexpr(::std::is_function_v<T>)
+			if constexpr(::std::is_function_v<remove_cvref<T>>)
 				return get_data_from(&a);
 			elseif constexpr(is_function_t<T>)
 				return a._m;
@@ -16099,7 +16111,8 @@ namespace function_n{
 		template<class U>
 		using func_data_t=function_n::func_data_t<U,Ret_t(Args_t...)>;
 
-		typedef Ret_t(*func_ptr_t)(Args_t...)noexcept;
+		typedef Ret_t func_t(Args_t...)noexcept;
+		typedef func_t *func_ptr_t;
 
 		using base_t::ptr_t;
 		using base_t::_m;
@@ -16117,7 +16130,7 @@ namespace function_n{
 				return true;
 			elseif constexpr(is_function_t<T>)
 				return false;
-			elseif constexpr(::std::is_function_v<T>)
+			elseif constexpr(::std::is_function_v<remove_cvref<T>>)
 				return get_data_able_helper<decltype(&declvalue(T))>();
 			elseif constexpr(invoke<T>.with_return_type<Ret_t>.able<Args_t...>)
 				return get<func_data_t<remove_cvref<T>>>.able<T>;
@@ -16132,7 +16145,7 @@ namespace function_n{
 				return true;
 			elseif constexpr(is_function_t<T>)
 				return false;
-			elseif constexpr(::std::is_function_v<T>)
+			elseif constexpr(::std::is_function_v<remove_cvref<T>>)
 				return get_data_nothrow_helper<decltype(&declvalue(T))>();
 			elseif constexpr(invoke<T>.with_return_type<Ret_t>.able<Args_t...>)
 				return get<func_data_t<remove_cvref<T>>>.nothrow<T>;
@@ -16144,7 +16157,7 @@ namespace function_n{
 
 		template<class T> requires get_data_able<T>
 		static auto get_data_from(T&&a)noexcept(get_data_nothrow<T>){
-			if constexpr(::std::is_function_v<T>)
+			if constexpr(::std::is_function_v<remove_cvref<T>>)
 				return get_data_from(&a);
 			elseif constexpr(is_function_t<T>)
 				return a._m;
