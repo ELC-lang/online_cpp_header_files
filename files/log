@@ -4780,13 +4780,13 @@ namespace math{
 		//bool：是否有最大值
 		static constexpr bool has_max=is_arithmetic_type;
 	public:
-		static constexpr T min()noexcept requires(has_min){
+		static constexpr auto min()noexcept requires(has_min){
 			if constexpr(is_float_type)
 				return ::std::numeric_limits<T>::lowest();
 			else
 				return ::std::numeric_limits<T>::min();
 		}
-		static constexpr T max()noexcept requires(has_max){
+		static constexpr auto max()noexcept requires(has_max){
 			return ::std::numeric_limits<T>::max();
 		}
 	public:
@@ -6337,6 +6337,24 @@ namespace string_view_n{
 		[[nodiscard]]constexpr string_view_t substr(const char_T*begin,const char_T*end)const noexcept{
 			return string_view_t(begin,end-begin);
 		}
+		//starts_with
+		[[nodiscard]]constexpr bool starts_with(const char_T ch)const noexcept{
+			return base_t::size()&&base_t::cbegin()[0]==ch;
+		}
+		[[nodiscard]]constexpr bool starts_with(string_view_t str)const noexcept{
+			if(str.size()>base_t::size())
+				return false;
+			return equal(base_t::cbegin(),str.cbegin(),str.size());
+		}
+		[[nodiscard]]constexpr bool starts_with(const char_T*str)const noexcept{
+			size_t i=0,len=base_t::size();
+			while(i<len&&str[i])
+				if(base_t::cbegin()[i]!=str[i])
+					return false;
+				else
+					++i;
+			return str[i]==0;
+		}
 		//find
 		[[nodiscard]]constexpr size_t find(const char_T ch)const{
 			return in_range_size_t(ch, *this);
@@ -6358,16 +6376,16 @@ namespace string_view_n{
 		}
 		//others by range_n::find_last_of_size_t etc
 		[[nodiscard]]constexpr size_t find_first_of(const char_T ch)const{
-			return range_n::find_first_of_size_t(ch, *this);
+			return range_n::find_first_of_size_t(array_like_view_t<const char_T>(&ch, 1), *this);
 		}
 		[[nodiscard]]constexpr size_t find_last_of(const char_T ch)const{
-			return range_n::find_last_of_size_t(ch, *this);
+			return range_n::find_last_of_size_t(array_like_view_t<const char_T>(&ch, 1), *this);
 		}
 		[[nodiscard]]constexpr size_t find_first_not_of(const char_T ch)const{
-			return range_n::find_first_not_of_size_t(ch, *this);
+			return range_n::find_first_not_of_size_t(array_like_view_t<const char_T>(&ch, 1), *this);
 		}
 		[[nodiscard]]constexpr size_t find_last_not_of(const char_T ch)const{
-			return range_n::find_last_not_of_size_t(ch, *this);
+			return range_n::find_last_not_of_size_t(array_like_view_t<const char_T>(&ch, 1), *this);
 		}
 		[[nodiscard]]constexpr size_t find_first_of(string_view_t str)const{
 			return range_n::find_first_of_size_t(str, *this);
@@ -6406,7 +6424,7 @@ using string_view_n::string_view;
 //type_name.hpp
 //at namespace elc::defs::base
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/part2/type_name.hpp"
-struct type_name_t:string_view_t<char>{
+struct demangle_name_t:string_view_t<char>{
 	//对于gcc和clang，这个类型有一个malloced的char*，以便于在析构时释放
 	//一切源于abi::__cxa_demangle
 	//对于msvc，这个类型析构时不需要做任何事情
@@ -6453,21 +6471,25 @@ struct type_name_t:string_view_t<char>{
 		#endif
 	}
 	/// 构造函数
-	type_name_t(const char*original_name)noexcept:base_t(demangle(original_name)){}
+	demangle_name_t(const char*original_name)noexcept:base_t(demangle(original_name)){}
 	/// 复制构造函数
-	type_name_t(const type_name_t&other)noexcept:base_t(copy_demangle(other)){}
+	demangle_name_t(const demangle_name_t&other)noexcept:base_t(copy_demangle(other)){}
 	/// 移动构造函数（swap）
-	type_name_t(type_name_t&&other)noexcept:base_t(nullptr,0){
+	demangle_name_t(demangle_name_t&&other)noexcept:base_t(nullptr,0){
 		swap_with(other);
 	}
 	/// 析构函数
-	~type_name_t()noexcept{
+	~demangle_name_t()noexcept{
 		#if defined(__clang__)||defined(__GNUC__)
 			//gcc和clang
 			//需要释放malloced的char*
 			::std::free((void*)begin());
 		#endif
 	}
+};
+struct type_name_t:demangle_name_t{
+	using base_t=demangle_name_t;
+	using base_t::base_t;
 };
 [[nodiscard]]inline type_name_t base_type_info_t::get_name()const noexcept{
 	return _tid.get_name();
@@ -7569,6 +7591,13 @@ namespace overhead_n{
 		#if defined(ELC_MEMORY_ALLOC_LOCATION_RECORD) && defined(ELC_SPEED_TEST)
 			#error "ELC_MEMORY_ALLOC_LOCATION_RECORD and ELC_SPEED_TEST can't be defined at the same time."
 		#endif
+		#if defined(_MSC_VER)
+			#if defined(ELC_MEMORY_ALLOC_LOCATION_RECORD)
+				#pragma detect_mismatch("ELC_MEMORY_ALLOC_LOCATION_RECORD","true")
+			#else
+				#pragma detect_mismatch("ELC_MEMORY_ALLOC_LOCATION_RECORD","false")
+			#endif
+		#endif
 
 		inline constexpr bool use_debug_alloc_lib=
 			#if in_debug && !defined(ELC_SPEED_TEST)
@@ -7878,7 +7907,7 @@ namespace overhead_n{
 
 //file_end
 
-		#line 266 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
+		#line 273 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
 	}
 	//
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
@@ -7893,7 +7922,7 @@ namespace overhead_n{
 
 //file_end
 
-	#line 269 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
+	#line 276 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/alloc.hpp"
 #endif
 
 //file_end
@@ -11448,6 +11477,619 @@ protected:\
 //file_end
 
 #line 37 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+//using at function_t.name
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/function_name.hpp"
+//function_name.hpp
+#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/function_name.hpp"
+#if !defined(ELC_APIS_function_name)
+	#define ELC_APIS_function_name
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+//base_defs
+//at namespace ::
+/*@
+未完成的elc解释器include文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/ELC-lang/ELC
+*/
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/pre_checks.hpp"
+//pre_checks.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/pre_checks.hpp"
+//__cplusplus needs 20+
+#if !defined(__cplusplus)||__cplusplus<202002L
+	//if msvc, check _MSVC_LANG
+	#if defined(_MSVC_LANG) && _MSVC_LANG>=202002L
+		//ok
+	#else
+		#error "elc files needs c++20 or higher"
+	#endif
+#endif
+
+//check if the compiler is msvc
+#if defined(_MSC_VER)
+	//check if _CPPRTTI
+	#if !defined(_CPPRTTI)
+		#error "elc files needs rtti"
+	#endif
+	//check _MSC_VER at last 1932
+	#if _MSC_VER<1932
+		#error "elc files needs at last msvc 19.32 or higher, keep moving!"
+	#endif
+#endif
+
+//file_end
+
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+#line 57 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/base_defs"
+
+//file_end
+
+	#line 37 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/function_name.hpp"
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/decl_system_type.hpp"
+//decl_system_type.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/decl_system_type.hpp"
+//copy&rewrite from steve02081504/steve.h
+#define linux 2
+#define windows 3
+#define other 4
+#if defined(__linux)||defined(__linux__)||defined(__gnu_linux__)
+	#define SYSTEM_TYPE linux
+#elif defined(_WIN32)||defined(__MINGW32__)||defined(__CYGWIN__)
+	#define SYSTEM_TYPE windows
+#else
+	#define SYSTEM_TYPE other
+#endif
+#define ERROR_MSG_UNABLE_OS "Unable OS,edit this file on your own or contact ELC's producers."
+
+//file_end
+
+	#line 38 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/function_name.hpp"
+	#if SYSTEM_TYPE == linux
+		#include <dlfcn.h>
+	#elif SYSTEM_TYPE == windows
+		#define NOMINMAX
+		#include <Windows.h>
+		#include <dbghelp.h>
+		#pragma comment(lib,"dbghelp.lib")
+	#else
+		#error ERROR_MSG_UNABLE_OS
+	#endif
+	#undef other
+	namespace elc::APIs::function_name{
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+//_defs.hpp
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+//undefs at "_undefs.hpp"
+
+//set ELC_WARNING_LEVEL default to 4(max)
+#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(push,ELC_WARNING_LEVEL)
+	#pragma warning(disable:4099)//class与struct混用警告diss
+	#pragma warning(disable:4584)//重复子类警告diss
+	#pragma warning(disable:4250)//域控制继承警告diss
+	#pragma warning(disable:26432)//不完全默认方法警告diss
+	#pragma warning(disable:26435)//virtual override方法警告diss
+	#pragma warning(disable:26481)//容器安利diss
+	#pragma warning(disable:26446)//gsl::at安利diss
+	#pragma warning(disable:26434)//方法覆盖警告diss
+	#pragma warning(disable:26429)//gsl::not_null安利diss
+	#pragma warning(disable:26471)//对void*进行static_cast安利diss
+	#pragma warning(disable:26474)//隐式指针转换显式cast警告diss
+	#pragma warning(disable:26473)//相同指针显式cast警告diss
+	#pragma warning(disable:26456)//隐藏非虚运算符警告diss
+	#pragma warning(disable:26485)//数组作指针警告diss
+	#pragma warning(disable:26490)//reinterpret_cast警告diss
+	#pragma warning(disable:26472)//static_cast窄幅转换警告diss
+	#pragma warning(disable:26482)//非常数数组索引警告diss
+	#pragma warning(disable:26493)//c_cast转换警告diss：虽然有用但是太烦了，爬
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic warning "-Wall"//开启所有警告
+	#pragma GCC diagnostic ignored "-Wmissing-template-keyword"//忽略模板警告
+#endif
+#if defined(_MSC_VER)
+	//#define suppress_msvc_warning(...) __pragma(warning(suppress:__VA_ARGS__)) //不再使用因为其不确定的作用域
+	#define disable_msvc_warning(...) __pragma(warning(disable:__VA_ARGS__))
+	#define push_msvc_warning() __pragma(warning(push))
+	#define pop_msvc_warning() __pragma(warning(pop))
+	#define push_and_disable_msvc_warning(...) push_msvc_warning() disable_msvc_warning(__VA_ARGS__)
+#else
+	//#define suppress_msvc_warning(...)
+	#define disable_msvc_warning(...)
+	#define push_msvc_warning()
+	#define pop_msvc_warning()
+	#define push_and_disable_msvc_warning(...)
+#endif
+#if defined(_MSC_VER)
+	//push pack settings
+	#pragma pack(push)
+	#pragma pack()
+#endif
+#if defined(_MSC_VER)
+	//push and undef common macros
+	#pragma push_macro("new")
+	#undef new
+	#pragma push_macro("delete")
+	#undef delete
+	#pragma push_macro("min")
+	#undef min
+	#pragma push_macro("max")
+	#undef max
+	#pragma push_macro("abs")
+	#undef abs
+	#pragma push_macro("export")
+	#undef export
+	#pragma push_macro("rand")
+	#undef rand
+	#pragma push_macro("sqrt")
+	#undef sqrt
+	#pragma push_macro("elc")
+	#undef elc
+#endif
+//
+#if defined(ELC_VOID_NAME)
+	#undef void
+#endif
+//
+#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
+	#undef rand
+#endif
+
+// #define often_noexcept
+#define noexcept_as(...) noexcept(noexcept((__VA_ARGS__)))//dnmd C艹标准就是没有noexcept_as_auto
+#define noexcept_as_auto MAGIC//哦现在有了
+#define constexpr_as(...) MAGIC constexpr//( •̀ ω •́ )✌
+#define constexpr_as_auto MAGIC MAGIC constexpr//✌( •̀ ω •́ )✌
+
+#define using_method_from_base_t(name,...) \
+template<class...Args> requires was_not_an_ill_form(declvalue(base_t).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(base_t::name(declvalue(Args)...))\
+{\
+	return base_t::name(forward<Args>(rest)...);\
+}\
+
+#define using_method_from_value(name,value_name,...) \
+template<class...Args> requires was_not_an_ill_form(re_declvalue(value_name).name(declvalue(Args)...))\
+auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(declvalue(Args)...))\
+{\
+	return value_name.name(forward<Args>(rest)...);\
+}\
+
+#define floop while(__builtin_is_my_dick_still_there())
+#if defined(_MSC_VER) && _MSC_VER>=1935
+	//https://developercommunity.visualstudio.com/t/10193638
+	#define enable_adl(name) template<typename=void>void name()noexcept=delete
+#else
+	#define enable_adl(name) void name()noexcept=delete
+#endif
+
+#define re_declvalue(...) (declvalue(decltype(__VA_ARGS__)))
+#define re_decltype(...) (decltype(declvalue(__VA_ARGS__)))
+
+#define declvalue(...) (::std::declval<__VA_ARGS__>())
+
+/*! 实例化到此将引发错误 */
+#define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发警告 */
+#define template_warning(reason) template_warning_helper<T>(reason)
+
+//for type_info
+#define type_info_of(...) base_type_info_t(typeid(__VA_ARGS__))
+#define type_name_of(...) (type_info_of(__VA_ARGS__).get_name())
+
+#define is_common_attribute(name) public attribute<T,name<T>>
+#define is_special_attribute(name) public attribute<T,name>
+
+#define has_attribute(...) template_name has_attribute_helper<__VA_ARGS__>()
+#define not_has_attribute(...) template_name not_has_has_attribute_helper<__VA_ARGS__>()
+
+//for float_size_t
+#define float_size_of(...) (float_size_t{sizeof(__VA_ARGS__)})
+//bitnum_of
+#define bitnum_of(...) (sizeof(__VA_ARGS__)*CHAR_BIT)
+
+//for attribute
+#define def_common_attribute_with_nothing(name) \
+template<typename T>\
+class name{}\
+
+#define def_special_attribute_with_nothing(name) \
+class name{}\
+
+#define common_attribute_t template<class>class
+#define special_attribute_t class
+
+/*!
+若参数的布尔值为零，那么此模板不会实例化
+
+为什么不用cpp20的constraints？
+1.不能类内定义
+2.不能作为模板参数
+一句话总结：c艹标准会sb
+*/
+#define enable_if(...) class enable_state= ::std::enable_if_t<__VA_ARGS__>
+/*! 默认参与模板候选 */
+#define enabled_by_default class enable_state=void
+/*! 默认不参与模板候选 */
+#define disabled_by_default class enable_state= ::std::enable_if_t<false>
+/*! 若参数为病式，那么此模板不会实例化 */
+#define enable_if_not_ill_form(...) class enable_state= ::std::void_t<decltype(__VA_ARGS__)>
+/*!用于模板声明 */
+#define enable_flag class enable_state
+
+#define was_an_ill_form(...) (!was_not_an_ill_form(__VA_ARGS__))
+#define was_an_ill_form_with_parameter(...) (!was_not_an_ill_form_with_parameter(__VA_ARGS__))
+#define was_not_an_ill_form(...) (bool(requires{__VA_ARGS__;}))
+#define was_not_an_ill_form_and_noexcept(...) (bool(requires{__VA_ARGS__;{__VA_ARGS__}noexcept;}))
+#define was_not_an_ill_form_with_parameter(...) (bool(requires __VA_ARGS__ ))
+
+/*! 让lambda递归更加美观 */
+#define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
+/*! 让lambda递归更加美观 */
+#define get_recursive_lambda_caller(name) \
+exlambda(auto&&...Args){\
+	return name(name,Args...);\
+}
+/*! 让lambda定义更加美观 */
+#define lambda []
+/*! 让lambda定义更加美观 */
+#define exlambda [&]
+/*! 让lambda定义更加美观 */
+#define lambda_with_catch(...) [__VA_ARGS__]
+/*! 让lambda定义更加美观 */
+#define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
+//recursive_lambda_self_referential_reserved_symbolname
+#define lambda_RLSRRS _my_jb_super_sb_name_
+
+#define MAGIC//ahh,ko no tenno da!
+
+/*! 装饰性语法糖 */
+#define nothing
+
+/*! aya风格语法糖 */
+#define elseif else if
+/*! aya风格语法糖 */
+#define _big_than_ >
+/*! aya风格语法糖 */
+#define _small_than_ <
+
+#if defined(_MSC_VER)
+	#define not !
+	#define and &&
+	#define or ||
+#endif
+
+/*! 进入名称空间，并不是很美观 */
+#define INTER_NAMESPACE(NAMESPACENAME) namespace NAMESPACENAME{
+/*! 退出名称空间，并不是很美观 */
+#define BREAK_NAMESPACE }
+
+/*! template说明符 */
+#define template_name template
+/*! template说明符 */
+#define type_name class
+
+#if defined(DEBUG) || defined(_DEBUG)
+	#define not_in_debug 0
+	#define in_debug 1
+#else
+	#define not_in_debug 1
+	#define in_debug 0
+#endif
+
+#define es U""
+#define ec(ch) U ## ch
+
+#if defined(ELC_TEST_ON)||defined(ELC_TEST_CHECK_MEMORY_LACK)
+	#define ELC_TEST_EVENTNAME(name) stest_eventer _the_stest_eventer__(L""name)
+#else
+	#define ELC_TEST_EVENTNAME(name)
+#endif
+
+#define override_instance_struct \
+protected:\
+	virtual void abstract_method_unget_this()noexcept_as(instance_struct<this_t>::abstract_method_unget_this())override{instance_struct<this_t>::abstract_method_unget_this();}\
+	virtual void* _abstract_method_copy_get_this()noexcept_as(instance_struct<this_t>::_abstract_method_copy_get_this())override{return instance_struct<this_t>::_abstract_method_copy_get_this();}\
+	virtual void* _abstract_method_get_resize_this(size_t size)noexcept_as(instance_struct<this_t>::instance_struct<this_t>::_abstract_method_get_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_resize_this(size);}\
+	virtual void* _abstract_method_get_forward_resize_this(size_t size)noexcept_as(instance_struct<this_t>::_abstract_method_get_forward_resize_this(size))override{return instance_struct<this_t>::_abstract_method_get_forward_resize_this(size);}\
+	virtual size_t abstract_method_get_size_of_get_for_this()noexcept override{return instance_struct<this_t>::abstract_method_get_size_of_get_for_this();}
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define distinctive __declspec(dllexport)
+#else
+	#define distinctive
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define force_inline __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+	#define force_inline __attribute__((always_inline)) inline
+#else
+	#define force_inline inline
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define with_no_vtable __declspec(novtable)
+#else
+	#define with_no_vtable
+#endif
+
+#define in_consteval (::std::is_constant_evaluated())
+
+#define no_vtable_struct struct with_no_vtable
+#define no_vtable_class class with_no_vtable
+
+//#define get_elc_defs using namespace ::elc::defs
+
+//file_end
+
+		#line 51 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/function_name.hpp"
+
+		using namespace ::elc::defs;//get def
+
+		#if SYSTEM_TYPE == linux
+			struct function_name_t:demangle_name_t{
+				using base_t=demangle_name_t;
+				using base_t::base_t;
+			};
+		#elif SYSTEM_TYPE == windows
+			//windows需要额外复制一份
+			#line 66 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/function_name.hpp"
+			struct function_name_t:string_view_t<char>{
+				using base_t=string_view_t<char>;
+				string_view_t<char> copy_name(string_view_t<char>name)noexcept{
+					auto tmp=(char*)::std::malloc(name.size()+1);
+					memcpy(tmp,name.data(),name.size());
+					tmp[name.size()]=0;
+					return string_view_t<char>{tmp, name.size()};
+				}
+				string_view_t<char> demangle_name(string_view_t<char>name)noexcept{
+					char tmp[1024];
+					if(name.starts_with("@ILT+")){
+						auto lit_end_pos=name.find('(');
+						if(lit_end_pos==base_t::npos)
+							return copy_name(name);
+						name=name.substr(lit_end_pos+1);
+						name=name.substr(size_t{0},name.size()-1);
+						memcpy(tmp,name.data(),name.size());
+						tmp[name.size()]=0;
+						name={tmp,name.size()};
+					}
+					DWORD len=UnDecorateSymbolName(name.data(),tmp,1024,UNDNAME_COMPLETE);
+					if(len)
+						return copy_name(string_view_t<char>{tmp,len});
+					else
+						return copy_name(name);
+				}
+				function_name_t(const char*str,ULONG len)noexcept:base_t(demangle_name(base_t{str,len})){}
+				function_name_t(const function_name_t&other)noexcept:base_t(copy_name(other)){}
+				function_name_t(function_name_t&&other)noexcept:base_t(nullptr,0){
+					swap(other,*this);
+				}
+				~function_name_t()noexcept{
+					::std::free((void*)base_t::data());
+				}
+				function_name_t&operator=(const function_name_t&other)noexcept{
+					function_name_t tmp(other);
+					swap(tmp,*this);
+					return *this;
+				}
+				function_name_t&operator=(function_name_t&&other)noexcept{
+					swap(other,*this);
+					return *this;
+				}
+			};
+			//一个额外的全局对象用于SymInitialize和SymCleanup
+			struct symbol_init_t{
+				bool _inited;
+				symbol_init_t(){
+					SymSetOptions(SYMOPT_DEFERRED_LOADS);
+					_inited=SymInitialize(GetCurrentProcess(), nullptr, true);
+				}
+				~symbol_init_t(){
+					if(_inited)
+						SymCleanup(GetCurrentProcess());
+				}
+			};
+			inline extern symbol_init_t symbol_init{};
+		#endif
+		[[nodiscard]]inline function_name_t get_function_name(void*ptr)noexcept{
+			#if SYSTEM_TYPE==windows
+				//SymFromAddr (dbghelp.h)
+				struct symbol_info_t:SYMBOL_INFO{
+					char name_addtional_space[MAX_SYM_NAME];
+				};
+				symbol_info_t symbol;
+				symbol.SizeOfStruct=sizeof(SYMBOL_INFO);
+				symbol.MaxNameLen=MAX_SYM_NAME;
+				DWORD64 displacement;
+				if(SymFromAddr(GetCurrentProcess(),(DWORD64)ptr,&displacement,&symbol))
+					return function_name_t(symbol.Name,symbol.NameLen);
+				else
+					return function_name_t("unknown",7);
+			#elif SYSTEM_TYPE==linux
+				//dladdr (dlfcn.h)
+				Dl_info info;
+				if(dladdr(ptr,&info))
+					return function_name_t(info.dli_sname);
+				else
+					return function_name_t("unknown");
+			#endif
+		}
+
+		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
+//_undefs.hpp
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_undefs.hpp"
+//defs at "_defs.hpp"
+
+#if defined(_MSC_VER)
+	#pragma warning(pop)
+#endif
+//#undef suppress_msvc_warning
+#undef disable_msvc_warning
+#undef push_msvc_warning
+#undef pop_msvc_warning
+#undef push_and_disable_msvc_warning
+#if defined(_MSC_VER)
+	#pragma pack(pop)
+#endif
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
+#endif
+#if defined(_MSC_VER)
+	#pragma pop_macro("new")
+	#pragma pop_macro("delete")
+	#pragma pop_macro("min")
+	#pragma pop_macro("max")
+	#pragma pop_macro("abs")
+	#pragma pop_macro("export")
+	#pragma pop_macro("rand")
+	#pragma pop_macro("sqrt")
+	#pragma pop_macro("elc")
+#endif
+
+//
+#if defined(ELC_VOID_NAME)
+	#define void the_void
+#endif
+//
+#if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
+	#define rand the_rand
+#endif
+
+// #undef often_noexcept
+#undef noexcept_as
+#undef noexcept_as_auto
+#undef constexpr_as
+#undef constexpr_as_auto
+
+#undef using_method_from_base_t
+#undef using_method_from_value
+
+#undef floop
+#undef enable_adl
+
+#undef re_declvalue
+#undef re_decltype
+
+#undef declvalue
+
+#undef template_error
+#undef template_warning
+
+#undef type_info_of
+#undef type_name_of
+
+#undef is_common_attribute
+#undef is_special_attribute
+
+#undef has_attribute
+#undef not_has_attribute
+
+#undef float_size_of
+#undef bitnum_of
+
+#undef def_common_attribute_with_nothing
+#undef def_special_attribute_with_nothing
+
+#undef common_attribute_t
+#undef special_attribute_t
+
+#undef enable_if
+#undef enabled_by_default
+#undef disabled_by_default
+#undef enable_if_not_ill_form
+#undef enable_flag
+
+#undef was_an_ill_form
+#undef was_an_ill_form_with_parameter
+#undef was_not_an_ill_form
+#undef was_not_an_ill_form_and_noexcept
+#undef was_not_an_ill_form_with_parameter
+
+#undef recursive_lambda
+#undef get_recursive_lambda_caller
+#undef lambda
+#undef exlambda
+#undef lambda_with_catch
+#undef self_recursion
+#undef lambda_RLSRRS
+
+#undef MAGIC
+
+#undef nothing
+
+#undef elseif
+#undef _big_than_
+#undef _small_than_
+
+#if defined(_MSC_VER)
+	#undef not
+	#undef and
+	#undef or
+#endif
+
+#undef INTER_NAMESPACE
+#undef BREAK_NAMESPACE
+
+#undef szie
+#undef form
+
+#undef template_name
+#undef type_name
+
+#undef not_in_debug
+
+#undef es
+#undef ec
+
+#undef ELC_TEST_EVENTNAME
+
+#undef override_instance_struct
+
+#undef distinctive
+
+#undef force_inline
+
+#undef with_no_vtable
+
+#undef in_consteval
+
+#undef no_vtable_struct
+#undef no_vtable_class
+
+//#undef get_elc_defs
+
+//file_end
+
+		#line 148 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/function_name.hpp"
+	}
+	//
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
+//undef_decl_system_type.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
+//copy&rewrite from steve02081504/evest.h
+#undef linux
+#undef windows
+#undef other
+#undef SYSTEM_TYPE
+#undef ERROR_MSG_UNABLE_OS
+
+//file_end
+
+	#line 151 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/function_name.hpp"
+	namespace elc::defs{
+		using namespace elc::APIs::function_name;
+	}
+#endif
+
+//file_end
+
+#line 38 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 //include locale：自然语言相关的字符串
 //strings
 #line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/locale/using.hpp"
@@ -11967,7 +12609,7 @@ namespace elc::defs::locale::str{
 
 //file_end
 
-#line 39 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 
 namespace elc::defs{ //在elc::defs中定义内容
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
@@ -12247,7 +12889,7 @@ protected:\
 
 //file_end
 
-	#line 42 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+	#line 43 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 
 	namespace memory{
 		#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/memory/lifetime/_body.hpp"
@@ -12981,7 +13623,7 @@ namespace lifetime_n{
 
 //file_end
 
-		#line 45 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+		#line 46 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 	}
 	using namespace memory;
 	namespace base{
@@ -13600,7 +14242,7 @@ using function_base_n::function_data_wrapper_t;
 
 //file_end
 
-		#line 49 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+		#line 50 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 	}
 
 	namespace memory{
@@ -15366,7 +16008,7 @@ inline void test_end(){
 
 //file_end
 
-		#line 53 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+		#line 54 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 	}
 	using namespace memory;
 
@@ -15876,7 +16518,7 @@ namespace function_n{
 		template<class T>
 		static constexpr bool get_data_able_helper()noexcept{
 			if constexpr(base_on_this_t_or_more_stringent_restrictions<T>)
-				return true;
+				return false;
 			elseif constexpr(is_function_t<T>)
 				return false;
 			elseif constexpr(::std::is_function_v<remove_cvref<T>>)
@@ -15891,7 +16533,7 @@ namespace function_n{
 		template<class T>
 		static constexpr bool get_data_nothrow_helper()noexcept{
 			if constexpr(base_on_this_t_or_more_stringent_restrictions<T>)
-				return true;
+				return false;
 			elseif constexpr(is_function_t<T>)
 				return false;
 			elseif constexpr(::std::is_function_v<remove_cvref<T>>)
@@ -15939,9 +16581,6 @@ namespace function_n{
 		template<class T> requires get_data_able<T>
 		base_function_t(T&&a)noexcept(get_data_nothrow<T>){
 			_m=get_data_from(forward<T>(a));
-		}
-		base_function_t(func_ptr_t a)noexcept{//当nothrow==0时，noexcept(true)的参数可自动转为noexcept(false)的，不用再次考虑
-			_m=get<func_data_t<func_ptr_t>>(a);
 		}
 		~base_function_t()noexcept(promise_nothrow_at_destruct)=default;
 
@@ -16024,7 +16663,7 @@ namespace function_n{
 		template<class T>
 		static constexpr bool get_data_able_helper()noexcept{
 			if constexpr(base_on_this_t_or_more_stringent_restrictions<T>)
-				return true;
+				return false;
 			elseif constexpr(is_function_t<T>)
 				return false;
 			elseif constexpr(::std::is_function_v<remove_cvref<T>>)
@@ -16039,7 +16678,7 @@ namespace function_n{
 		template<class T>
 		static constexpr bool get_data_nothrow_helper()noexcept{
 			if constexpr(base_on_this_t_or_more_stringent_restrictions<T>)
-				return true;
+				return false;
 			elseif constexpr(is_function_t<T>)
 				return false;
 			elseif constexpr(::std::is_function_v<remove_cvref<T>>)
@@ -16084,9 +16723,6 @@ namespace function_n{
 		template<class T> requires get_data_able<T>
 		base_function_t(T&&a)noexcept(get_data_nothrow<T>){
 			_m=get_data_from(forward<T>(a));
-		}
-		base_function_t(func_ptr_t a)noexcept{//当nothrow==0时，noexcept(true)的参数可自动转为noexcept(false)的，不用再次考虑
-			_m=get<func_data_t<func_ptr_t>>(a);
 		}
 		~base_function_t()noexcept(promise_nothrow_at_destruct)=default;
 
@@ -16167,7 +16803,7 @@ namespace function_n{
 		template<class T>
 		static constexpr bool get_data_able_helper()noexcept{
 			if constexpr(base_on_this_t_or_more_stringent_restrictions<T>)
-				return true;
+				return false;
 			elseif constexpr(is_function_t<T>)
 				return false;
 			elseif constexpr(::std::is_function_v<remove_cvref<T>>)
@@ -16182,7 +16818,7 @@ namespace function_n{
 		template<class T>
 		static constexpr bool get_data_nothrow_helper()noexcept{
 			if constexpr(base_on_this_t_or_more_stringent_restrictions<T>)
-				return true;
+				return false;
 			elseif constexpr(is_function_t<T>)
 				return false;
 			elseif constexpr(::std::is_function_v<remove_cvref<T>>)
@@ -16230,9 +16866,6 @@ namespace function_n{
 		template<class T> requires get_data_able<T>
 		base_function_t(T&&a)noexcept(get_data_nothrow<T>){
 			_m=get_data_from(forward<T>(a));
-		}
-		base_function_t(func_ptr_t a)noexcept{//当nothrow==0时，noexcept(true)的参数可自动转为noexcept(false)的，不用再次考虑
-			_m=get<func_data_t<func_ptr_t>>(a);
 		}
 		~base_function_t()noexcept(promise_nothrow_at_destruct)=default;
 
@@ -17055,7 +17688,7 @@ inline void test_end(){
 
 //file_end
 
-		#line 58 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+		#line 59 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 	}
 	using namespace container;
 
@@ -17497,7 +18130,7 @@ inline void test_end(){
 
 //file_end
 
-		#line 63 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+		#line 64 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 	}
 	using namespace memory;//只是强迫症
 
@@ -17524,7 +18157,7 @@ inline void test_end(){
 
 //file_end
 
-		#line 69 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+		#line 70 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 	}
 	#endif
 
@@ -17680,7 +18313,7 @@ inline void test_end(){
 
 //file_end
 
-	#line 73 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+	#line 74 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 }
 namespace elc{
 	//导出base承诺于名称空间elc中提供的内容
@@ -17693,7 +18326,7 @@ namespace elc{
 
 //file_end
 
-	#line 76 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
+	#line 77 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/_body.hpp"
 }
 
 //file_end
@@ -18880,13 +19513,13 @@ export flush;
 	#line 55 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_stream/_body.hpp"
 }
 #if defined(ELC_STRING)
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
-//type_name_test_output.hpp
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_or_function_name_test_output.hpp"
+//type_or_function_name_test_output.hpp
 //at namespace ::
 //multi when ELC_STRING & ELC_BASE_STREAM
-#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
-#if !defined(ELC_multi_type_name_test_output)//pls skip define check as this part is muti
-#define ELC_multi_type_name_test_output
+#line 32 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_or_function_name_test_output.hpp"
+#if !defined(ELC_multi_type_or_function_name_test_output)//pls skip define check as this part is muti
+#define ELC_multi_type_or_function_name_test_output
 namespace elc::defs{
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_defs.hpp"
 //_defs.hpp
@@ -19165,7 +19798,7 @@ protected:\
 
 //file_end
 
-	#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
+	#line 35 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_or_function_name_test_output.hpp"
 
 	namespace stream_n{
 		//typename output only for text_ostream_t<char_t>
@@ -19182,6 +19815,12 @@ protected:\
 		template<text_ostream stream_T>
 		decltype(auto)operator<<(stream_T&&stream,const ::std::type_info&info)noexcept(noexcept_text_ostream<stream_T>){
 			return stream << type_name_t{info.name()};
+		}
+
+		//function name output only for text_ostream_t<char_t>
+		template<text_ostream stream_T>
+		decltype(auto)operator<<(stream_T&&stream,const function_name_t&name)noexcept(noexcept_text_ostream<stream_T>){
+			return stream << to_char_t_str(name);
 		}
 	}
 
@@ -19337,7 +19976,7 @@ protected:\
 
 //file_end
 
-	#line 55 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_name_test_output.hpp"
+	#line 61 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/type_or_function_name_test_output.hpp"
 }
 #endif
 
@@ -19711,7 +20350,7 @@ protected:\
 		}
 
 		//T* output only for text_ostream
-		template<typename T,text_ostream stream_T>
+		template<typename T,text_ostream stream_T> requires(!::std::is_function_v<T>)
 		inline decltype(auto)operator<<(stream_T&&stream,T*data)noexcept(noexcept_text_ostream<stream_T>){
 			//output name of type at first
 			stream << type_info<T>.get_name();
@@ -19724,6 +20363,16 @@ protected:\
 			stream << ec("@") << to_string((size_t)data,hexadecimal);
 			return stream;
 		}
+		//function output only for text_ostream
+		template<typename T,text_ostream stream_T> requires(::std::is_function_v<T>)
+		inline decltype(auto)operator<<(stream_T&&stream,T*data)noexcept(noexcept_text_ostream<stream_T>){
+			//output name of type at first
+			stream << get_function_name(data);
+			//output address
+			stream << ec("@") << to_string((size_t)data,hexadecimal);
+			return stream;
+		}
+
 	}
 
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_share/_undefs.hpp"
@@ -19878,7 +20527,7 @@ protected:\
 
 //file_end
 
-	#line 130 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
+	#line 140 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
 }
 #endif
 
