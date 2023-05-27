@@ -6268,7 +6268,8 @@ namespace string_view_n{
 			return equal(base_t::cbegin(),str.cbegin(),str.size());
 		}
 		[[nodiscard]]constexpr bool starts_with(const char_T*str)const noexcept{
-			size_t i=0,len=base_t::size();
+			size_t i = 0;
+			const auto len = base_t::size();
 			while(i<len&&str[i])
 				if(base_t::cbegin()[i]!=str[i])
 					return false;
@@ -11759,19 +11760,23 @@ protected:\
 			};
 		#elif SYSTEM_TYPE == windows
 			//windows需要额外复制一份
-			#line 66 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/function_name.hpp"
+			push_and_disable_msvc_warning(26408);//malloc/free警告diss
 			struct function_name_t:string_view_t<char>{
 				using base_t=string_view_t<char>;
 				string_view_t<char> copy_name(string_view_t<char>name)noexcept{
 					auto tmp=(char*)::std::malloc(name.size()+1);
-					memcpy(tmp,name.data(),name.size());
-					tmp[name.size()]=0;
-					return string_view_t<char>{tmp, name.size()};
+					if(tmp) {
+						memcpy(tmp, name.data(), name.size());
+						tmp[name.size()] = 0;
+						return string_view_t<char>{tmp, name.size()};
+					}
+					else
+						return base_t{nullptr,0};
 				}
 				string_view_t<char> demangle_name(string_view_t<char>name)noexcept{
 					char tmp[1024];
 					if(name.starts_with("@ILT+")){
-						auto lit_end_pos=name.find('(');
+						const auto lit_end_pos=name.find('(');
 						if(lit_end_pos==base_t::npos)
 							return copy_name(name);
 						name=name.substr(lit_end_pos+1);
@@ -11780,7 +11785,7 @@ protected:\
 						tmp[name.size()]=0;
 						name={tmp,name.size()};
 					}
-					DWORD len=UnDecorateSymbolName(name.data(),tmp,1024,UNDNAME_COMPLETE);
+					const auto len=UnDecorateSymbolName(name.data(),tmp,1024,UNDNAME_COMPLETE);
 					if(len)
 						return copy_name(string_view_t<char>{tmp,len});
 					else
@@ -11804,14 +11809,15 @@ protected:\
 					return *this;
 				}
 			};
+			pop_msvc_warning();
 			//一个额外的全局对象用于SymInitialize和SymCleanup
 			struct symbol_init_t{
 				bool _inited;
-				symbol_init_t(){
+				symbol_init_t()noexcept{
 					SymSetOptions(SYMOPT_DEFERRED_LOADS);
 					_inited=SymInitialize(GetCurrentProcess(), nullptr, true);
 				}
-				~symbol_init_t(){
+				~symbol_init_t()noexcept{
 					if(_inited)
 						SymCleanup(GetCurrentProcess());
 				}
@@ -11987,7 +11993,7 @@ protected:\
 
 //file_end
 
-		#line 148 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/function_name.hpp"
+		#line 150 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/function_name.hpp"
 	}
 	//
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/_tools/undef_decl_system_type.hpp"
@@ -12002,7 +12008,7 @@ protected:\
 
 //file_end
 
-	#line 151 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/function_name.hpp"
+	#line 153 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/APIs/function_name.hpp"
 	namespace elc::defs{
 		using namespace elc::APIs::function_name;
 	}
@@ -16539,7 +16545,9 @@ namespace function_n{
 		static Ret_t _func_ptr_value(Args_t...args)noexcept{
 			if(!_func_ptr_data_local)
 				_func_ptr_data_local=_func_ptr_data_gobal.load(::std::memory_order_relaxed);
+			push_and_disable_msvc_warning(26447);//noexcept不匹配警告diss
 			return _func_ptr_data_local->call(forward<Args_t>(args)...);
+			pop_msvc_warning();
 		}
 	public:
 		//自当前function对象生成一个函数指针，具有与当前function对象相同的行为
@@ -16682,7 +16690,9 @@ namespace function_n{
 		static Ret_t _func_ptr_value(Args_t...args)noexcept{
 			if(!_func_ptr_data_local)
 				_func_ptr_data_local=_func_ptr_data_gobal.load(::std::memory_order_relaxed);
+			push_and_disable_msvc_warning(26447);//noexcept不匹配警告diss
 			return _func_ptr_data_local->call(forward<Args_t>(args)...);
+			pop_msvc_warning();
 		}
 	public:
 		//自当前function对象生成一个函数指针，具有与当前function对象相同的行为
@@ -16827,7 +16837,9 @@ namespace function_n{
 		static Ret_t _func_ptr_value(Args_t...args)noexcept{
 			if(!_func_ptr_data_local)
 				_func_ptr_data_local=_func_ptr_data_gobal.load(::std::memory_order_relaxed);
+			push_and_disable_msvc_warning(26447);//noexcept不匹配警告diss
 			return _func_ptr_data_local->call(forward<Args_t>(args)...);
+			pop_msvc_warning();
 		}
 	public:
 		//自当前function对象生成一个函数指针，具有与当前function对象相同的行为
@@ -16872,8 +16884,8 @@ namespace function_n{
 //at namespace elc::defs::container
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/container/function/deduction_guides.hpp"
 namespace function_n{
-	template<typename T,typename Func_t=get_function_type<T>,bool promise_nothrow_at_destruct>
-	base_function_t(T)->base_function_t<Func_t,promise_nothrow_at_destruct>;
+	template<typename T,bool promise_nothrow_at_destruct>
+	base_function_t(T) -> base_function_t<get_function_type<T>, promise_nothrow_at_destruct>;
 }
 
 //file_end
