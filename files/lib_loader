@@ -1651,6 +1651,42 @@ namespace math{
 		template<typename T>
 		concept is_unsigned_basic_float_type=unsigned_basic_float_type<T>;
 
+		/// 大整数类型概念
+		template<typename T>
+		concept big_integer_type=integer_type<T> && big_type<T>;
+		template<typename T>
+		concept is_big_integer_type=big_integer_type<T>;
+
+		/// 大浮点数类型概念
+		template<typename T>
+		concept big_float_type=float_type<T> && big_type<T>;
+		template<typename T>
+		concept is_big_float_type=big_float_type<T>;
+
+		/// 无符号大整数类型概念
+		template<typename T>
+		concept unsigned_big_integer_type=big_integer_type<T> && is_unsigned<T>;
+		template<typename T>
+		concept is_unsigned_big_integer_type=unsigned_big_integer_type<T>;
+
+		/// 有符号大整数类型概念
+		template<typename T>
+		concept signed_big_integer_type=big_integer_type<T> && is_signed<T>;
+		template<typename T>
+		concept is_signed_big_integer_type=signed_big_integer_type<T>;
+
+		/// 无符号大浮点数类型概念
+		template<typename T>
+		concept unsigned_big_float_type=big_float_type<T> && is_unsigned<T>;
+		template<typename T>
+		concept is_unsigned_big_float_type=unsigned_big_float_type<T>;
+
+		/// 有符号大浮点数类型概念
+		template<typename T>
+		concept signed_big_float_type=big_float_type<T> && is_signed<T>;
+		template<typename T>
+		concept is_signed_big_float_type=signed_big_float_type<T>;
+
 		/// 有NaN的类型概念
 		template<typename T>
 		concept has_NaN=arithmetic_type_info_prover<remove_cvref<T>>::has_NaN;
@@ -1708,21 +1744,20 @@ namespace math{
 			return false;
 	}
 	/*! 符号位设置 */
-	template<arithmetic_type T>
-	[[nodiscard]]force_inline constexpr T copy_as_negative(auto x,bool negative=1)noexcept{
+	template<typename T=void,typename Arg_t=void>
+	[[nodiscard]]force_inline constexpr auto copy_as_negative(Arg_t x,bool negative=1)noexcept{
 		if constexpr(is_unsigned<T>)
 			template_error("copy_as_negative:unsigned type");
-		if constexpr(is_basic_type<decltype(x)>){
-			if constexpr(is_float_type<decltype(x)>)
+		elseif constexpr(type_info<T> == type_info<void>)
+			return copy_as_negative<to_signed_t<Arg_t>>(x,negative);
+		elseif constexpr(is_basic_type<Arg_t>) {
+			if constexpr(is_float_type<Arg_t>)
 				return(T)::std::copysign(x,negative?-1:1);
 			else
 				return(T)negative?T{}-x:x;
 		}
 		else
-			return copy_as_negative<T>((T)x,negative);
-	}
-	[[nodiscard]]force_inline constexpr auto copy_as_negative(auto x,bool negative=1)noexcept{
-		return copy_as_negative<to_signed_t<decltype(x)>>(x,negative);
+			return(T)negative?T{}-x:x;
 	}
 	[[nodiscard]]force_inline constexpr auto copy_as_not_negative(auto x)noexcept{
 		return copy_as_negative(x,false);
@@ -1997,13 +2032,13 @@ namespace math{
 	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
 	template<arithmetic_type T>
 	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
-		#line 506 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 541 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
-		#line 518 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 553 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		for(T c=5u;c<=b;c+=6u)//遍历判断是否能被因数分解——不会有人看不懂吧?
 			if((!mod(a,c))||(!mod(a,(c+2u))))
 				return false;
-		#line 527 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 562 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return true;
 	}
 	/*! 判断某数是否是素数 */
@@ -2016,10 +2051,10 @@ namespace math{
 
 		if(b<4)
 			return true;//1和0也是prime,我不管.
-		#line 549 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 584 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		if(mod(mod(b,6)-1u,4u))
 			return false;
-		#line 554 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 589 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return is_prime_num_no_pre_check(b);
 	}
 	/// 求小于或等于某数的素数
@@ -2078,13 +2113,13 @@ namespace math{
 	/// 已知当前array的size，求下一个合适的提前分配大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_array(size_T size)noexcept{
-		#line 615 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 650 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return size_T(size*magic_number::gold_of_resize);
 	}
 	/// 已知当前hash table的size，求下一个合适的桶大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_hash(size_T size)noexcept{
-		#line 624 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 659 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return size_T(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
 	}
 	pop_msvc_warning();
@@ -7071,162 +7106,169 @@ namespace sort_n{
 	typedef compare_t default_compare_t;
 
 	//heapsort
-	template<typename array_t, typename compare_t = default_compare_t>
-	void heapify(array_t& array, size_t begin, size_t end, size_t i, compare_t compare = compare_t()) {
-		size_t largest = i + begin; // 初始化largest为根节点
-		size_t left_child = 2 * i + 1 + begin; // 左子节点
-		size_t right_child = left_child + 1; // 右子节点
+	template<typename iter_t, typename compare_t = default_compare_t>
+	void heapify(iter_t begin, iter_t end, iter_t i, compare_t compare = compare_t()) {
+		auto largest = i; // 初始化largest为根节点
+		auto left_child = begin + 2 * (i - begin) + 1; // 左子节点
+		auto right_child = left_child + 1; // 右子节点
 
 		// 如果左子节点比根节点大，则更新largest
-		if (left_child < end && compare(array[left_child], array[largest])==strong_ordering::greater)
+		if (left_child < end && compare(*left_child, *largest)==strong_ordering::greater)
 			largest = left_child;
 
 		// 如果右子节点比根节点大，则更新largest
-		if (right_child < end && compare(array[right_child], array[largest])==strong_ordering::greater)
+		if (right_child < end && compare(*right_child, *largest)==strong_ordering::greater)
 			largest = right_child;
 
 		// 如果largest不是根节点，则交换根节点和largest的值，并递归地对largest子树进行heapify
-		if (largest != i + begin) {
-			swap(array[i + begin], array[largest]);
-			heapify(array, begin, end, largest - begin, compare);
+		if (largest != i) {
+			swap(*i,*largest);
+			heapify(begin, end, largest, compare);
 		}
 	}
 
-	template<typename array_t, typename compare_t = default_compare_t>
-	void build_max_heap(array_t& array, size_t begin, size_t end, compare_t compare = compare_t()) {
-		size_t n = end - begin;
+	template<typename iter_t, typename compare_t = default_compare_t>
+	void build_max_heap(iter_t begin, iter_t end, compare_t compare = compare_t()) {
+		auto n = end - begin;
 
 		// 从最后一个非叶子节点开始进行heapify，直到根节点
-		for (ptrdiff_t i = n / 2 - 1; i >= 0; i--)
-			heapify(array, begin, end, i, compare);
+		for (auto i = n / 2 - 1; i >= 0; i--)
+			heapify(begin, end, begin + i, compare);
 	}
 
-	template<typename array_t, typename compare_t = default_compare_t>
-	array_t& heapsort(array_t& array, size_t begin, size_t end, compare_t compare = compare_t()) {
-		size_t n = end - begin;
+	template<typename iter_t, typename compare_t = default_compare_t>
+	void heapsort(iter_t begin, iter_t end, compare_t compare = compare_t()) {
+		auto n = end - begin;
 
 		// 构建最大堆
-		build_max_heap(array, begin, end, compare);
+		build_max_heap(begin, end, compare);
 
 		// 从最后一个元素开始，依次将其与堆顶元素交换，并对堆顶元素进行heapify
-		for (ptrdiff_t i = n - 1; i >= 0; i--) {
-			swap(array[begin], array[begin + i]);
-			heapify(array, begin, begin + i, 0, compare);
+		for (auto i = n - 1; i >= 0; i--) {
+			swap(*begin,begin[i]);
+			heapify(begin, begin + i, begin, compare);
 		}
-		return array;
 	}
 
 	template<typename array_t, typename compare_t = default_compare_t>
-	void heapify(array_t& array, size_t n, size_t i, compare_t compare = compare_t()) {
-		heapify(array, 0, n, i, compare);
+	void heapify(array_t& array, size_t i, compare_t compare = compare_t()) {
+		heapify(array.begin(), array.end(), array.begin() + i, compare);
 	}
 	template<typename array_t, typename compare_t = default_compare_t>
 	void build_max_heap(array_t& array, compare_t compare = compare_t()) {
-		build_max_heap(array, 0, array.size(), compare);
+		build_max_heap(array.begin(), array.end(), compare);
 	}
 	template<typename array_t, typename compare_t = default_compare_t>
-	array_t& heapsort(array_t& array, compare_t compare = compare_t()) {
-		return heapsort(array, 0, array.size(), compare);
+	array_t&& heapsort(array_t&& array, compare_t compare = compare_t()) {
+		heapsort(array.begin(), array.end(), compare);
+		return forward<array_t>(array);
 	}
 
 	//insertion_sort
-	template<typename array_t, typename compare_t = default_compare_t>
-	array_t& insertion_sort(array_t& array, size_t begin, size_t end, compare_t compare = compare_t()) {
+	template<typename iter_t, typename compare_t = default_compare_t>
+	void insertion_sort(iter_t begin, iter_t end, compare_t compare = compare_t()) {
 		// 从第二个元素开始，依次将其插入到前面已排序的数组中
-		for (size_t i = begin + 1; i < end; i++) {
-			auto key = move(array[i]);
-			ptrdiff_t j=i-1;
+		for (auto i = begin + 1; i < end; i++) {
+			auto key = std::move(*i);
+			auto j = i - 1;
 			// 将比key大的元素向后移动
-			while (j >= ptrdiff_t(begin) && compare(array[j], key)==strong_ordering::greater) {
-				array[j + 1] = move(array[j]);
+			while (j >= begin && compare(*j, key)==strong_ordering::greater) {
+				*(j + 1) = std::move(*j);
 				j--;
 			}
 			// 将key插入到正确的位置
-			array[j + 1] = move(key);
+			*(j + 1) = std::move(key);
 		}
-		return array;
 	}
 	template<typename array_t, typename compare_t = default_compare_t>
-	array_t& insertion_sort(array_t& array, compare_t compare = compare_t()) {
-		return insertion_sort(array, 0, array.size(), compare);
+	array_t&& insertion_sort(array_t&& array, compare_t compare = compare_t()) {
+		insertion_sort(array.begin(), array.end(), compare);
+		return forward<array_t>(array);
 	}
 
 	//quicksort
 	// partition函数
-	template<typename array_t, typename compare_t = default_compare_t>
-	size_t partition(array_t& array, size_t begin, size_t end, compare_t compare = compare_t()) {
+	template<typename iter_t, typename compare_t = default_compare_t>
+	iter_t partition(iter_t begin, iter_t end, compare_t compare = compare_t()) {
 		// 选取最后一个元素作为pivot
-		auto pivot = array[end - 1];
-		size_t i = begin;
-		for (size_t j = begin; j < end - 1; j++) {
+		auto&pivot = end[-1];
+		auto i = begin;
+		for (auto j = begin; j < end - 1; j++) {
 			// 如果当前元素小于pivot，将其交换到左边
-			if (compare(array[j], pivot)==strong_ordering::less) {
-				swap(array[i], array[j]);
+			if (compare(*j, pivot)==strong_ordering::less) {
+				swap(*i,*j);
 				i++;
 			}
 		}
 		// 将pivot放到正确的位置
-		swap(array[i], array[end - 1]);
+		swap(*i,pivot);
 		return i;
 	}
 
-	// quicksort循环函数
-	template<typename array_t, typename compare_t = default_compare_t>
-	void quicksort_loop(array_t& array, size_t begin, size_t end, compare_t compare = compare_t()) {
+	// quicksort函数
+	template<typename iter_t, typename compare_t = default_compare_t>
+	void quicksort(iter_t begin, iter_t end, compare_t compare = compare_t()) {
 		while (end - begin > 1) {
 			// 分割数组并递归排序
-			const size_t pivot = partition(array, begin, end, compare);
-			quicksort_loop(array, begin, pivot, compare);
+			const auto pivot = partition(begin, end, compare);
+			quicksort(begin, pivot, compare);
 			begin = pivot + 1;
 		}
 	}
-
-	// quicksort函数
 	template<typename array_t, typename compare_t = default_compare_t>
-	array_t& quicksort(array_t& array, compare_t compare = compare_t()) {
-		quicksort_loop(array, 0, array.size(), compare);
-		return array;
+	array_t&& quicksort(array_t&& array, compare_t compare = compare_t()) {
+		quicksort(array.begin(), array.end(), compare);
+		return forward<array_t>(array);
 	}
 
 	//introsort
 	constexpr size_t size_threshold = 1<<4;
 
 	// introsort循环函数
-	template<typename array_t, typename compare_t = default_compare_t>
-	void introsort_loop(array_t& array, size_t begin, size_t end, size_t depth_limit, compare_t compare = compare_t()) {
+	template<typename iter_t, typename compare_t = default_compare_t>
+	void introsort_loop(iter_t begin, iter_t end, size_t depth_limit, compare_t compare = compare_t()) {
 		while (end - begin > size_threshold) {
 			// 如果递归深度达到了限制，使用heapsort排序
 			if (depth_limit == 0) {
-				heapsort(array, begin, end, compare);
+				heapsort(begin, end, compare);
 				return;
 			}
 			depth_limit--;
 
 			// 分割数组并递归排序
-			const size_t pivot = partition(array, begin, end, compare);
-			introsort_loop(array, pivot + 1, end, depth_limit, compare);
+			const auto pivot = partition(begin, end, compare);
+			introsort_loop(pivot + 1, end, depth_limit, compare);
 			end = pivot;
 		}
-		insertion_sort(array, begin, end, compare);
+		insertion_sort(begin, end, compare);
 	}
 
 	// introsort函数
-	template<typename array_t, typename compare_t = default_compare_t>
-	array_t& introsort(array_t& array, compare_t compare = compare_t()) {
-		const size_t n = array.size();
+	template<typename iter_t, typename compare_t = default_compare_t>
+	void introsort(iter_t begin, iter_t end, compare_t compare = compare_t()) {
+		const auto n = end - begin;
 		// 如果数组长度小于等于size_threshold，使用插入排序
 		if (n <= size_threshold)
-			return insertion_sort(array, compare);
+			return insertion_sort(begin, end, compare);
 		// 否则使用introsort
-		const size_t depth_limit = size_t(2 * log(n, 2));
-		introsort_loop(array, 0, n, depth_limit, compare);
-		return array;
+		const auto depth_limit = decltype(n)(2 * log(n, 2));
+		introsort_loop(begin, end, depth_limit, compare);
+	}
+	template<typename array_t, typename compare_t = default_compare_t>
+	array_t&& introsort(array_t&& array, compare_t compare = compare_t()) {
+		introsort(array.begin(), array.end(), compare);
+		return forward<array_t>(array);
 	}
 
 	// 默认排序函数
+	template<typename iter_t, typename compare_t = default_compare_t>
+	void sort(iter_t begin, iter_t end, compare_t compare = compare_t()) {
+		introsort(begin, end, compare);
+	}
 	template<typename array_t, typename compare_t = default_compare_t>
-	array_t& sort(array_t& array, compare_t compare = compare_t()) {
-		return introsort(array, compare);
+	array_t&& sort(array_t&& array, compare_t compare = compare_t()) {
+		sort(array.begin(), array.end(), compare);
+		return forward<array_t>(array);
 	}
 }
 using sort_n::sort;
@@ -13938,12 +13980,12 @@ namespace iterator_n{
 		base_t_rw _m;
 		template<typename build_base_t_T> requires(construct<base_t_rw>.able<build_base_t_T>)
 		constexpr reverse_base_t(build_base_t_T&& a)noexcept(construct<base_t_rw>.nothrow<build_base_t_T>):_m(a){}
-		constexpr reverse_base_t(const reverse_base_t&a)noexcept(construct<base_t_rw>.nothrow<const base_t_rw&>):_m(a._m){}
-		constexpr reverse_base_t(reverse_base_t&&a)noexcept(construct<base_t_rw>.nothrow<base_t_rw&&>):_m(move(a._m)){}
-		constexpr reverse_base_t& operator=(const reverse_base_t&a)&noexcept{_m=a._m;return*this;}
-		constexpr reverse_base_t& operator=(const reverse_base_t&&a)&noexcept{_m=move(a._m);return*this;}
-		constexpr auto operator==(const reverse_base_t&a)const noexcept{return _m==a._m;}
-		constexpr auto operator<=>(const reverse_base_t&a)const noexcept{return _m<=>a._m;}
+		constexpr reverse_base_t(const this_t&a)noexcept(construct<base_t_rw>.nothrow<const base_t_rw&>):_m(a._m){}
+		constexpr reverse_base_t(this_t&&a)noexcept(construct<base_t_rw>.nothrow<base_t_rw&&>):_m(move(a._m)){}
+		constexpr this_t& operator=(const this_t&a)&noexcept{_m=a._m;return*this;}
+		constexpr this_t& operator=(const this_t&&a)&noexcept{_m=move(a._m);return*this;}
+		constexpr auto operator==(const this_t&a)const noexcept{return _m==a._m;}
+		constexpr auto operator<=>(const this_t&a)const noexcept{return _m<=>a._m;}
 
 		static constexpr bool is_pointer=::std::is_pointer_v<base_t_w>;
 
@@ -14120,6 +14162,7 @@ namespace iterator_n{
 			if constexpr(compare.able<base_t_rw,other_base_t_w>)
 				return compare(_m,a._m);
 		}
+		constexpr this_t& operator=(const this_t&)&noexcept=default;
 		base_t_rw& get_base()noexcept{ return _m; }
 		const base_t_rw& get_base()const noexcept{ return _m; }
 	};
@@ -16302,6 +16345,19 @@ namespace array_n{
 		template<class U> requires(get<T>.as_array.able<U> && type_info<remove_cvref<U>>!=type_info<this_t>)
 		array_t(U&&a)noexcept(get<T>.as_array.nothrow<U>){
 			_m=get<T>.as_array(forward<U>(a));
+		}
+		/*初始化器进行构建*/
+		template<class Func> requires(invoke<Func>.with_return_type<T>.able<>)
+		array_t(note::size_t<size_t>size, Func&&func)noexcept(get<T>.nothrow<Func>){
+			_m=get<T>[size.value]();
+			for(auto&i:*this)
+				i=func();
+		}
+		template<class Func> requires(invoke<Func>.with_return_type<T>.able<size_t>)
+		array_t(note::size_t<size_t>size, Func&&func)noexcept(get<T>.nothrow<Func>){
+			_m=get<T>[size.value]();
+			for(size_t i=0;i<size.value;++i)
+				(*this)[i]=func(i);
 		}
 
 		//复制和移动函数
