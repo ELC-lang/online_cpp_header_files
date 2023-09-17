@@ -386,8 +386,8 @@ class name{}\
 /*! 让lambda递归更加美观 */
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
+#define get_recursive_lambda_caller(name,...) \
+exlambda(auto&&...Args)__VA_ARGS__ lambda_force_inline{\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
@@ -400,6 +400,17 @@ exlambda(auto&&...Args){\
 #define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
 //recursive_lambda_self_referential_reserved_symbolname
 #define lambda_RLSRRS _my_jb_super_sb_name_
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define lambda_inline [[msvc::forceinline]]
+	#define lambda_force_inline [[msvc::forceinline]]
+#elif
+	#define lambda_inline [[gnu::always_inline]]
+	#define lambda_force_inline [[gnu::always_inline]]
+#else
+	#define lambda_inline
+	#define lambda_force_inline
+#endif
 
 #define MAGIC//ahh,ko no tenno da!
 
@@ -615,9 +626,6 @@ constexpr struct discard_t{
 	template<typename T>
 	force_inline constexpr void operator()(T&&)const noexcept{}
 }discard{};
-
-template<typename T>
-inline void just_a_use(T&&){}
 
 template<typename T>
 distinctive inline T const_default_value_of{};//?
@@ -1711,6 +1719,7 @@ namespace math{
 	// min和max在下一个文件中定义，所以先用std的
 	using ::std::min;
 	using ::std::max;
+	using ::std::move;
 
 	//isNaN
 	template<arithmetic_type T>
@@ -1941,6 +1950,28 @@ namespace math{
 	[[nodiscard]]force_inline constexpr auto log(const T&a,const U&b)noexcept{
 		return log(a)/log(b);
 	}
+	//integer_log
+	template<unsigned_integer_type T>
+	[[nodiscard]]force_inline constexpr size_t integer_log(const T& a,const auto& b)noexcept{
+		auto integer_log_impl = recursive_lambda(const T& a,T& tester,const T this_lv,const size_t num)noexcept -> size_t{
+			size_t aret=0;
+			{
+				const auto next_lv=this_lv*this_lv;
+				if(next_lv<a)
+					aret=self_recursion(a,tester,next_lv,num*2);
+			}
+			floop
+				if(auto tmp=tester*this_lv;tmp>a)return aret;
+				else{
+					tester=move(tmp);
+					aret+=num;
+				}
+		};
+		auto integer_log_impl_caller = get_recursive_lambda_caller(integer_log_impl,noexcept);
+		T tester=1u;
+		return integer_log_impl_caller(a,tester,move(b),1u);
+	}
+
 	//pow
 	//不使用std版本而是自己写的原因：std版本不是constexpr，标准会傻逼
 	template<arithmetic_type T,arithmetic_type U=unsigned> requires(!is_big_type<T>)
@@ -2033,13 +2064,13 @@ namespace math{
 	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
 	template<arithmetic_type T>
 	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
-		#line 541 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 564 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
-		#line 553 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 576 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		for(T c=5u;c<=b;c+=6u)//遍历判断是否能被因数分解——不会有人看不懂吧?
 			if((!mod(a,c))||(!mod(a,(c+2u))))
 				return false;
-		#line 562 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 585 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return true;
 	}
 	/*! 判断某数是否是素数 */
@@ -2052,10 +2083,10 @@ namespace math{
 
 		if(b<4)
 			return true;//1和0也是prime,我不管.
-		#line 584 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 607 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		if(mod(mod(b,6)-1u,4u))
 			return false;
-		#line 589 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 612 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return is_prime_num_no_pre_check(b);
 	}
 	/// 求小于或等于某数的素数
@@ -2114,13 +2145,13 @@ namespace math{
 	/// 已知当前array的size，求下一个合适的提前分配大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_array(size_T size)noexcept{
-		#line 650 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 673 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return size_T(size*magic_number::gold_of_resize);
 	}
 	/// 已知当前hash table的size，求下一个合适的桶大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_hash(size_T size)noexcept{
-		#line 659 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 682 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return size_T(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
 	}
 	pop_msvc_warning();
@@ -2429,6 +2460,7 @@ using math::isInf;
 using math::abs;
 using math::exp;
 using math::log;
+using math::integer_log;
 using math::pow;
 using math::ceil;
 using math::floor;
@@ -2813,6 +2845,8 @@ namespace literal_support{
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
+#undef lambda_inline
+#undef lambda_force_inline
 
 #undef MAGIC
 
@@ -3049,8 +3083,8 @@ class name{}\
 /*! 让lambda递归更加美观 */
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
+#define get_recursive_lambda_caller(name,...) \
+exlambda(auto&&...Args)__VA_ARGS__ lambda_force_inline{\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
@@ -3063,6 +3097,17 @@ exlambda(auto&&...Args){\
 #define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
 //recursive_lambda_self_referential_reserved_symbolname
 #define lambda_RLSRRS _my_jb_super_sb_name_
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define lambda_inline [[msvc::forceinline]]
+	#define lambda_force_inline [[msvc::forceinline]]
+#elif
+	#define lambda_inline [[gnu::always_inline]]
+	#define lambda_force_inline [[gnu::always_inline]]
+#else
+	#define lambda_inline
+	#define lambda_force_inline
+#endif
 
 #define MAGIC//ahh,ko no tenno da!
 
@@ -4463,6 +4508,8 @@ namespace float_infos{
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
+#undef lambda_inline
+#undef lambda_force_inline
 
 #undef MAGIC
 
@@ -4705,8 +4752,8 @@ class name{}\
 /*! 让lambda递归更加美观 */
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
+#define get_recursive_lambda_caller(name,...) \
+exlambda(auto&&...Args)__VA_ARGS__ lambda_force_inline{\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
@@ -4719,6 +4766,17 @@ exlambda(auto&&...Args){\
 #define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
 //recursive_lambda_self_referential_reserved_symbolname
 #define lambda_RLSRRS _my_jb_super_sb_name_
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define lambda_inline [[msvc::forceinline]]
+	#define lambda_force_inline [[msvc::forceinline]]
+#elif
+	#define lambda_inline [[gnu::always_inline]]
+	#define lambda_force_inline [[gnu::always_inline]]
+#else
+	#define lambda_inline
+	#define lambda_force_inline
+#endif
 
 #define MAGIC//ahh,ko no tenno da!
 
@@ -4896,6 +4954,13 @@ namespace math{
 //at namespace elc::defs::base
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/bit.hpp"
 namespace bit{
+	push_and_disable_msvc_warning(26475);//强制转换警告diss
+	// npos!
+	/// 用以指定不存在的位置
+	template<unsigned_basic_integer_type T>
+	constexpr T npos_of=T(-1);
+	pop_msvc_warning();
+	constexpr auto npos=npos_of<size_t>;
 	/// 位操作：循环左移（无mod）
 	/// 不使用std版本而是自己写的原因：std版本右操作数只能是int而不能是size_t或别的，标准会傻逼
 	template<unsigned_basic_integer_type T>
@@ -5102,7 +5167,19 @@ namespace bit{
 			//默认通用实现
 			return countr_one(T(~v));
 	}
+	/// is_all_bit_one
+	template<unsigned_basic_integer_type T>
+	[[nodiscard]]force_inline constexpr bool all_bit_is_one(const T v)noexcept{
+		return v==npos_of<T>;
+	}
+	/// is_all_bit_zero
+	template<unsigned_basic_integer_type T>
+	[[nodiscard]]force_inline constexpr bool all_bit_is_zero(const T v)noexcept{
+		return v;
+	}
 }
+using bit::npos_of;
+using bit::npos;
 using bit::rotl;
 using bit::rotr;
 using bit::rotl_nomod;
@@ -5113,6 +5190,8 @@ using bit::countl_zero;
 using bit::countr_zero;
 using bit::countl_one;
 using bit::countr_one;
+using bit::all_bit_is_one;
+using bit::all_bit_is_zero;
 
 //file_end
 
@@ -5196,9 +5275,11 @@ namespace note_n{
 
 	def_note(from);
 	def_note(to);
-	def_note(size);
+	def_note(size_type);
 
 	#undef def_note
+	typedef size_type_t<::size_t> size_t;
+	constexpr size_t size(::size_t v){return{v};}
 	constexpr struct fail_t{}fail{};
 }
 namespace note=note_n;
@@ -6646,8 +6727,8 @@ namespace range_n{
 		constexpr range_t(const T begin,const T end):_begin(begin),_end(end){}
 		constexpr range_t(note::from_t<const T>begin,note::to_t<const T>end):_begin(begin),_end(end+1){}
 		constexpr range_t(note::to_t<const T>end,note::from_t<const T>begin):_begin(begin),_end(end+1){}
-		constexpr range_t(const T begin,note::size_t<const T>size):_begin(begin),_end(begin+size()){}
-		constexpr range_t(const T begin,note::size_t<size_t>size):_begin(begin),_end(begin+size()){}
+		constexpr range_t(const T begin,note::size_type_t<const T>size):_begin(begin),_end(begin+size()){}
+		constexpr range_t(const T begin,note::size_t size):_begin(begin),_end(begin+size()){}
 
 		constexpr size_t size()noexcept{return _end-_begin;}
 		constexpr auto end()noexcept{return _end;}
@@ -6768,11 +6849,6 @@ namespace range_n{
 			}
 		}
 	};
-	push_and_disable_msvc_warning(26475);//强制转换警告diss
-	//  npos
-	/// 用以指定不存在的位置
-	static constexpr size_t npos = size_t(-1);
-	pop_msvc_warning();
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard]]constexpr T* in_range(const remove_cvref<T>&pattern,const array_like_view_t<T>&range){
@@ -7362,7 +7438,7 @@ namespace string_view_n{
 	/// array_like_view_t的特化类型，表明这是字符串
 	template<typename char_T>
 	struct string_view_t:array_like_view_t<const char_T>{
-		static constexpr size_t npos=range_n::npos;
+		static constexpr size_t npos=bit::npos;
 		typedef array_like_view_t<const char_T> base_t;
 		typedef char_T*string_ptr_t;
 		typedef const char_T*const_string_ptr_t;
@@ -7711,7 +7787,7 @@ namespace range_n{
 	[[nodiscard]]constexpr const T* in_range(const remove_cvref<T>&pattern,const constexpr_str_t<T>&range){
 		if(range.is_bitmark_for_unindex_workable){
 			auto result = range.bitmark_for_unindex[pattern];
-			return result==range_n::npos?nullptr:range.begin()+result;
+			return result==npos?nullptr:range.begin()+result;
 		}
 		else
 			return in_range(pattern,(const constexpr_str_view_t<T>&)range);
@@ -7729,7 +7805,7 @@ namespace range_n{
 	[[nodiscard]]constexpr const T* in_range_but_reverse(const remove_cvref<T>&pattern,const constexpr_str_t<T>&range){
 		if(range.is_bitmark_for_unindex_workable){
 			auto result = range.bitmark_for_unindex[pattern];
-			return result==range_n::npos?nullptr:range.begin()+result;
+			return result==npos?nullptr:range.begin()+result;
 		}
 		else
 			return in_range_but_reverse(pattern,(const constexpr_str_view_t<T>&)range);
@@ -8018,6 +8094,8 @@ public:
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
+#undef lambda_inline
+#undef lambda_force_inline
 
 #undef MAGIC
 
@@ -8353,8 +8431,8 @@ class name{}\
 /*! 让lambda递归更加美观 */
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
+#define get_recursive_lambda_caller(name,...) \
+exlambda(auto&&...Args)__VA_ARGS__ lambda_force_inline{\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
@@ -8367,6 +8445,17 @@ exlambda(auto&&...Args){\
 #define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
 //recursive_lambda_self_referential_reserved_symbolname
 #define lambda_RLSRRS _my_jb_super_sb_name_
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define lambda_inline [[msvc::forceinline]]
+	#define lambda_force_inline [[msvc::forceinline]]
+#elif
+	#define lambda_inline [[gnu::always_inline]]
+	#define lambda_force_inline [[gnu::always_inline]]
+#else
+	#define lambda_inline
+	#define lambda_force_inline
+#endif
 
 #define MAGIC//ahh,ko no tenno da!
 
@@ -8879,6 +8968,8 @@ namespace overhead_n{
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
+#undef lambda_inline
+#undef lambda_force_inline
 
 #undef MAGIC
 
@@ -9202,8 +9293,8 @@ class name{}\
 /*! 让lambda递归更加美观 */
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
+#define get_recursive_lambda_caller(name,...) \
+exlambda(auto&&...Args)__VA_ARGS__ lambda_force_inline{\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
@@ -9216,6 +9307,17 @@ exlambda(auto&&...Args){\
 #define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
 //recursive_lambda_self_referential_reserved_symbolname
 #define lambda_RLSRRS _my_jb_super_sb_name_
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define lambda_inline [[msvc::forceinline]]
+	#define lambda_force_inline [[msvc::forceinline]]
+#elif
+	#define lambda_inline [[gnu::always_inline]]
+	#define lambda_force_inline [[gnu::always_inline]]
+#else
+	#define lambda_inline
+	#define lambda_force_inline
+#endif
 
 #define MAGIC//ahh,ko no tenno da!
 
@@ -11104,7 +11206,6 @@ inline constexpr size_t utf32_to_utf16_code_size = 2;
 template<class char_T>
 inline constexpr size_t to_u32_code_size=sizeof(char32_t)/sizeof(char_T);
 
-using range_n::npos;
 inline namespace convert_impl{
 	inline constexpr size_t decode_utf8(char32_t *out, const char8_t *in, size_t in_size_max)noexcept{
 		push_and_disable_msvc_warning(26494);//未初始化警告diss
@@ -11838,6 +11939,8 @@ inline constexpr bool ispunct(char_t c)noexcept{
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
+#undef lambda_inline
+#undef lambda_force_inline
 
 #undef MAGIC
 
@@ -12092,8 +12195,8 @@ class name{}\
 /*! 让lambda递归更加美观 */
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
+#define get_recursive_lambda_caller(name,...) \
+exlambda(auto&&...Args)__VA_ARGS__ lambda_force_inline{\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
@@ -12106,6 +12209,17 @@ exlambda(auto&&...Args){\
 #define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
 //recursive_lambda_self_referential_reserved_symbolname
 #define lambda_RLSRRS _my_jb_super_sb_name_
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define lambda_inline [[msvc::forceinline]]
+	#define lambda_force_inline [[msvc::forceinline]]
+#elif
+	#define lambda_inline [[gnu::always_inline]]
+	#define lambda_force_inline [[gnu::always_inline]]
+#else
+	#define lambda_inline
+	#define lambda_force_inline
+#endif
 
 #define MAGIC//ahh,ko no tenno da!
 
@@ -12304,7 +12418,7 @@ protected:\
 					for(auto c:err_msg){
 						s = ::std::c32rtomb(err_msg_write, c, &stat);
 						push_and_disable_msvc_warning(26475)//强转警告diss
-						if(s == range_n::npos)
+						if(s == npos)
 							die();
 						pop_msvc_warning();
 						err_msg_write += s;
@@ -12423,6 +12537,8 @@ protected:\
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
+#undef lambda_inline
+#undef lambda_force_inline
 
 #undef MAGIC
 
@@ -12750,8 +12866,8 @@ class name{}\
 /*! 让lambda递归更加美观 */
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
+#define get_recursive_lambda_caller(name,...) \
+exlambda(auto&&...Args)__VA_ARGS__ lambda_force_inline{\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
@@ -12764,6 +12880,17 @@ exlambda(auto&&...Args){\
 #define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
 //recursive_lambda_self_referential_reserved_symbolname
 #define lambda_RLSRRS _my_jb_super_sb_name_
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define lambda_inline [[msvc::forceinline]]
+	#define lambda_force_inline [[msvc::forceinline]]
+#elif
+	#define lambda_inline [[gnu::always_inline]]
+	#define lambda_force_inline [[gnu::always_inline]]
+#else
+	#define lambda_inline
+	#define lambda_force_inline
+#endif
 
 #define MAGIC//ahh,ko no tenno da!
 
@@ -13045,6 +13172,8 @@ protected:\
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
+#undef lambda_inline
+#undef lambda_force_inline
 
 #undef MAGIC
 
@@ -13343,8 +13472,8 @@ class name{}\
 /*! 让lambda递归更加美观 */
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
+#define get_recursive_lambda_caller(name,...) \
+exlambda(auto&&...Args)__VA_ARGS__ lambda_force_inline{\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
@@ -13357,6 +13486,17 @@ exlambda(auto&&...Args){\
 #define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
 //recursive_lambda_self_referential_reserved_symbolname
 #define lambda_RLSRRS _my_jb_super_sb_name_
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define lambda_inline [[msvc::forceinline]]
+	#define lambda_force_inline [[msvc::forceinline]]
+#elif
+	#define lambda_inline [[gnu::always_inline]]
+	#define lambda_force_inline [[gnu::always_inline]]
+#else
+	#define lambda_inline
+	#define lambda_force_inline
+#endif
 
 #define MAGIC//ahh,ko no tenno da!
 
@@ -13582,6 +13722,8 @@ namespace elc::defs::locale::str{
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
+#undef lambda_inline
+#undef lambda_force_inline
 
 #undef MAGIC
 
@@ -13815,8 +13957,8 @@ class name{}\
 /*! 让lambda递归更加美观 */
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
+#define get_recursive_lambda_caller(name,...) \
+exlambda(auto&&...Args)__VA_ARGS__ lambda_force_inline{\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
@@ -13829,6 +13971,17 @@ exlambda(auto&&...Args){\
 #define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
 //recursive_lambda_self_referential_reserved_symbolname
 #define lambda_RLSRRS _my_jb_super_sb_name_
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define lambda_inline [[msvc::forceinline]]
+	#define lambda_force_inline [[msvc::forceinline]]
+#elif
+	#define lambda_inline [[gnu::always_inline]]
+	#define lambda_force_inline [[gnu::always_inline]]
+#else
+	#define lambda_inline
+	#define lambda_force_inline
+#endif
 
 #define MAGIC//ahh,ko no tenno da!
 
@@ -16335,10 +16488,10 @@ namespace array_n{
 		/*默认构造*/
 		constexpr array_t()noexcept:_m(null_ptr){}
 		#line 51 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/container/array/defs.hpp"
-		explicit array_t(note::size_t<size_t>size)noexcept(get<T>.nothrow<>){
+		explicit array_t(note::size_t size)noexcept(get<T>.nothrow<>){
 			_m=get<T>[size.value]();
 		}
-		explicit array_t(note::size_t<size_t>size,const T&elem)noexcept(get<T>.nothrow<>){
+		explicit array_t(note::size_t size,const T&elem)noexcept(get<T>.nothrow<>){
 			_m=get<T>[size.value](elem);
 		}
 		#line 60 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/container/array/defs.hpp"
@@ -16349,13 +16502,13 @@ namespace array_n{
 		}
 		/*初始化器进行构建*/
 		template<class Func> requires(invoke<Func>.with_return_type<T>.able<>)
-		array_t(note::size_t<size_t>size, Func&&func)noexcept(get<T>.nothrow<Func>){
+		array_t(note::size_t size, Func&&func)noexcept(get<T>.nothrow<Func>){
 			_m=get<T>[size.value]();
 			for(auto&i:*this)
 				i=func();
 		}
 		template<class Func> requires(invoke<Func>.with_return_type<T>.able<size_t>)
-		array_t(note::size_t<size_t>size, Func&&func)noexcept(get<T>.nothrow<Func>){
+		array_t(note::size_t size, Func&&func)noexcept(get<T>.nothrow<Func>){
 			_m=get<T>[size.value]();
 			for(size_t i=0;i<size.value;++i)
 				(*this)[i]=func(i);
@@ -18572,6 +18725,8 @@ inline void test_end(){
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
+#undef lambda_inline
+#undef lambda_force_inline
 
 #undef MAGIC
 
@@ -18836,8 +18991,8 @@ class name{}\
 /*! 让lambda递归更加美观 */
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
+#define get_recursive_lambda_caller(name,...) \
+exlambda(auto&&...Args)__VA_ARGS__ lambda_force_inline{\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
@@ -18850,6 +19005,17 @@ exlambda(auto&&...Args){\
 #define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
 //recursive_lambda_self_referential_reserved_symbolname
 #define lambda_RLSRRS _my_jb_super_sb_name_
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define lambda_inline [[msvc::forceinline]]
+	#define lambda_force_inline [[msvc::forceinline]]
+#elif
+	#define lambda_inline [[gnu::always_inline]]
+	#define lambda_force_inline [[gnu::always_inline]]
+#else
+	#define lambda_inline
+	#define lambda_force_inline
+#endif
 
 #define MAGIC//ahh,ko no tenno da!
 
@@ -19745,6 +19911,8 @@ inline void test_end(){
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
+#undef lambda_inline
+#undef lambda_force_inline
 
 #undef MAGIC
 
@@ -20030,8 +20198,8 @@ class name{}\
 /*! 让lambda递归更加美观 */
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
+#define get_recursive_lambda_caller(name,...) \
+exlambda(auto&&...Args)__VA_ARGS__ lambda_force_inline{\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
@@ -20044,6 +20212,17 @@ exlambda(auto&&...Args){\
 #define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
 //recursive_lambda_self_referential_reserved_symbolname
 #define lambda_RLSRRS _my_jb_super_sb_name_
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define lambda_inline [[msvc::forceinline]]
+	#define lambda_force_inline [[msvc::forceinline]]
+#elif
+	#define lambda_inline [[gnu::always_inline]]
+	#define lambda_force_inline [[gnu::always_inline]]
+#else
+	#define lambda_inline
+	#define lambda_force_inline
+#endif
 
 #define MAGIC//ahh,ko no tenno da!
 
@@ -20257,6 +20436,8 @@ protected:\
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
+#undef lambda_inline
+#undef lambda_force_inline
 
 #undef MAGIC
 
@@ -20502,8 +20683,8 @@ class name{}\
 /*! 让lambda递归更加美观 */
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
+#define get_recursive_lambda_caller(name,...) \
+exlambda(auto&&...Args)__VA_ARGS__ lambda_force_inline{\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
@@ -20516,6 +20697,17 @@ exlambda(auto&&...Args){\
 #define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
 //recursive_lambda_self_referential_reserved_symbolname
 #define lambda_RLSRRS _my_jb_super_sb_name_
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define lambda_inline [[msvc::forceinline]]
+	#define lambda_force_inline [[msvc::forceinline]]
+#elif
+	#define lambda_inline [[gnu::always_inline]]
+	#define lambda_force_inline [[gnu::always_inline]]
+#else
+	#define lambda_inline
+	#define lambda_force_inline
+#endif
 
 #define MAGIC//ahh,ko no tenno da!
 
@@ -20808,6 +21000,8 @@ protected:\
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
+#undef lambda_inline
+#undef lambda_force_inline
 
 #undef MAGIC
 
@@ -21062,8 +21256,8 @@ class name{}\
 /*! 让lambda递归更加美观 */
 #define recursive_lambda(...) lambda(auto&&lambda_RLSRRS,__VA_ARGS__)
 /*! 让lambda递归更加美观 */
-#define get_recursive_lambda_caller(name) \
-exlambda(auto&&...Args){\
+#define get_recursive_lambda_caller(name,...) \
+exlambda(auto&&...Args)__VA_ARGS__ lambda_force_inline{\
 	return name(name,Args...);\
 }
 /*! 让lambda定义更加美观 */
@@ -21076,6 +21270,17 @@ exlambda(auto&&...Args){\
 #define self_recursion(...) lambda_RLSRRS(lambda_RLSRRS,__VA_ARGS__)
 //recursive_lambda_self_referential_reserved_symbolname
 #define lambda_RLSRRS _my_jb_super_sb_name_
+
+#if defined(_MSC_VER) && !defined(__clang__)
+	#define lambda_inline [[msvc::forceinline]]
+	#define lambda_force_inline [[msvc::forceinline]]
+#elif
+	#define lambda_inline [[gnu::always_inline]]
+	#define lambda_force_inline [[gnu::always_inline]]
+#else
+	#define lambda_inline
+	#define lambda_force_inline
+#endif
 
 #define MAGIC//ahh,ko no tenno da!
 
@@ -21338,6 +21543,8 @@ inline void test_end{
 #undef lambda_with_catch
 #undef self_recursion
 #undef lambda_RLSRRS
+#undef lambda_inline
+#undef lambda_force_inline
 
 #undef MAGIC
 
