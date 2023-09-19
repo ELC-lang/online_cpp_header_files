@@ -252,6 +252,11 @@ namespace elc::defs{ //在elc::defs中定义内容
 	#undef void
 #endif
 //
+#if defined(ELC_PUBLIC_ALL)
+	#define protected public
+	#define private public
+#endif
+//
 #if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
 	#undef rand
 #endif
@@ -603,6 +608,9 @@ static void destroy(T*a)noexcept{
 constexpr struct do_nothing_t{
 	template<class...Args>
 	void operator()(Args&&...)noexcept{}
+	constexpr bool operator==(const do_nothing_t&)noexcept{return true;}
+	template<typename T>
+	constexpr bool operator==(T&)noexcept{return false;}
 }do_nothing;
 
 //file_end
@@ -2745,6 +2753,11 @@ namespace literal_support{
 	#define void the_void
 #endif
 //
+#if defined(ELC_PUBLIC_ALL)
+	#undef protected
+	#undef private
+#endif
+//
 #if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
 	#define rand the_rand
 #endif
@@ -2947,6 +2960,11 @@ namespace elc::defs{
 //
 #if defined(ELC_VOID_NAME)
 	#undef void
+#endif
+//
+#if defined(ELC_PUBLIC_ALL)
+	#define protected public
+	#define private public
 #endif
 //
 #if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
@@ -4408,6 +4426,11 @@ namespace float_infos{
 	#define void the_void
 #endif
 //
+#if defined(ELC_PUBLIC_ALL)
+	#undef protected
+	#undef private
+#endif
+//
 #if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
 	#define rand the_rand
 #endif
@@ -4616,6 +4639,11 @@ namespace elc::defs{ //在elc::defs中定义内容
 //
 #if defined(ELC_VOID_NAME)
 	#undef void
+#endif
+//
+#if defined(ELC_PUBLIC_ALL)
+	#define protected public
+	#define private public
 #endif
 //
 #if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
@@ -7994,6 +8022,11 @@ public:
 	#define void the_void
 #endif
 //
+#if defined(ELC_PUBLIC_ALL)
+	#undef protected
+	#undef private
+#endif
+//
 #if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
 	#define rand the_rand
 #endif
@@ -8208,6 +8241,11 @@ namespace elc::defs{
 //
 #if defined(ELC_VOID_NAME)
 	#undef void
+#endif
+//
+#if defined(ELC_PUBLIC_ALL)
+	#define protected public
+	#define private public
 #endif
 //
 #if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
@@ -8799,6 +8837,11 @@ inline void test_end(){
 //
 #if defined(ELC_VOID_NAME)
 	#define void the_void
+#endif
+//
+#if defined(ELC_PUBLIC_ALL)
+	#undef protected
+	#undef private
 #endif
 //
 #if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)

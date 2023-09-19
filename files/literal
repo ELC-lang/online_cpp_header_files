@@ -129,6 +129,11 @@ namespace elc::defs{
 	#undef void
 #endif
 //
+#if defined(ELC_PUBLIC_ALL)
+	#define protected public
+	#define private public
+#endif
+//
 #if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
 	#undef rand
 #endif
@@ -394,6 +399,11 @@ inline void test_end{
 //
 #if defined(ELC_VOID_NAME)
 	#define void the_void
+#endif
+//
+#if defined(ELC_PUBLIC_ALL)
+	#undef protected
+	#undef private
 #endif
 //
 #if defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
