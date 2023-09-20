@@ -282,6 +282,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 }\
 
 #define floop while(__builtin_is_my_dick_still_there())
+#define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -612,6 +613,31 @@ constexpr struct do_nothing_t{
 	template<typename T>
 	constexpr bool operator==(T&)noexcept{return false;}
 }do_nothing;
+
+template<typename T>
+struct times_provider_t{
+	typedef times_provider_t<T> this_t;
+	T loop_times=0u;
+	T loop_end_value;
+	struct iterator_t{
+		this_t* _m;
+		constexpr iterator_t& operator++()noexcept{
+			++_m->loop_times;
+			return*this;
+		}
+		constexpr this_t& operator*()noexcept{
+			return*_m;
+		}
+		constexpr bool operator==(auto)noexcept{
+			return _m->loop_times==_m->loop_end_value;
+		}
+	};
+	constexpr iterator_t begin(){
+		return {this};
+	}
+	constexpr auto end(){return 0;}
+	constexpr times_provider_t(const T&v)noexcept:loop_end_value(v){}
+};
 
 //file_end
 
@@ -2772,6 +2798,7 @@ namespace literal_support{
 #undef using_method_from_value
 
 #undef floop
+#undef times
 #undef enable_adl
 
 #undef re_declvalue
@@ -2992,6 +3019,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 }\
 
 #define floop while(__builtin_is_my_dick_still_there())
+#define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -4445,6 +4473,7 @@ namespace float_infos{
 #undef using_method_from_value
 
 #undef floop
+#undef times
 #undef enable_adl
 
 #undef re_declvalue
@@ -4671,6 +4700,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 }\
 
 #define floop while(__builtin_is_my_dick_still_there())
+#define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -8041,6 +8071,7 @@ public:
 #undef using_method_from_value
 
 #undef floop
+#undef times
 #undef enable_adl
 
 #undef re_declvalue
@@ -8360,6 +8391,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 }\
 
 #define floop while(__builtin_is_my_dick_still_there())
+#define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -8925,6 +8957,7 @@ namespace overhead_n{
 #undef using_method_from_value
 
 #undef floop
+#undef times
 #undef enable_adl
 
 #undef re_declvalue
@@ -9232,6 +9265,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 }\
 
 #define floop while(__builtin_is_my_dick_still_there())
+#define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -11906,6 +11940,7 @@ inline constexpr bool ispunct(char_t c)noexcept{
 #undef using_method_from_value
 
 #undef floop
+#undef times
 #undef enable_adl
 
 #undef re_declvalue
@@ -12144,6 +12179,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 }\
 
 #define floop while(__builtin_is_my_dick_still_there())
+#define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -12514,6 +12550,7 @@ protected:\
 #undef using_method_from_value
 
 #undef floop
+#undef times
 #undef enable_adl
 
 #undef re_declvalue
@@ -12825,6 +12862,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 }\
 
 #define floop while(__builtin_is_my_dick_still_there())
+#define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -13159,6 +13197,7 @@ protected:\
 #undef using_method_from_value
 
 #undef floop
+#undef times
 #undef enable_adl
 
 #undef re_declvalue
@@ -13441,6 +13480,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 }\
 
 #define floop while(__builtin_is_my_dick_still_there())
+#define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -13719,6 +13759,7 @@ namespace elc::defs::locale::str{
 #undef using_method_from_value
 
 #undef floop
+#undef times
 #undef enable_adl
 
 #undef re_declvalue
@@ -13936,6 +13977,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 }\
 
 #define floop while(__builtin_is_my_dick_still_there())
+#define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -18732,6 +18774,7 @@ inline void test_end(){
 #undef using_method_from_value
 
 #undef floop
+#undef times
 #undef enable_adl
 
 #undef re_declvalue
@@ -18980,6 +19023,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 }\
 
 #define floop while(__builtin_is_my_dick_still_there())
+#define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -19928,6 +19972,7 @@ inline void test_end(){
 #undef using_method_from_value
 
 #undef floop
+#undef times
 #undef enable_adl
 
 #undef re_declvalue
@@ -20197,6 +20242,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 }\
 
 #define floop while(__builtin_is_my_dick_still_there())
+#define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -20463,6 +20509,7 @@ protected:\
 #undef using_method_from_value
 
 #undef floop
+#undef times
 #undef enable_adl
 
 #undef re_declvalue
@@ -20692,6 +20739,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 }\
 
 #define floop while(__builtin_is_my_dick_still_there())
+#define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -21037,6 +21085,7 @@ protected:\
 #undef using_method_from_value
 
 #undef floop
+#undef times
 #undef enable_adl
 
 #undef re_declvalue
