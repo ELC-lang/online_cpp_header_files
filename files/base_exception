@@ -2811,37 +2811,43 @@ namespace math{
 	template<float_type T> requires(has_epsilon<T>)
 	[[nodiscard]]force_inline constexpr T sqrt(const T&v)noexcept;
 	template<float_type T>
+	inline constexpr T sqrt_to_new_epsilon(T&num,const T&v,const to_unsigned_t<T>&epsilon)noexcept{
+		//newton-raphson
+		floop{
+			auto next_ret=(num+v/num)/2u;
+			const bool end=abs(next_ret-num)<epsilon;
+			num=move(next_ret);//既然都算出来了，为什么不使用next_ret而是aret？
+			if(end)
+				return next_ret;
+		}
+	}
+	template<float_type T>
+	[[nodiscard]]inline constexpr T quick_sqrt(const T&v)noexcept{
+		if constexpr(BIT_POSSIBILITY==2)// evil floating point bit level hacking
+			if(!in_consteval)//编译期计算不能使用union_cast，让编译器慢慢算去吧
+				if constexpr(type_info<T> == type_info<float>)
+					return union_cast<T>(0x5F375A86-(union_cast<const int32_t>(v)>>1));
+				elseif constexpr(type_info<T> == type_info<double>)
+					return union_cast<T>(0x5FE6EB50C7B537A9-(union_cast<const int64_t>(v)>>1));
+				elseif constexpr(type_info<T> == type_info<long double>)
+					#if defined(_MSC_VER)//msvc上long double就是double
+						return union_cast<T>(0x5FE6EB50C7B537A9-(union_cast<const int64_t>(v)>>1));
+					#elif defined(ELC_BASE_ENV_HAS_INT128)
+						return union_cast<T>(0x5F1E45D78623ECB73CAB40BC89254389_u128-(union_cast<const int128_t>(v)>>1));
+					#else
+						do_nothing;//可以寄了
+					#endif
+				elseif constexpr(is_big_type<T>)
+					return sqrt(static_cast<long double>(v));
+		return v/2u;
+	}
+	template<float_type T>
 	[[nodiscard]]inline constexpr T sqrt(const T&v,const to_unsigned_t<T>&epsilon)noexcept{
 		if constexpr(has_NaN<T> && has_inf<T>)
 			if(v < 0u || v >= arithmetic_type_info_prover<T>::Inf())
 				return arithmetic_type_info_prover<T>::NaN();
-		T aret=exlambda()->T{
-			if constexpr(BIT_POSSIBILITY==2)// evil floating point bit level hacking
-				if(!in_consteval)//编译期计算不能使用union_cast，让编译器慢慢算去吧
-					if constexpr(type_info<T> == type_info<float>)
-						return union_cast<T>(0x5F375A86-(union_cast<const int32_t>(v)>>1));
-					elseif constexpr(type_info<T> == type_info<double>)
-						return union_cast<T>(0x5FE6EB50C7B537A9-(union_cast<const int64_t>(v)>>1));
-					elseif constexpr(type_info<T> == type_info<long double>)
-						#if defined(_MSC_VER)//msvc上long double就是double
-							return union_cast<T>(0x5FE6EB50C7B537A9-(union_cast<const int64_t>(v)>>1));
-						#elif defined(ELC_BASE_ENV_HAS_INT128)
-							return union_cast<T>(0x5F1E45D78623ECB73CAB40BC89254389_u128-(union_cast<const int128_t>(v)>>1));
-						#else
-							do_nothing;//可以寄了
-						#endif
-					elseif constexpr(is_big_type<T>)
-						return sqrt(static_cast<long double>(v));
-			return v/2u;
-		}();
-		//newton-raphson
-		floop{
-			auto next_ret=(aret+v/aret)/2u;
-			if(abs(next_ret-aret)<epsilon)
-				return next_ret;//既然都算出来了，为什么不使用next_ret而是aret？
-			else
-				aret=move(next_ret);
-		}
+		T aret=quick_sqrt(v);
+		return sqrt_to_new_epsilon(aret,v,epsilon);
 	}
 	//sqrt with one parameter
 	template<float_type T> requires(has_epsilon<T>)
@@ -2855,13 +2861,13 @@ namespace math{
 	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
 	template<arithmetic_type T>
 	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
-		#line 415 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 421 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
-		#line 427 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 433 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		for(T c=5u;c<=b;c+=6u)//遍历判断是否能被因数分解——不会有人看不懂吧?
 			if((!mod(a,c))||(!mod(a,(c+2u))))
 				return false;
-		#line 436 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 442 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return true;
 	}
 	/*! 判断某数是否是素数 */
@@ -2874,10 +2880,10 @@ namespace math{
 
 		if(b<4)
 			return true;//1和0也是prime,我不管.
-		#line 458 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 464 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		if(mod(mod(b,6)-1u,4u))
 			return false;
-		#line 463 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 469 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return is_prime_num_no_pre_check(b);
 	}
 	/// 求小于或等于某数的素数
@@ -2936,13 +2942,13 @@ namespace math{
 	/// 已知当前array的size，求下一个合适的提前分配大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_array(size_T size)noexcept{
-		#line 524 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 530 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return size_T(size*magic_number::gold_of_resize);
 	}
 	/// 已知当前hash table的size，求下一个合适的桶大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_hash(size_T size)noexcept{
-		#line 533 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 539 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return size_T(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
 	}
 	pop_msvc_warning();
@@ -3216,6 +3222,8 @@ using math::integer_log;
 using math::pow;
 using math::ceil;
 using math::floor;
+using math::sqrt_to_new_epsilon;
+using math::quick_sqrt;
 using math::sqrt;
 using math::trunc;
 using math::is_prime_num;
@@ -3318,7 +3326,7 @@ namespace magic_number{
 				//我们可以将result看作Ai*sqrt_640320的和.
 				auto magic_number = sqrt_640320;
 				//计算新的sqrt_640320.
-				sqrt_640320 = sqrt(ufloat_t{640320u},new_epsilon);
+				sqrt_to_new_epsilon(sqrt_640320,ufloat_t{640320u},new_epsilon);
 				magic_number /= sqrt_640320;
 				//去除旧数据的影响.
 				result /= magic_number;
@@ -3361,9 +3369,9 @@ namespace math{
 
 	template<float_type T>
 	[[nodiscard]]constexpr T arctan(T num, const to_unsigned_t<T>&epsilon)noexcept{
-		#line 955 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 963 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		if constexpr(signed_type<T>)
-			if (num < 0) return copy_as_negative(arctan(abs(num), epsilon));
+			if (num < 0) return -arctan(abs(num), epsilon);
 		if (num > 1) return pi_with_epsilon(epsilon)/2u - arctan(reciprocal(move(num)), epsilon);
 
 		size_t i = 1; bool negation = false; // 取反
@@ -6086,7 +6094,7 @@ namespace note_n{
 		force_inline constexpr name##_t(T a)noexcept:value(a){}\
 		template<class U>\
 		force_inline constexpr name##_t(name##_t<U>a)noexcept:value(a.value){}\
-		force_inline constexpr operator T()noexcept{return value;}\
+		force_inline explicit constexpr operator T()noexcept{return value;}\
 		force_inline constexpr T operator()()noexcept{return value;}\
 	};\
 	template<typename T>\
@@ -6117,7 +6125,7 @@ namespace array_like_n{
 	template<class T,size_t N>
 	[[nodiscard]]inline constexpr size_t size_of_array_like(T(&)[N])noexcept{return N;}
 	template<class T>
-	[[nodiscard]]inline size_t size_of_array_like(::std::initializer_list<T>&a)noexcept{return a.size();}
+	[[nodiscard]]inline size_t size_of_array_like(::std::initializer_list<remove_cvref<T>>&a)noexcept{return a.size();}
 
 	enable_adl(begin_of_array_like);
 	template<class T>
@@ -6125,7 +6133,7 @@ namespace array_like_n{
 	template<class T,size_t N>
 	[[nodiscard]]inline constexpr auto begin_of_array_like(T(&a)[N])noexcept{return addressof(a[0]);}
 	template<class T>
-	[[nodiscard]]inline const T* begin_of_array_like(::std::initializer_list<T>&a)noexcept{return a.begin();}
+	[[nodiscard]]inline const T* begin_of_array_like(::std::initializer_list<remove_cvref<T>>&a)noexcept{return a.begin();}
 
 	enable_adl(end_of_array_like);
 	template<class T>
@@ -6153,6 +6161,8 @@ namespace array_like_n{
 									);
 	template<class T,class U>
 	constexpr bool is_array_like_for=strict_is_array_like_for<T,U>||strict_is_array_like_for<const T,U>;
+
+	static_assert(is_array_like_for<int,::std::initializer_list<int>>);
 
 	template<class T>
 	struct array_like_view_t{
@@ -6184,6 +6194,7 @@ namespace array_like_n{
 		size_t _size=0;
 	public:
 		constexpr explicit array_like_view_t(T*a,size_t b)noexcept:_begin(a),_size(b){}
+		constexpr explicit array_like_view_t(T*a,note::size_t b)noexcept:array_like_view_t(a,b()){}
 		template<class U> requires strict_is_array_like_for<T,U>
 		explicit constexpr_as_auto array_like_view_t(U&&a)noexcept_as(begin_of_array_like<T>(a),size_of_array_like<T>(a)):array_like_view_t(begin_of_array_like<T>(a),size_of_array_like<T>(a)){}
 		constexpr array_like_view_t(const this_t&)noexcept=default;
