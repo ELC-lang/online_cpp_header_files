@@ -181,6 +181,10 @@ namespace elc::defs{
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
 #if !defined(ELC_WARNING_LEVEL)
 	#define ELC_WARNING_LEVEL 4
@@ -248,6 +252,8 @@ namespace elc::defs{
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -288,7 +294,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -553,6 +559,7 @@ protected:\
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -704,8 +711,12 @@ namespace elc::defs{ //在elc::defs中定义内容
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -769,6 +780,8 @@ namespace elc::defs{ //在elc::defs中定义内容
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -809,7 +822,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -2844,10 +2857,14 @@ namespace math{
 	template<float_type T> requires(has_epsilon<T>)
 	[[nodiscard]]force_inline constexpr T sqrt(const T&v)noexcept;
 	template<float_type T>
-	inline constexpr T sqrt_to_new_epsilon(T&num,const T&v,const to_unsigned_t<T>&epsilon)noexcept{
+	inline constexpr T sqrt_iteration(const T&num,const T&v)noexcept{
 		//newton-raphson
+		return (num+v/num)/2u;
+	}
+	template<float_type T>
+	inline constexpr T sqrt_to_new_epsilon(T num,const T&v,const to_unsigned_t<T>&epsilon)noexcept{
 		floop{
-			auto next_ret=(num+v/num)/2u;
+			auto next_ret=sqrt_iteration(num,v);
 			const bool end=abs(next_ret-num)<epsilon;
 			num=move(next_ret);//既然都算出来了，为什么不使用next_ret而是aret？
 			if(end)
@@ -2879,8 +2896,7 @@ namespace math{
 		if constexpr(has_NaN<T> && has_inf<T>)
 			if(v < 0u || v >= arithmetic_type_info_prover<T>::Inf())
 				return arithmetic_type_info_prover<T>::NaN();
-		T aret=quick_sqrt(v);
-		return sqrt_to_new_epsilon(aret,v,epsilon);
+		return sqrt_to_new_epsilon(quick_sqrt(v),v,epsilon);
 	}
 	//sqrt with one parameter
 	template<float_type T> requires(has_epsilon<T>)
@@ -2894,13 +2910,13 @@ namespace math{
 	/*! 判断某数是否是素数,无预先检查以供其他素数相关函数快速调用. */
 	template<arithmetic_type T>
 	[[nodiscard]]inline constexpr bool is_prime_num_no_pre_check(T a)noexcept{
-		#line 421 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 424 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		T b=safe_arithmetic_cast<T>(sqrt(a));//若一个数可以分解为两因数之积,其中一个因数必定≤其开方:反指数式减少遍历范围.
-		#line 433 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 436 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		for(T c=5u;c<=b;c+=6u)//遍历判断是否能被因数分解——不会有人看不懂吧?
 			if((!mod(a,c))||(!mod(a,(c+2u))))
 				return false;
-		#line 442 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 445 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return true;
 	}
 	/*! 判断某数是否是素数 */
@@ -2913,10 +2929,10 @@ namespace math{
 
 		if(b<4)
 			return true;//1和0也是prime,我不管.
-		#line 464 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 467 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		if(mod(mod(b,6)-1u,4u))
 			return false;
-		#line 469 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 472 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return is_prime_num_no_pre_check(b);
 	}
 	/// 求小于或等于某数的素数
@@ -2975,13 +2991,13 @@ namespace math{
 	/// 已知当前array的size，求下一个合适的提前分配大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_array(size_T size)noexcept{
-		#line 530 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 533 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return size_T(size*magic_number::gold_of_resize);
 	}
 	/// 已知当前hash table的size，求下一个合适的桶大小
 	template<unsigned_integer_type size_T>
 	[[nodiscard]]inline constexpr size_T get_next_gold_size_to_resize_for_hash(size_T size)noexcept{
-		#line 539 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 542 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		return size_T(get_prime_num_big_or_eq_than(size*magic_number::gold_of_resize));
 	}
 	pop_msvc_warning();
@@ -3255,6 +3271,7 @@ using math::integer_log;
 using math::pow;
 using math::ceil;
 using math::floor;
+using math::sqrt_iteration;
 using math::sqrt_to_new_epsilon;
 using math::quick_sqrt;
 using math::sqrt;
@@ -3312,7 +3329,7 @@ namespace magic_number{
 	using ::std::move;
 
 	template<unsigned_big_float_type T>
-	struct pi_with_epsilon_t{
+	struct pi_with_epsilon_impl_t{
 	private:
 		typedef to_signed_t<T> float_t;
 		typedef to_unsigned_t<T> ufloat_t;
@@ -3328,42 +3345,55 @@ namespace magic_number{
 		ufloat_t _640320_pow_3kplus1p5 = sqrt_640320*640320u;//初始值1.5次方
 		const uint_t _545140134_ = 545140134u;
 		const uint_t _640320pow3 = pow(uint_t{640320u},3u);
-	public:
-		constexpr pi_with_epsilon_t(ufloat_t the_epsilon = magic_number::god)noexcept: epsilon(move(the_epsilon)){}
-		[[nodiscard]]constexpr T operator()()noexcept{
-			while (abs(sum) > epsilon) {
-				sum = copy_as_negative(
-					(				_545140134k_p13591409 * _6k_factorial				)
-					/ //= 	--------------------------------------------------------
-					(		_3k_factorial*k_factorial_pow_3 * _640320_pow_3kplus1p5		)
-				,sign);
-				++k;
-				for times(3) _3k_factorial *= ++_3k;
-				for times(6) _6k_factorial *= ++_6k;
-				k_factorial_pow_3 *= pow(k,3u);
-				_545140134k_p13591409 += _545140134_;
-				_640320_pow_3kplus1p5 *= _640320pow3;
-				sign = !sign;
 
-				result += sum;
-			};
+		[[nodiscard]]constexpr void update_sqrt_640320(ufloat_t new_value)noexcept{
+			//首先 我们将result中的sqrt_640320去除.
+			//将现有的result看作(X0 X1 X2 ... Xn) 的和, 其中Xi = Yi/_640320_pow_3kplus1p5.
+			//而_640320_pow_3kplus1p5 = sqrt_640320*640320^3i.
+			//设Ai = Yi/640320^3i, 则Xi = Ai*sqrt_640320.
+			//我们可以将result看作Ai*sqrt_640320的和.
+			auto magic_number = move(sqrt_640320) / new_value;
+			sqrt_640320=move(new_value);
+			//去除旧数据的影响.
+			result /= magic_number;
+			_640320_pow_3kplus1p5 *= magic_number;
+		}
+	public:
+		constexpr pi_with_epsilon_impl_t(ufloat_t the_epsilon = magic_number::god)noexcept: epsilon(move(the_epsilon)){}
+		[[nodiscard]]constexpr T take_value()noexcept{
 			return abs(reciprocal(12*result));
+		}
+		[[nodiscard]]constexpr void do_base_iteration()noexcept{
+			sum = copy_as_negative(
+				(				_545140134k_p13591409 * _6k_factorial				)
+				/ //= 	--------------------------------------------------------
+				(		_3k_factorial*k_factorial_pow_3 * _640320_pow_3kplus1p5		)
+			,sign);
+			++k;
+			for times(3) _3k_factorial *= ++_3k;
+			for times(6) _6k_factorial *= ++_6k;
+			k_factorial_pow_3 *= pow(k,3u);
+			_545140134k_p13591409 += _545140134_;
+			_640320_pow_3kplus1p5 *= _640320pow3;
+			sign = !sign;
+
+			result += sum;
+		}
+		[[nodiscard]]constexpr void do_sqrt_iteration()noexcept{
+			update_sqrt_640320(sqrt_iteration(sqrt_640320,ufloat_t{640320u}));
+		}
+		[[nodiscard]]constexpr void do_iteration()noexcept{
+			do_base_iteration();do_sqrt_iteration();
+		}
+		[[nodiscard]]constexpr T operator()()noexcept{
+			while (abs(sum) > epsilon)
+				do_base_iteration();
+			return take_value();
 		}
 		[[nodiscard]]constexpr T operator()(ufloat_t new_epsilon)noexcept{
 			if(new_epsilon < epsilon){
-				//epsilon变小了，我们需要重新计算
-				//首先 我们将result中的sqrt_640320去除.
-				//将现有的result看作(X0 X1 X2 ... Xn) 的和, 其中Xi = Yi/_640320_pow_3kplus1p5.
-				//而_640320_pow_3kplus1p5 = sqrt_640320*640320^3i.
-				//设Ai = Yi/640320^3i, 则Xi = Ai*sqrt_640320.
-				//我们可以将result看作Ai*sqrt_640320的和.
-				auto magic_number = sqrt_640320;
-				//计算新的sqrt_640320.
-				sqrt_to_new_epsilon(sqrt_640320,ufloat_t{640320u},new_epsilon);
-				magic_number /= sqrt_640320;
-				//去除旧数据的影响.
-				result /= magic_number;
-				_640320_pow_3kplus1p5 *= magic_number;
+				//epsilon变小了，我们需要重新计算sqrt_640320
+				update_sqrt_640320(sqrt_to_new_epsilon(sqrt_640320,ufloat_t{640320u},new_epsilon));
 				//更新epsilon.
 				epsilon = move(new_epsilon);
 			}
@@ -3371,14 +3401,28 @@ namespace magic_number{
 		}
 	};
 	template<unsigned_float_type T>
-	distinctive inline pi_with_epsilon_t<T> pi_with_epsilon_impl{};
-	template<float_type T>
-	auto pi_with_epsilon(T&&epsilon)noexcept{
-		if constexpr(is_basic_float_type<T>)
-			return (T)magic_number::pi;//啊？
-		else
-			return pi_with_epsilon_impl<to_unsigned_t<remove_cvref<T>>>(forward<T>(epsilon));
-	}
+	distinctive inline pi_with_epsilon_impl_t<T> pi_with_epsilon_impl{};
+	distinctive inline constexpr struct pi_with_epsilon_t{
+		template<float_type T>
+		static auto&_impl = pi_with_epsilon_impl<to_unsigned_t<remove_cvref<T>>>;
+		template<float_type T>
+		auto operator()(T&&epsilon)const noexcept{
+			if constexpr(is_basic_float_type<T>)
+				return (T)magic_number::pi;//啊？
+			else
+				return _impl<T>(forward<T>(epsilon));
+		}
+		template<float_type T>
+		struct for_type_t{
+			auto operator()(T epsilon)const noexcept{return _impl<T>(forward<T>(epsilon));}
+			void do_base_iteration()const noexcept{_impl<T>.do_base_iteration();}
+			void do_sqrt_iteration()const noexcept{_impl<T>.do_sqrt_iteration();}
+			void do_iteration()const noexcept{_impl<T>.do_iteration();}
+			auto take_value()const noexcept{return _impl<T>.take_value();}
+		};
+		template<float_type T>
+		static constexpr auto for_type = for_type_t<T>{};//这个是为了让用户可以自己调用do_iteration等函数
+	}pi_with_epsilon{};
 }
 using magic_number::pi_with_epsilon;
 
@@ -3402,7 +3446,7 @@ namespace math{
 
 	template<float_type T>
 	[[nodiscard]]constexpr T arctan(T num, const to_unsigned_t<T>&epsilon)noexcept{
-		#line 963 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 994 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		if constexpr(signed_type<T>)
 			if (num < 0) return -arctan(abs(num), epsilon);
 		if (num > 1) return pi_with_epsilon(epsilon)/2u - arctan(reciprocal(move(num)), epsilon);
@@ -3568,6 +3612,7 @@ using math::arccsc;
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -3713,8 +3758,12 @@ namespace elc::defs{
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -3778,6 +3827,8 @@ namespace elc::defs{
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -3818,7 +3869,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -5133,13 +5184,11 @@ namespace float_infos{
 			struct divide_t{
 				T numerator;
 				size_t denominator;
-			private:
-				bool _success;
-			public:
-				constexpr divide_t(T numerator,size_t denominator)noexcept:_success(true),numerator(numerator),denominator(denominator){}
-				constexpr divide_t()noexcept:_success(false),numerator(0),denominator(0){}
+				bool is_success;
+				constexpr divide_t(T numerator,size_t denominator)noexcept:is_success(true),numerator(numerator),denominator(denominator){}
+				constexpr divide_t()noexcept:is_success(false),numerator(0),denominator(0){}
 				[[nodiscard]]constexpr bool success()const noexcept{
-					return _success;
+					return is_success;
 				}
 				[[nodiscard]]constexpr explicit operator bool()const noexcept{
 					return success();
@@ -5239,6 +5288,7 @@ namespace float_infos{
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -5375,7 +5425,7 @@ namespace float_infos{
 
 //file_end
 
-	#line 411 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
+	#line 409 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/basic_environment/_body.hpp"
 }
 
 //file_end
@@ -5390,8 +5440,12 @@ namespace elc::defs{ //在elc::defs中定义内容
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -5455,6 +5509,8 @@ namespace elc::defs{ //在elc::defs中定义内容
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -5495,7 +5551,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -5805,6 +5861,7 @@ namespace math{
 		}());
 	};
 }
+using math::arithmetic_type_info_prover;
 
 //file_end
 
@@ -8022,7 +8079,7 @@ namespace hash_n{
 		@returns array_like_view_t<T> 对象的哈希值。
 		*/
 		template<class T> requires is_not_signal_value_for_array_like<T>
-		[[nodiscard]]inline constexpr hash_value_t hash(const array_like_view_t<T>a)const noexcept(nothrow<T>){
+		[[nodiscard]]inline constexpr hash_value_t hash(const array_like_view_t<T>&a)const noexcept(nothrow<T>){
 			return hash(a.begin(),a.size());
 		}
 		/*!
@@ -8035,7 +8092,7 @@ namespace hash_n{
 		@returns array_like_view_t<T> 对象的哈希值。
 		*/
 		template<class T> requires is_not_signal_value_for_array_like<T>
-		[[nodiscard]]inline constexpr hash_value_t with_calculated_before(hash_value_t before,size_t before_size,const array_like_view_t<T>a)const noexcept{
+		[[nodiscard]]inline constexpr hash_value_t with_calculated_before(hash_value_t before,size_t before_size,const array_like_view_t<T>&a)const noexcept{
 			return with_calculated_before(before,before_size,a.begin(),a.size());
 		}
 
@@ -8190,7 +8247,7 @@ namespace range_n{
 	};
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* in_range(const remove_cvref<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* in_range(const remove_cvref<T>&pattern,array_like_view_t<T> range){
 		for(auto&i : range){
 			if(i==pattern)
 				return addressof(i);
@@ -8199,7 +8256,7 @@ namespace range_n{
 	}
 	/// 若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t in_range_size_t(const remove_cvref<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr size_t in_range_size_t(const remove_cvref<T>&pattern,array_like_view_t<T> range){
 		auto result = in_range(pattern,range);
 		if(result)
 			return result - range.begin();
@@ -8208,7 +8265,7 @@ namespace range_n{
 	}
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* in_range_but_reverse(const remove_cvref<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* in_range_but_reverse(const remove_cvref<T>&pattern,array_like_view_t<T> range){
 		for(auto&i : range|::std::views::reverse){
 			if(i==pattern)
 				return addressof(i);
@@ -8217,7 +8274,7 @@ namespace range_n{
 	}
 	/// 若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t in_range_but_reverse_size_t(const remove_cvref<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr size_t in_range_but_reverse_size_t(const remove_cvref<T>&pattern,array_like_view_t<T> range){
 		auto result = in_range_but_reverse(pattern,range);
 		if(result)
 			return result - range.begin();
@@ -8227,13 +8284,13 @@ namespace range_n{
 	/// 若成功找到匹配的数据串，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard,deprecated("cache match_pattern and don't waste it")]]
-	constexpr T* in_range(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	constexpr T* in_range(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		match_pattern tmp=pattern;
 		return tmp.match(range);
 	}
 	/// 若成功找到匹配的数据串，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t in_range_size_t(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr size_t in_range_size_t(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		auto result = in_range(pattern,range);
 		if(result)
 			return result - range.begin();
@@ -8244,13 +8301,13 @@ namespace range_n{
 	/// 若成功找到匹配的数据串，返回其开头，若未找到，返回nullptr
 	template<typename T>
 	[[nodiscard,deprecated("cache match_pattern and don't waste it")]]
-	constexpr T* in_range_but_reverse(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	constexpr T* in_range_but_reverse(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		reverse_match_pattern tmp = pattern;
 		return tmp.match(range);
 	}
 	/// 若成功找到匹配的数据串，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t in_range_but_reverse_size_t(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr size_t in_range_but_reverse_size_t(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		auto result = in_range_but_reverse(pattern,range);
 		if(result)
 			return result - range.begin();
@@ -8291,7 +8348,7 @@ namespace range_n{
 	/// find_first_of的bitmark实现
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_first_of_bitmark(const bitmark_for_finds<T>&mark,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* find_first_of_bitmark(const bitmark_for_finds<T>&mark,array_like_view_t<T> range){
 		for(auto&i : range){
 			if(mark[i])
 				return addressof(i);
@@ -8301,7 +8358,7 @@ namespace range_n{
 	/// find_first_of的朴素实现
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* base_find_first_of(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* base_find_first_of(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		for(auto&i : range){
 			if(in_range(i,pattern))
 				return addressof(i);
@@ -8311,7 +8368,7 @@ namespace range_n{
 	//  find_first_of
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_first_of(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* find_first_of(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		if constexpr(basic_integer_type<T>){
 			bitmark_for_finds<T> mark;
 			if(mark.mark(pattern))
@@ -8321,7 +8378,7 @@ namespace range_n{
 	}
 	/// 若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t find_first_of_size_t(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr size_t find_first_of_size_t(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		auto result = find_first_of(pattern,range);
 		if(result)
 			return result - range.begin();
@@ -8331,7 +8388,7 @@ namespace range_n{
 	/// find_last_of的bitmark实现
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_of_bitmark(const bitmark_for_finds<T>&mark,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* find_last_of_bitmark(const bitmark_for_finds<T>&mark,array_like_view_t<T> range){
 		for(auto& i: range|::std::views::reverse){
 			if(mark[i])
 				return addressof(i);
@@ -8340,7 +8397,7 @@ namespace range_n{
 	/// find_last_of的朴素实现
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* base_find_last_of(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* base_find_last_of(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		for(auto&i : range|::std::views::reverse){
 			if(in_range(i,pattern))
 				return addressof(i);
@@ -8350,7 +8407,7 @@ namespace range_n{
 	//  find_last_of
 	/// 若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_of(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* find_last_of(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		if constexpr(basic_integer_type<T>){
 			bitmark_for_finds<T> mark;
 			if(mark.mark(pattern))
@@ -8360,7 +8417,7 @@ namespace range_n{
 	}
 	/// 若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t find_last_of_size_t(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr size_t find_last_of_size_t(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		auto result = find_last_of(pattern,range);
 		if(result)
 			return result - range.begin();
@@ -8370,7 +8427,7 @@ namespace range_n{
 	/// find_first_not_of的bitmark实现
 	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_first_not_of_bitmark(const bitmark_for_finds<T>&mark,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* find_first_not_of_bitmark(const bitmark_for_finds<T>&mark,array_like_view_t<T> range){
 		for(auto& i: range){
 			if(!mark[i])
 				return addressof(i);
@@ -8380,7 +8437,7 @@ namespace range_n{
 	/// find_first_not_of的朴素实现
 	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* base_find_first_not_of(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* base_find_first_not_of(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		for(auto&i : range){
 			if(!in_range(i,pattern))
 				return addressof(i);
@@ -8390,7 +8447,7 @@ namespace range_n{
 	//  find_first_not_of
 	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_first_not_of(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* find_first_not_of(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		if constexpr(basic_integer_type<T>){
 			bitmark_for_finds<T> mark;
 			if(mark.mark(pattern))
@@ -8400,7 +8457,7 @@ namespace range_n{
 	}
 	/// 若成功找到不匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t find_first_not_of_size_t(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr size_t find_first_not_of_size_t(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		auto result = find_first_not_of(pattern,range);
 		if(result)
 			return result - range.begin();
@@ -8410,7 +8467,7 @@ namespace range_n{
 	/// find_last_not_of的bitmark实现
 	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_not_of_bitmark(const bitmark_for_finds<T>&mark,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* find_last_not_of_bitmark(const bitmark_for_finds<T>&mark,array_like_view_t<T> range){
 		for(auto& i: range|::std::views::reverse){
 			if(!mark[i])
 				return addressof(i);
@@ -8420,7 +8477,7 @@ namespace range_n{
 	/// find_last_not_of的朴素实现
 	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* base_find_last_not_of(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* base_find_last_not_of(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		for(auto&i : range|::std::views::reverse){
 			if(!in_range(i,pattern))
 				return addressof(i);
@@ -8483,7 +8540,7 @@ namespace range_n{
 	//  find_last_not_of
 	/// 若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_not_of(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* find_last_not_of(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		if constexpr(basic_integer_type<T>){
 			bitmark_for_finds<T> mark;
 			if(mark.mark(pattern))
@@ -8493,7 +8550,7 @@ namespace range_n{
 	}
 	/// 若成功找到不匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t find_last_not_of_size_t(const array_like_view_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr size_t find_last_not_of_size_t(const array_like_view_t<T>&pattern,array_like_view_t<T> range){
 		auto result = find_last_not_of(pattern,range);
 		if(result)
 			return result - range.begin();
@@ -8706,10 +8763,10 @@ using constexpr_str_n::constexpr_str_t;
 //仅是声明以及size_t包装
 namespace range_n{
 	template<typename T>
-	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range);
+	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<T>&pattern,array_like_view_t<T> range);
 	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t in_range_size_t(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr size_t in_range_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
 		auto result = in_range(pattern, range);
 		if(result)
 			return result - range.data();
@@ -8717,10 +8774,10 @@ namespace range_n{
 			return npos;
 	}
 	template<typename T>
-	[[nodiscard]]constexpr T* in_range_but_reverse(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range);
+	[[nodiscard]]constexpr T* in_range_but_reverse(const constexpr_str_t<T>&pattern,array_like_view_t<T> range);
 	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t in_range_but_reverse_size_t(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr size_t in_range_but_reverse_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
 		auto result = in_range_but_reverse(pattern, range);
 		if(result)
 			return result - range.data();
@@ -8728,10 +8785,10 @@ namespace range_n{
 			return npos;
 	}
 	template<typename T>
-	[[nodiscard]]constexpr T* find_first_of(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range);
+	[[nodiscard]]constexpr T* find_first_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range);
 	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t find_first_of_size_t(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr size_t find_first_of_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
 		auto result = find_first_of(pattern, range);
 		if(result)
 			return result - range.data();
@@ -8739,10 +8796,10 @@ namespace range_n{
 			return npos;
 	}
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_of(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range);
+	[[nodiscard]]constexpr T* find_last_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range);
 	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t find_last_of_size_t(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr size_t find_last_of_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
 		auto result = find_last_of(pattern, range);
 		if(result)
 			return result - range.data();
@@ -8750,10 +8807,10 @@ namespace range_n{
 			return npos;
 	}
 	template<typename T>
-	[[nodiscard]]constexpr T* find_first_not_of(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range);
+	[[nodiscard]]constexpr T* find_first_not_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range);
 	//若成功找到不匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t find_first_not_of_size_t(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr size_t find_first_not_of_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
 		auto result = find_first_not_of(pattern, range);
 		if(result)
 			return result - range.data();
@@ -8761,10 +8818,10 @@ namespace range_n{
 			return npos;
 	}
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_not_of(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range);
+	[[nodiscard]]constexpr T* find_last_not_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range);
 	//若成功找到不匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_not_of_size_t(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* find_last_not_of_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
 		auto result = find_last_not_of(pattern,range);
 		if(result)
 			return result - range.begin();
@@ -9075,17 +9132,17 @@ using constexpr_str_n::operator ""_constexpr_str;
 //重载range操作
 namespace range_n{
 	template<typename T>
-	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
 		return pattern.match_pattern.match(range);
 	}
 	template<typename T>
-	[[nodiscard]]constexpr T* in_range_but_reverse(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* in_range_but_reverse(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
 		return pattern.reverse_match_pattern.match(range);
 	}
 	//find_first_of
 	//若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_first_of(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* find_first_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
 		if(pattern.is_bitmark_workable)
 			return find_first_of_bitmark(pattern.bitmark_for_finds,range);
 		else
@@ -9094,7 +9151,7 @@ namespace range_n{
 	//find_last_of
 	//若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_of(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* find_last_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
 		if(pattern.is_bitmark_workable)
 			return find_last_of_bitmark(pattern.bitmark_for_finds,range);
 		else
@@ -9103,7 +9160,7 @@ namespace range_n{
 	//find_first_not_of
 	//若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_first_not_of(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* find_first_not_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
 		if(pattern.is_bitmark_workable)
 			return find_first_not_of_bitmark(pattern.bitmark_for_finds,range);
 		else
@@ -9112,7 +9169,7 @@ namespace range_n{
 	//find_last_not_of
 	//若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_not_of(const constexpr_str_t<T>&pattern,const array_like_view_t<T>&range){
+	[[nodiscard]]constexpr T* find_last_not_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
 		if(pattern.is_bitmark_workable)
 			return find_last_not_of_bitmark(pattern.bitmark_for_finds,range);
 		else
@@ -9711,6 +9768,7 @@ using function_base_n::function_data_wrapper_t;
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -9955,8 +10013,12 @@ using function_base_n::function_data_wrapper_t;
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -10020,6 +10082,8 @@ using function_base_n::function_data_wrapper_t;
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -10060,7 +10124,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -10597,6 +10661,7 @@ namespace overhead_n{
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -10829,8 +10894,12 @@ namespace elc{
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -10894,6 +10963,8 @@ namespace elc{
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -10934,7 +11005,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -13580,6 +13651,7 @@ inline constexpr bool ispunct(char_t c)noexcept{
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -13743,8 +13815,12 @@ inline constexpr bool ispunct(char_t c)noexcept{
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -13808,6 +13884,8 @@ inline constexpr bool ispunct(char_t c)noexcept{
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -13848,7 +13926,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -14190,6 +14268,7 @@ protected:\
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -14426,8 +14505,12 @@ protected:\
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -14491,6 +14574,8 @@ protected:\
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -14531,7 +14616,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -14837,6 +14922,7 @@ protected:\
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -15044,8 +15130,12 @@ protected:\
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -15109,6 +15199,8 @@ protected:\
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -15149,7 +15241,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -15399,6 +15491,7 @@ namespace elc::defs::locale::str{
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -15541,8 +15634,12 @@ namespace elc::defs{ //在elc::defs中定义内容
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -15606,6 +15703,8 @@ namespace elc::defs{ //在elc::defs中定义内容
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -15646,7 +15745,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -19804,6 +19903,7 @@ inline void test_end(){
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -20045,8 +20145,12 @@ namespace elc::defs{
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -20110,6 +20214,8 @@ namespace elc::defs{
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -20150,7 +20256,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -20416,6 +20522,7 @@ inline void test_end(){
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -20673,8 +20780,12 @@ namespace elc::defs{
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -20738,6 +20849,8 @@ namespace elc::defs{
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -20778,7 +20891,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -21698,6 +21811,7 @@ inline void test_end(){
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -21892,8 +22006,12 @@ namespace elc::defs{
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -21957,6 +22075,8 @@ namespace elc::defs{
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -21997,7 +22117,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -22235,6 +22355,7 @@ protected:\
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -22389,8 +22510,12 @@ namespace elc::defs{
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -22454,6 +22579,8 @@ namespace elc::defs{
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -22494,7 +22621,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -22826,6 +22953,7 @@ protected:\
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -22989,8 +23117,12 @@ namespace elc::defs{
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -23054,6 +23186,8 @@ namespace elc::defs{
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -23094,7 +23228,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -24280,6 +24414,7 @@ inline void test_end(){
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
@@ -24454,8 +24589,12 @@ namespace elc::defs{
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //undefs at "_undefs.hpp"
 
+#if defined(ELC_CODE_REALM)
+	#error "include <elc/code_realm> after any other elc headers then u can get all the stuffs in your code space!"
+#endif
+
 //set ELC_WARNING_LEVEL default to 4(max)
-#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
+#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 
 #if defined(_MSC_VER)
 	#pragma warning(push,ELC_WARNING_LEVEL)
@@ -24519,6 +24658,8 @@ namespace elc::defs{
 	#undef rand
 	#pragma push_macro("sqrt")
 	#undef sqrt
+	#pragma push_macro("type_info")
+	#undef type_info
 	#pragma push_macro("elc")
 	#undef elc
 #endif
@@ -24559,7 +24700,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
-	//https://developercommunity.visualstudio.com/t/10193638
+	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
 #else
 	#define enable_adl(name) void name()noexcept=delete
@@ -24795,6 +24936,7 @@ protected:\
 	#pragma pop_macro("export")
 	#pragma pop_macro("rand")
 	#pragma pop_macro("sqrt")
+	#pragma pop_macro("type_info")
 	#pragma pop_macro("elc")
 #endif
 
