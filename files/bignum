@@ -14164,11 +14164,11 @@ protected:\
 					__debugbreak();
 			#endif
 			#if defined(_WINMAIN_)
-				::MessageBoxW(NULL,L"elc died.",NULL,MB_ICONERROR);
+				::MessageBoxW(NULL,L"\nelc died.",NULL,MB_ICONERROR);
 			#endif
 			die_state state;
 			Init_die_state(state);
-			ConsoleLog(state,"elc died.\n");
+			ConsoleLog(state,"\nelc died.\n");
 			ConsoleLogEnd(state);
 			::std::abort();
 		}
@@ -14191,7 +14191,7 @@ protected:\
 					#endif
 					die_state state;
 					Init_die_state(state);
-					ConsoleLog(state,L"elc died because:\n");
+					ConsoleLog(state,L"\nelc died because:\n");
 					ConsoleLog(state,err_msg_in_wchar);
 					ConsoleLog(state,L"\n");
 					ConsoleLogEnd(state);
@@ -14203,7 +14203,7 @@ protected:\
 					#endif
 					die_state state;
 					Init_die_state(state);
-					ConsoleLog(state,L"elc died because:\n");
+					ConsoleLog(state,L"\nelc died because:\n");
 					ConsoleLog(state,err_msg_in_wchar);
 					ConsoleLog(state,L"\n");
 					ConsoleLogEnd(state);
@@ -14229,7 +14229,7 @@ protected:\
 					#endif
 					die_state state;
 					Init_die_state(state);
-					ConsoleLog(state,"elc died because:\n");
+					ConsoleLog(state,"\nelc died because:\n");
 					ConsoleLog(state,err_msg_in_char);
 					ConsoleLog(state,"\n");
 					ConsoleLogEnd(state);
@@ -21290,8 +21290,8 @@ private:
 		return fast_divmod_base(a.get_data_view(),b.get_data_view());
 	}
 	[[nodiscard]]static data_type fast_div_base(data_view_type a,data_view_type b)noexcept{
-		if(a.size()<=fast_div_base_threshold)return div_base(a,b);
 		no_mod_optimisation_of_div(a,b);
+		if(a.size()<=fast_div_base_threshold)return div_base_no_optimisation(a,b);
 		const auto [a_after_reg,b_after_reg,muti]=fast_div_regularisation(a,b);
 		return fast_divmod_base_impl(a_after_reg,b_after_reg).quot._data;
 	}
@@ -21316,7 +21316,7 @@ private:
 		size_t base = (b.size()+1) / 2;
 		//符合3/2时，进行试商
 		if(a.size() <= base*3) {
-			base = b.size() / 2;
+			base = to_size_t(b.size() / magic_number::e);
 			auto a_high = a.subview(base);//不需要re_shrink：subview是舍弃低位，下同
 			auto b_high = b.subview(base);
 			//数值优化，这意味着余数不可用（下方的remain确实被舍弃了所以可以这样优化）

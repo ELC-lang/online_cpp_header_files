@@ -14203,11 +14203,11 @@ protected:\
 					__debugbreak();
 			#endif
 			#if defined(_WINMAIN_)
-				::MessageBoxW(NULL,L"elc died.",NULL,MB_ICONERROR);
+				::MessageBoxW(NULL,L"\nelc died.",NULL,MB_ICONERROR);
 			#endif
 			die_state state;
 			Init_die_state(state);
-			ConsoleLog(state,"elc died.\n");
+			ConsoleLog(state,"\nelc died.\n");
 			ConsoleLogEnd(state);
 			::std::abort();
 		}
@@ -14230,7 +14230,7 @@ protected:\
 					#endif
 					die_state state;
 					Init_die_state(state);
-					ConsoleLog(state,L"elc died because:\n");
+					ConsoleLog(state,L"\nelc died because:\n");
 					ConsoleLog(state,err_msg_in_wchar);
 					ConsoleLog(state,L"\n");
 					ConsoleLogEnd(state);
@@ -14242,7 +14242,7 @@ protected:\
 					#endif
 					die_state state;
 					Init_die_state(state);
-					ConsoleLog(state,L"elc died because:\n");
+					ConsoleLog(state,L"\nelc died because:\n");
 					ConsoleLog(state,err_msg_in_wchar);
 					ConsoleLog(state,L"\n");
 					ConsoleLogEnd(state);
@@ -14268,7 +14268,7 @@ protected:\
 					#endif
 					die_state state;
 					Init_die_state(state);
-					ConsoleLog(state,"elc died because:\n");
+					ConsoleLog(state,"\nelc died because:\n");
 					ConsoleLog(state,err_msg_in_char);
 					ConsoleLog(state,"\n");
 					ConsoleLogEnd(state);
@@ -23548,6 +23548,13 @@ struct comn_string_data_t final:base_string_data_t<char_T>,instance_struct<comn_
 		_p_reverse_match_pattern=nullptr;
 	}
 	void self_changed()noexcept{
+		#if defined(_MSC_VER) && defined(ELC_STRING_CHECKING_NOT_INITED_CHARS)
+		push_and_disable_msvc_warning(4310);//截断常量警告diss
+		for(size_t i=0;i<_m.size();i++)
+			if(_m[i]==char_T(0xCDCDCDCD))
+				__debugbreak();
+		pop_msvc_warning();
+		#endif
 		clear_match_pattern();
 		base_t::self_changed();
 	}
@@ -23919,6 +23926,38 @@ struct head_apply_string_data_t final:base_string_data_t<char_T>,instance_struct
 		_m.resize(head_size);
 	}
 
+	void marge_same_value_type()noexcept{
+		while(type_info<this_t> == typeid(*_to) && _to->is_unique()){
+			//合并重复的head_apply_string_data_t以防树状结构过深
+			const auto p=down_cast<this_t*>(_to.get());
+			const auto p_size=p->_used_size;
+			const auto p_begin=(const char_T*)(p->_m.end())-p_size;
+			const auto this_begin=_m.end()-_used_size;
+			const auto pos=_m.size()-_used_size;
+			if(pos>=p_size)
+				copy_assign[p_size](note::from<const char_T*>(p_begin),note::to<char_T*>(this_begin-p_size));
+			else{
+				const auto size_now=this->get_size();
+				const auto size_new=get_next_gold_size_to_resize_for_array(size_now);
+				_m.insert_with_forward_resize(pos,p_size,p_begin,size_new);
+			}
+			_to_size=p->_to_size;
+			_used_size+=p_size;
+			_to=p->_to;
+		}
+	}
+	void self_changed()noexcept{
+		marge_same_value_type();
+		#if defined(_MSC_VER) && defined(ELC_STRING_CHECKING_NOT_INITED_CHARS)
+		push_and_disable_msvc_warning(4310);//截断常量警告diss
+			for(size_t i=0;i<_used_size;++i)
+				if(_m.end()[i-_used_size]==char_T(0xCDCDCDCD))
+					__debugbreak();
+		pop_msvc_warning();
+		#endif
+		base_t::self_changed();
+	}
+
 	[[nodiscard]]virtual ptr_t get_substr_data(size_t begin,size_t size)noexcept override final{
 		if(begin>=_used_size)
 			return _to->get_substr_data(begin-_used_size,size);
@@ -23949,7 +23988,8 @@ struct head_apply_string_data_t final:base_string_data_t<char_T>,instance_struct
 			return this->apply_str_to_end(str);
 		elseif(this->is_unique()){
 			if(pos<_used_size){
-				if(_m.size()-_used_size>=str.size()){
+				const auto pos_base=_m.size()-_used_size;
+				if(pos_base>=str.size()){
 					char_T* orogin_head_begin=_m.end()-_used_size;
 					char_T* head_begin=orogin_head_begin-str.size();
 					copy_assign[pos](note::from<const char_T*>(orogin_head_begin),note::to<char_T*>(head_begin));
@@ -23958,7 +23998,7 @@ struct head_apply_string_data_t final:base_string_data_t<char_T>,instance_struct
 				else{
 					const auto size_now=this->get_size()+str.size();
 					const auto size_new=get_next_gold_size_to_resize_for_array(size_now);
-					_m.insert_with_forward_resize(pos,str.size(),str.begin(),size_new);
+					_m.insert_with_forward_resize(pos_base+pos,str.size(),str.begin(),size_new);
 				}
 				_used_size+=str.size();
 			}else{
@@ -24013,12 +24053,13 @@ public:
 	}
 	[[nodiscard]]virtual ptr_t apply_str_to_begin(string_view_t str)noexcept(copy_construct_nothrow&&apply_data_nothrow)override final{
 		if(this->is_unique()){
-			if(_m.size()-_used_size>=str.size())
+			const auto pos=_m.size()-_used_size;
+			if(pos>=str.size())
 				copy_assign[str.size()](note::from<const char_T*>(str.begin()),note::to<char_T*>(_m.end()-_used_size-str.size()));
 			else{
 				const auto size_now=this->get_size()+str.size();
 				const auto size_new=get_next_gold_size_to_resize_for_array(size_now);
-				_m.insert_with_forward_resize(0,str.size(),str.begin(),size_new);
+				_m.insert_with_forward_resize(pos,str.size(),str.begin(),size_new);
 			}
 			_used_size+=str.size();
 			self_changed();
@@ -24066,7 +24107,7 @@ public:
 			return base_t::do_remove_front(size);
 	}
 	[[nodiscard]]virtual ptr_t do_remove_back(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
-		#line 227 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/string_data_t/head_apply_string_data_t.hpp"
+		#line 261 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/string_data_t/head_apply_string_data_t.hpp"
 		if(this->is_unique() && size<_to_size){
 			_to=_to->do_remove_back(size);
 			_to_size-=size;
@@ -24251,6 +24292,36 @@ struct end_apply_string_data_t final:base_string_data_t<char_T>,instance_struct<
 		_m.resize(end_count);
 	}
 
+	void marge_same_value_type()noexcept{
+		while(type_info<this_t> == typeid(*_to) && _to->is_unique()){
+			//合并重复的end_apply_string_data_t以防树状结构过深
+			const auto p=down_cast<this_t*>(_to.get());
+			const auto p_begin=(const char_T*)(p->_m.begin());
+			const auto p_size=p->_used_size;
+			if(_m.size()-_used_size>=p_size)
+				copy_assign[p_size](note::from<const char_T*>(p_begin),note::to<char_T*>(_m.data()+_used_size));
+			else{
+				const auto size_now=this->get_size();
+				const auto size_new=get_next_gold_size_to_resize_for_array(size_now);
+				_m.insert_with_resize(_used_size,p_size,p_begin,size_new);
+			}
+			_to_size=p->_to_size;
+			_used_size+=p_size;
+			_to=p->_to;
+		}
+	}
+	void self_changed()noexcept{
+		marge_same_value_type();
+		#if defined(_MSC_VER) && defined(ELC_STRING_CHECKING_NOT_INITED_CHARS)
+		push_and_disable_msvc_warning(4310);//截断常量警告diss
+		for(size_t i=0;i<_used_size;i++)
+			if(_m[i]==char_T(0xCDCDCDCD))
+				__debugbreak();
+		pop_msvc_warning();
+		#endif
+		base_t::self_changed();
+	}
+
 	[[nodiscard]]virtual ptr_t get_substr_data(size_t begin,size_t size)noexcept override final{
 		if(begin+size<=_to_size)
 			return _to->get_substr_data(begin,size);
@@ -24380,7 +24451,7 @@ public:
 			return base_t::apply_str_to_begin(str);
 	}
 	[[nodiscard]]virtual ptr_t do_remove_front(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
-		#line 222 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/string_data_t/end_apply_string_data_t.hpp"
+		#line 252 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/string_data_t/end_apply_string_data_t.hpp"
 		if(this->is_unique() && size<_to_size){
 			_to=_to->do_remove_front(size);
 			_to_size-=size;
@@ -25754,6 +25825,10 @@ protected:
 			push_back(str);
 			return *this;
 		}
+		string_t& operator+=(string_t&&str)&noexcept{
+			push_back(move(str));
+			return *this;
+		}
 		string_t& operator+=(string_view_t str)&noexcept{
 			push_back(str);
 			return *this;
@@ -25766,7 +25841,7 @@ protected:
 		}
 		template<typename U>
 		[[nodiscard]]string_t&& operator+(U&& b)&&noexcept_as(*this+=b) requires was_not_an_ill_form(*this+=b){		  //对右值的operator+优化为operator+=
-			*this+=b;
+			*this+=forward<U>(b);
 			return move(*this);
 		}
 		//END_BLOCK
@@ -25876,7 +25951,7 @@ protected:
 		public:
 			[[nodiscard]]char_T*		operator&()&&noexcept{ return get_address(); }
 			[[nodiscard]]const char_T*	operator&()const&&noexcept{ return get_address(); }
-			#line 347 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/defs.hpp"
+			#line 351 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/defs.hpp"
 			template<class text_ostream_T> requires(type_info<text_ostream_T>.base_on<text_ostream_t<char_T>>)
 			friend auto& operator<<(text_ostream_T& os,arec_t&& ch)noexcept(noexcept_text_ostream_class<text_ostream_T>){
 				return os << move(ch).operator char_T();
@@ -26089,6 +26164,18 @@ protected:
 				_m=_m->apply_str_to_end(str._m);
 			}
 		}
+		void push_back(string_t&& str)&noexcept{
+			full_copy_cso_check(*this);
+			full_copy_cso_check(str);
+			if(_in_cso()&&!str._in_cso())
+				_cso_fin(str._m->apply_str_to_begin(to_string_view_t()));
+			elseif(str._in_cso())
+				push_back(str.to_string_view_t());
+			else{
+				_cso_check();
+				_m=_m->apply_str_to_end(move(str._m));
+			}
+		}
 		void push_back(string_view_t str)&noexcept{ _cso_check();_m=_m->apply_str_to_end(str); }
 		void push_back(char_T ch)&noexcept{ push_back(string_view_t{&ch,1}); }
 		void push_back(const arec_t&& ch)&noexcept{ push_back(move(ch).operator char_T()); }
@@ -26114,6 +26201,18 @@ protected:
 			else{
 				_cso_check();
 				_m=_m->apply_str_to_begin(str._m);
+			}
+		}
+		void push_front(string_t&& str)&noexcept{
+			full_copy_cso_check(*this);
+			full_copy_cso_check(str);
+			if(_in_cso()&&!str._in_cso())
+				_cso_fin(str._m->apply_str_to_end(to_string_view_t()));
+			elseif(str._in_cso())
+				push_front(str.to_string_view_t());
+			else{
+				_cso_check();
+				_m=_m->apply_str_to_begin(move(str._m));
 			}
 		}
 		void push_front(string_view_t str)&noexcept{ _cso_check();_m=_m->apply_str_to_begin(str); }
@@ -26482,7 +26581,7 @@ protected:
 			_m=_m->pre_alloc_after_end(size);
 		}
 
-		#line 956 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/defs.hpp"
+		#line 984 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/defs.hpp"
 		//replace
 		//TODO: 右值版replace
 		this_t replace(size_t pos,size_t size,const string_t& str)const noexcept{
@@ -27696,10 +27795,15 @@ protected:\
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/literal.hpp"
 namespace string_n{
 	template<constexpr_str_n::constexpr_str_t_literal_helper str_helper>
-	inline constexpr string operator""_elc_string()noexcept{
+	inline constexpr string operator""_string()noexcept{
 		return string(constexpr_str_n::operator""_constexpr_str<str_helper>());
 	}
+	template<constexpr_str_n::constexpr_str_t_literal_helper str_helper>
+	inline constexpr string operator""_elc_string()noexcept{
+		return operator""_string<str_helper>();
+	}
 }
+using string_n::operator""_string;
 using string_n::operator""_elc_string;
 
 //file_end
@@ -30312,8 +30416,8 @@ private:
 		return fast_divmod_base(a.get_data_view(),b.get_data_view());
 	}
 	[[nodiscard]]static data_type fast_div_base(data_view_type a,data_view_type b)noexcept{
-		if(a.size()<=fast_div_base_threshold)return div_base(a,b);
 		no_mod_optimisation_of_div(a,b);
+		if(a.size()<=fast_div_base_threshold)return div_base_no_optimisation(a,b);
 		const auto [a_after_reg,b_after_reg,muti]=fast_div_regularisation(a,b);
 		return fast_divmod_base_impl(a_after_reg,b_after_reg).quot._data;
 	}
@@ -30338,7 +30442,7 @@ private:
 		size_t base = (b.size()+1) / 2;
 		//符合3/2时，进行试商
 		if(a.size() <= base*3) {
-			base = b.size() / 2;
+			base = to_size_t(b.size() / magic_number::e);
 			auto a_high = a.subview(base);//不需要re_shrink：subview是舍弃低位，下同
 			auto b_high = b.subview(base);
 			//数值优化，这意味着余数不可用（下方的remain确实被舍弃了所以可以这样优化）
