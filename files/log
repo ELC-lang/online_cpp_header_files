@@ -333,6 +333,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -347,6 +348,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -628,6 +631,7 @@ protected:\
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -636,6 +640,7 @@ protected:\
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of
@@ -861,6 +866,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -875,6 +881,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -2925,7 +2933,7 @@ namespace math{
 					return union_cast<T>(0x5FE6EB50C7B537A9-(union_cast<const int64_t>(v)>>1));
 				elseif constexpr(type_info<T> == type_info<long double>)
 					#if defined(_MSC_VER)//msvc上long double就是double
-						return union_cast<T>(0x5FE6EB50C7B537A9-(union_cast<const int64_t>(v)>>1));
+						return quick_sqrt(static_cast<double>(v));
 					#elif defined(ELC_BASE_ENV_HAS_INT128)
 						return union_cast<T>(0x5F1E45D78623ECB73CAB40BC89254389_u128-(union_cast<const int128_t>(v)>>1));
 					#else
@@ -3700,6 +3708,7 @@ using math::arccsc;
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -3708,6 +3717,7 @@ using math::arccsc;
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of
@@ -3927,6 +3937,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -3941,6 +3952,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -5376,6 +5389,7 @@ namespace float_infos{
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -5384,6 +5398,7 @@ namespace float_infos{
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of
@@ -5609,6 +5624,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -5623,6 +5639,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -9856,6 +9874,7 @@ using function_base_n::function_data_wrapper_t;
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -9864,6 +9883,7 @@ using function_base_n::function_data_wrapper_t;
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of
@@ -10182,6 +10202,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -10196,6 +10217,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -10749,6 +10772,7 @@ namespace overhead_n{
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -10757,6 +10781,7 @@ namespace overhead_n{
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of
@@ -11063,6 +11088,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -11077,6 +11103,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -13739,6 +13767,7 @@ inline constexpr bool ispunct(char_t c)noexcept{
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -13747,6 +13776,7 @@ inline constexpr bool ispunct(char_t c)noexcept{
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of
@@ -13984,6 +14014,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -13998,6 +14029,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -14356,6 +14389,7 @@ protected:\
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -14364,6 +14398,7 @@ protected:\
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of
@@ -14674,6 +14709,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -14688,6 +14724,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -15010,6 +15048,7 @@ protected:\
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -15018,6 +15057,7 @@ protected:\
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of
@@ -15299,6 +15339,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -15313,6 +15354,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -15579,6 +15622,7 @@ namespace elc::defs::locale::str{
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -15587,6 +15631,7 @@ namespace elc::defs::locale::str{
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of
@@ -15803,6 +15848,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -15817,6 +15863,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -19991,6 +20039,7 @@ inline void test_end(){
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -19999,6 +20048,7 @@ inline void test_end(){
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of
@@ -20246,6 +20296,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -20260,6 +20311,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -21196,6 +21249,7 @@ inline void test_end(){
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -21204,6 +21258,7 @@ inline void test_end(){
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of
@@ -21472,6 +21527,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -21486,6 +21542,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -21740,6 +21798,7 @@ protected:\
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -21748,6 +21807,7 @@ protected:\
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of
@@ -21976,6 +22036,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -21990,6 +22051,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -22338,6 +22401,7 @@ protected:\
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -22346,6 +22410,7 @@ protected:\
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of
@@ -22583,6 +22648,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -22597,6 +22663,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -22900,6 +22968,7 @@ inline void test_end{
 
 #undef floop
 #undef times
+#undef debug_times
 #undef enable_adl
 
 #undef re_declvalue
@@ -22908,6 +22977,7 @@ inline void test_end{
 #undef declvalue
 
 #undef template_error
+#undef template_error_of_type
 #undef template_warning
 
 #undef type_info_of

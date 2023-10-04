@@ -40,80 +40,6 @@
 	namespace elc::defs{}
 	using namespace elc;
 	using namespace elc::defs;
-	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/resolve_global_name_conflicts"
-//resolve_global_name_conflicts
-//at namespace ::
-/*@
-未完成的elc解释器include文件
-由steve02081504与Alex0125设计、编写
-转载时请在不对此文件做任何修改的同时注明出处
-项目地址：https://github.com/ELC-lang/ELC
-*/
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/resolve_global_name_conflicts"
-#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/pre_checks.hpp"
-//pre_checks.hpp
-#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/pre_checks.hpp"
-//__cplusplus needs 20+
-#if !defined(__cplusplus)||__cplusplus<202002L
-	//if msvc, check _MSVC_LANG
-	#if defined(_MSVC_LANG) && _MSVC_LANG>=202002L
-		//ok
-	#else
-		#error "elc files needs c++20 or higher"
-	#endif
-#endif
-
-//check if the compiler is msvc
-#if defined(_MSC_VER)
-	//check if _CPPRTTI
-	#if !defined(_CPPRTTI)
-		#error "elc files needs rtti"
-	#endif
-	//check _MSC_VER at last 1932
-	#if _MSC_VER<1932
-		#error "elc files needs at last msvc 19.32 or higher, keep moving!"
-	#endif
-#endif
-
-//file_end
-
-#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/resolve_global_name_conflicts"
-#if !defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
-	#define ELC_RESOLVE_GLOBAL_NAME_CONFLICTS
-	#if defined(ELC_RANDOM)
-		//make sure std::rand defined
-		#include <cstdlib>
-		namespace elc::defs{
-			template<class T>
-			constexpr auto&the_rand=rand<T>;
-		}
-		namespace elc{
-			using defs::the_rand;
-		}
-		namespace std{
-			constexpr auto&the_rand=rand;
-		}
-		#define rand the_rand
-	#endif
-	
-	#if defined(_MSC_VER)//msvc上type_info也是全局内容
-		namespace elc::defs{
-			template<class T>
-			constexpr auto&the_type_info=type_info<T>;
-		}
-		namespace elc{
-			using defs::the_type_info;
-		}
-		namespace std{
-			typedef type_info the_type_info;
-		}
-		#define type_info the_type_info
-	#endif
-#endif
-
-//file_end
-
-	#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/code_realm"
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
 //_defs.hpp
 #line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/_defs.hpp"
@@ -231,6 +157,7 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 #define floop while(__builtin_is_my_dick_still_there())
 #define times(...) ([[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t(__VA_ARGS__)) //for times(72)do_something;
+#define debug_times(...) (debug_timer_t timer;[[maybe_unused]]auto [loop_times,loop_end_value] : ::elc::defs::times_provider_t((timer.reset(),(__VA_ARGS__)))) //for times(72)do_something;
 #if defined(_MSC_VER) && _MSC_VER>=1935
 	//@see https://developercommunity.visualstudio.com/t/10193638
 	#define enable_adl(name) template<typename=void>void name()noexcept=delete
@@ -245,6 +172,8 @@ auto name(Args&&...rest)__VA_ARGS__ noexcept_as(re_declvalue(value_name).name(de
 
 /*! 实例化到此将引发错误 */
 #define template_error(reason) static_assert(template_error_helper<T>,reason)
+/*! 实例化到此将引发错误 */
+#define template_error_of_type(type,reason) static_assert(template_error_helper<type>,reason)
 /*! 实例化到此将引发警告 */
 #define template_warning(reason) template_warning_helper<T>(reason)
 
@@ -406,6 +335,89 @@ protected:\
 #define no_vtable_class class with_no_vtable
 
 //#define get_elc_defs using namespace ::elc::defs
+
+//file_end
+
+	#line 36 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/code_realm"
+	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/resolve_global_name_conflicts"
+//resolve_global_name_conflicts
+//at namespace ::
+/*@
+未完成的elc解释器include文件
+由steve02081504与Alex0125设计、编写
+转载时请在不对此文件做任何修改的同时注明出处
+项目地址：https://github.com/ELC-lang/ELC
+*/
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/resolve_global_name_conflicts"
+#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/pre_checks.hpp"
+//pre_checks.hpp
+#line 30 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/../../../_share/pre_checks.hpp"
+//__cplusplus needs 20+
+#if !defined(__cplusplus)||__cplusplus<202002L
+	//if msvc, check _MSVC_LANG
+	#if defined(_MSVC_LANG) && _MSVC_LANG>=202002L
+		//ok
+	#else
+		#error "elc files needs c++20 or higher"
+	#endif
+#endif
+
+//check if the compiler is msvc
+#if defined(_MSC_VER)
+	//check if _CPPRTTI
+	#if !defined(_CPPRTTI)
+		#error "elc files needs rtti"
+	#endif
+	//check _MSC_VER at last 1932
+	#if _MSC_VER<1932
+		#error "elc files needs at last msvc 19.32 or higher, keep moving!"
+	#endif
+#endif
+
+//file_end
+
+#line 31 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/resolve_global_name_conflicts"
+#if !defined(ELC_RESOLVE_GLOBAL_NAME_CONFLICTS)
+	#define ELC_RESOLVE_GLOBAL_NAME_CONFLICTS
+	#if defined(ELC_RANDOM)
+		//make sure std::rand defined
+		#include <cstdlib>
+		namespace elc::defs{
+			template<class T>
+			constexpr auto&the_rand=rand<T>;
+		}
+		namespace elc{
+			using defs::the_rand;
+		}
+		namespace std{
+			constexpr auto&the_rand=rand;
+		}
+		#define rand the_rand
+	#endif
+	
+	#if defined(_MSC_VER)//msvc上type_info也是全局内容
+		namespace elc::defs{
+			template<class T>
+			constexpr auto&the_type_info=type_info<T>;
+		}
+		namespace elc{
+			using defs::the_type_info;
+		}
+		namespace std{
+			typedef type_info the_type_info;
+		}
+		#define type_info the_type_info
+	#endif
+	#if defined(_INC_MATH)//float_t
+		namespace elc{
+			typedef float_t the_float_t;
+		}
+		namespace std{
+			typedef float_t the_float_t;
+		}
+		#define float_t the_float_t
+	#endif
+#endif
 
 //file_end
 
