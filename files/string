@@ -3794,12 +3794,14 @@ namespace math{
 
 	/// 线性插值.
 	namespace linear_interpolation{
-		[[nodiscard]]inline constexpr auto get_k(auto y1,auto y2,auto δx)noexcept{
+		template<arithmetic_type T1,arithmetic_type T2,arithmetic_type result_T>
+		[[nodiscard]]inline constexpr auto get_k(T1 y1,T2 y2,result_T δx)noexcept{
 			auto δy=sub(y2,y1);
 			auto k=δy/δx;
 			return k;
 		}
-		[[nodiscard]]inline constexpr auto get_k(auto y1,auto y2)noexcept{
+		template<arithmetic_type T1,arithmetic_type T2>
+		[[nodiscard]]inline constexpr auto get_k(T1 y1,T2 y2)noexcept{
 			return get_k(y1,y2,1.0);
 		}
 		[[nodiscard]]inline constexpr auto get_result(auto y1,auto k,auto δx)noexcept{
@@ -4244,7 +4246,7 @@ namespace math{
 
 	template<float_type T>
 	[[nodiscard]]constexpr T arctan(T num, const to_unsigned_t<T>&epsilon)noexcept{
-		#line 1005 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 1007 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		if constexpr(signed_type<T>)
 			if (num < 0) return -arctan(abs(num), epsilon);
 		if (num > 1) return pi_with_epsilon(epsilon)/2u - arctan(reciprocal(move(num)), epsilon);
@@ -6858,6 +6860,9 @@ namespace array_like_n{
 			if(pos>size())pos=size();
 			return this_t{_begin+pos,size()-pos};
 		}
+		[[nodiscard]]constexpr operator array_like_view_t<const T>()const noexcept{
+			return array_like_view_t<const T>{_begin,_size};
+		}
 	};
 	template<typename T>
 	struct array_end_by_zero_t:array_like_view_t<T>{
@@ -9287,10 +9292,10 @@ using constexpr_str_n::constexpr_str_t;
 //仅是声明以及size_t包装
 namespace range_n{
 	template<typename T>
-	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<T>&pattern,array_like_view_t<T> range);
+	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range);
 	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t in_range_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
+	[[nodiscard]]constexpr size_t in_range_size_t(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range){
 		auto result = in_range(pattern, range);
 		if(result)
 			return result - range.data();
@@ -9298,10 +9303,10 @@ namespace range_n{
 			return npos;
 	}
 	template<typename T>
-	[[nodiscard]]constexpr T* in_range_but_reverse(const constexpr_str_t<T>&pattern,array_like_view_t<T> range);
+	[[nodiscard]]constexpr T* in_range_but_reverse(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range);
 	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t in_range_but_reverse_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
+	[[nodiscard]]constexpr size_t in_range_but_reverse_size_t(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range){
 		auto result = in_range_but_reverse(pattern, range);
 		if(result)
 			return result - range.data();
@@ -9309,10 +9314,10 @@ namespace range_n{
 			return npos;
 	}
 	template<typename T>
-	[[nodiscard]]constexpr T* find_first_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range);
+	[[nodiscard]]constexpr T* find_first_of(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range);
 	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t find_first_of_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
+	[[nodiscard]]constexpr size_t find_first_of_size_t(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range){
 		auto result = find_first_of(pattern, range);
 		if(result)
 			return result - range.data();
@@ -9320,10 +9325,10 @@ namespace range_n{
 			return npos;
 	}
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range);
+	[[nodiscard]]constexpr T* find_last_of(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range);
 	//若成功找到匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t find_last_of_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
+	[[nodiscard]]constexpr size_t find_last_of_size_t(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range){
 		auto result = find_last_of(pattern, range);
 		if(result)
 			return result - range.data();
@@ -9331,10 +9336,10 @@ namespace range_n{
 			return npos;
 	}
 	template<typename T>
-	[[nodiscard]]constexpr T* find_first_not_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range);
+	[[nodiscard]]constexpr T* find_first_not_of(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range);
 	//若成功找到不匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr size_t find_first_not_of_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
+	[[nodiscard]]constexpr size_t find_first_not_of_size_t(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range){
 		auto result = find_first_not_of(pattern, range);
 		if(result)
 			return result - range.data();
@@ -9342,10 +9347,10 @@ namespace range_n{
 			return npos;
 	}
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_not_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range);
+	[[nodiscard]]constexpr T* find_last_not_of(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range);
 	//若成功找到不匹配的数据项，返回其距离开头的步数，若未找到，返回npos
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_not_of_size_t(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
+	[[nodiscard]]constexpr T* find_last_not_of_size_t(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range){
 		auto result = find_last_not_of(pattern,range);
 		if(result)
 			return result - range.begin();
@@ -9656,17 +9661,17 @@ using constexpr_str_n::operator ""_constexpr_str;
 //重载range操作
 namespace range_n{
 	template<typename T>
-	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
+	[[nodiscard]]constexpr T* in_range(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range){
 		return pattern.match_pattern.match(range);
 	}
 	template<typename T>
-	[[nodiscard]]constexpr T* in_range_but_reverse(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
+	[[nodiscard]]constexpr T* in_range_but_reverse(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range){
 		return pattern.reverse_match_pattern.match(range);
 	}
 	//find_first_of
 	//若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_first_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
+	[[nodiscard]]constexpr T* find_first_of(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range){
 		if(pattern.is_bitmark_workable)
 			return find_first_of_bitmark(pattern.bitmark_for_finds,range);
 		else
@@ -9675,7 +9680,7 @@ namespace range_n{
 	//find_last_of
 	//若成功找到匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
+	[[nodiscard]]constexpr T* find_last_of(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range){
 		if(pattern.is_bitmark_workable)
 			return find_last_of_bitmark(pattern.bitmark_for_finds,range);
 		else
@@ -9684,7 +9689,7 @@ namespace range_n{
 	//find_first_not_of
 	//若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_first_not_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
+	[[nodiscard]]constexpr T* find_first_not_of(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range){
 		if(pattern.is_bitmark_workable)
 			return find_first_not_of_bitmark(pattern.bitmark_for_finds,range);
 		else
@@ -9693,7 +9698,7 @@ namespace range_n{
 	//find_last_not_of
 	//若成功找到不匹配的数据项，返回其开头，若未找到，返回nullptr
 	template<typename T>
-	[[nodiscard]]constexpr T* find_last_not_of(const constexpr_str_t<T>&pattern,array_like_view_t<T> range){
+	[[nodiscard]]constexpr T* find_last_not_of(const constexpr_str_t<remove_cvref<T>>&pattern,array_like_view_t<T> range){
 		if(pattern.is_bitmark_workable)
 			return find_last_not_of_bitmark(pattern.bitmark_for_finds,range);
 		else
@@ -21387,11 +21392,9 @@ inline constexpr struct endline_t{
 			if(ch==char_T{'\n'})
 				break;
 			if(ch==char_T{'\r'}){
-				if(!stream.waitting_for_data() && stream>>ch) {
-					if(ch==char_T{'\n'})
-						break;
-					stream.unread(&ch,1);
-				}
+				if(!stream.waitting_for_data() && stream>>ch)
+					if(ch!=char_T{'\n'})//可能的\r\n结尾
+						stream.unread(&ch,1);
 				break;
 			}
 		}
@@ -26538,22 +26541,24 @@ protected:
 		);
 	public:
 		static constexpr bool floating_arec_able=floating_arec_result_able||floating_arec_set_able;
-		class floating_arec_t: non_copyable,non_moveable{
+		template<class=void> requires floating_arec_able
+		class floating_arec_t_impl: non_copyable,non_moveable{
 			string_t* _to;
 			float_t	  _index;
 			size_t	  _index_x1;
 			size_t	  _index_x2;
 
 			friend class string_t;
+			typedef floating_arec_t_impl<> this_t;
 		public:
 			static constexpr bool result_able=floating_arec_result_able;
 			static constexpr bool set_able=floating_arec_set_able;
 
-			floating_arec_t(string_t* to,float_t index)noexcept:_to(to),_index(index){
+			floating_arec_t_impl(string_t* to,float_t index)noexcept:_to(to),_index(index){
 				_index_x1=static_cast<size_t>(index);
 				_index_x2=_index_x1+1;
 			}
-			floating_arec_t(special_init_t,const floating_arec_t&ref)noexcept:_to(ref._to),_index(ref._index){}
+			floating_arec_t_impl(special_init_t,const this_t&ref)noexcept:_to(ref._to),_index(ref._index){}
 			[[nodiscard]]operator floating_arec_result_type()const&&noexcept requires result_able{
 				char_T y1=_to->arec(_index_x1);
 				char_T y2=_to->arec(_index_x2);
@@ -26562,7 +26567,7 @@ protected:
 							math::linear_interpolation::get_k(y1,y2),
 														   			  δx);
 			}
-			floating_arec_t&& operator=(floating_arec_result_type a)&&noexcept requires set_able{
+			this_t&& operator=(floating_arec_result_type a)&&noexcept requires set_able{
 				char_T y1=_to->arec(_index_x1);
 				char_T y2=_to->arec(_index_x2);
 				auto k=math::linear_interpolation::get_k(y1,y2);
@@ -26575,8 +26580,10 @@ protected:
 				return move(*this);
 			}
 		};
-		[[nodiscard]]floating_arec_t operator[](float_t index)noexcept requires floating_arec_able{ return{this,index}; }
-		[[nodiscard]]const floating_arec_t operator[](float_t index)const noexcept requires floating_arec_able{ return{remove_const(this),index}; }
+		#define floating_arec_t floating_arec_t_impl<>
+		[[nodiscard]]auto operator[](float_t index)noexcept requires floating_arec_able{ return floating_arec_t{this,index}; }
+		[[nodiscard]]const auto operator[](float_t index)const noexcept requires floating_arec_able{ return floating_arec_t{remove_const(this),index}; }
+		#undef floating_arec_t
 
 		//泛型arec.
 		template<arithmetic_type T>
@@ -27116,7 +27123,7 @@ protected:
 			_m=_m->pre_alloc_after_end(size);
 		}
 
-		#line 984 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/defs.hpp"
+		#line 988 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/defs.hpp"
 		//replace
 		//TODO: 右值版replace
 		this_t replace(size_t pos,size_t size,const string_t& str)const noexcept{
@@ -27193,7 +27200,7 @@ protected:
 			while(!is.is_end()&&is.peek()!='\r'&&is.peek()!='\n')
 				str+=is.get();
 			is>>endline;//处理结尾
-			return is;
+			return str;
 		}
 		#undef _m
 	};
@@ -28625,6 +28632,7 @@ export string_t;
 export string;
 export string_view_t;
 export string_view;
+export operator""_string;
 export operator""_elc_string;
 export operator""_constexpr_str;
 #undef export
