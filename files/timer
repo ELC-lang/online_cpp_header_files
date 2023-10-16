@@ -2732,7 +2732,7 @@ namespace float_infos{
 		static constexpr auto exponent_mask=0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_u128;
 
 		//快速开方魔数
-		static constexpr auto quick_invsqrt_magic_number=0xB2E33F324820BFFD8005AD87D212C5B0_u128;
+		static constexpr auto quick_invsqrt_magic_number=0xBFFCDD90BCFBC61B561ECBF4C7DF5F72_u128;
 	};
 	#endif
 	struct bfloat16_float_info{
@@ -2799,7 +2799,7 @@ namespace float_infos{
 		elseif constexpr(type_info<T> == type_info<long double>){
 			#if defined(_MSC_VER)//msvc上long double就是double
 				return float64_float_info{};
-			#elif defined(ELC_BASE_ENV_HAS_INT128)
+			#elif defined(ELC_BASE_ENV_HAS_INT128) && defined(__aarch64__)//aarch64上long double是float128
 				return float128_float_info{};
 			#else
 				//"long double is not supported"
@@ -27407,8 +27407,39 @@ protected:
 			using namespace char_set;
 			while(isspace(is.peek()))
 				is.get();
+			/*/
+			size_t insert_pos=0;
+			while(!is.is_end()){
+				const auto c=is.peek();
+				switch (c){
+				case char_T(38)://right
+					is.get();
+					if(insert_pos<str.size())
+						insert_pos++;
+					break;
+				case char_T(37)://left
+					is.get();
+					if(insert_pos>0)
+						insert_pos--;
+					break;
+				case char_T(8)://backspace
+					is.get();
+					if(insert_pos>0)
+						str.erase(--insert_pos);
+					break;
+				
+				default:
+					if(isspace(c))
+						return is;
+					else
+						str.insert(insert_pos++,is.get());
+					break;
+				}
+			}
+			/*/
 			while(!is.is_end()&&!isspace(is.peek()))
 				str+=is.get();
+			//*/
 			return is;
 		}
 		template<class text_istream_T> requires(type_info<text_istream_T>.base_on<text_istream_t<char_T>>)
@@ -27417,8 +27448,39 @@ protected:
 			using namespace char_set;
 			while(isspace(is.peek()))
 				is.get();
+			/*/
+			size_t insert_pos=0;
+			while(!is.is_end()){
+				const auto c=is.peek();
+				switch (c){
+				case char_T(38)://right
+					is.get();
+					if(insert_pos<str.size())
+						insert_pos++;
+					break;
+				case char_T(37)://left
+					is.get();
+					if(insert_pos>0)
+						insert_pos--;
+					break;
+				case char_T(8)://backspace
+					is.get();
+					if(insert_pos>0)
+						str.erase(--insert_pos);
+					break;
+				case char_T('\r'):
+				case char_T('\n'):
+					is>>endline;//处理结尾
+					return str;
+				default:
+					str.push_back(is.get());
+					break;
+				}
+			}
+			/*/
 			while(!is.is_end()&&is.peek()!='\r'&&is.peek()!='\n')
 				str+=is.get();
+			//*/
 			is>>endline;//处理结尾
 			return str;
 		}
@@ -31724,6 +31786,10 @@ public:
 	[[nodiscard]]friend bool is_even(const ubigint& x)noexcept{
 		return !is_odd(x);
 	}
+	//hash
+	[[nodiscard]]force_inline hash_t hash()const noexcept{
+		return hash_n::hash(_data);
+	}
 };
 
 template<typename T>
@@ -32086,6 +32152,11 @@ public:
 	//friend is_even
 	friend [[nodiscard]] bool is_even(const bigint& n)noexcept{
 		return is_even(n._num);
+	}
+	//hash
+	[[nodiscard]]force_inline hash_t hash()const noexcept{
+		const auto tmp = hash_n::hash(_num)._value;
+		return hash_t{_is_negative?tmp*7u:tmp};
 	}
 };
 
@@ -32604,6 +32675,10 @@ public:
 	[[nodiscard]]explicit operator bigint()&&noexcept{
 		return move(*this).operator ubigint();
 	}
+	//hash
+	[[nodiscard]]force_inline hash_t hash()const noexcept{
+		return hash_t{hash_n::hash(_numerator)._value*13+hash_n::hash(_denominator)._value};
+	}
 };
 
 template<typename T>
@@ -32985,6 +33060,11 @@ public:
 	}
 	[[nodiscard]]explicit operator ubigint()&&noexcept{
 		return ubigint(move(_num));
+	}
+	//hash
+	[[nodiscard]]force_inline hash_t hash()const noexcept{
+		const auto tmp = hash_n::hash(_num)._value;
+		return hash_t{_is_negative?tmp*7u:tmp};
 	}
 };
 
