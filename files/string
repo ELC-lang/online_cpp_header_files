@@ -24520,20 +24520,11 @@ struct head_apply_string_data_t final:base_string_data_t<char_T>,instance_struct
 		while(type_info<this_t> == typeid(*_to) && _to->is_unique()){
 			//合并重复的head_apply_string_data_t以防树状结构过深
 			const auto p=down_cast<this_t*>(_to.get());
-			const auto p_size=p->_used_size;
-			const auto p_begin=(const char_T*)(p->_m.end())-p_size;
-			const auto this_begin=_m.end()-_used_size;
-			const auto pos=_m.size()-_used_size;
-			if(pos>=p_size)
-				copy_assign[p_size](note::from<const char_T*>(p_begin),note::to<char_T*>(this_begin-p_size));
-			else{
-				const auto size_now=this->get_size();
-				const auto size_new=get_next_gold_size_to_resize_for_array(size_now);
-				_m.insert_with_forward_resize(pos,p_size,p_begin,size_new);
-			}
+			discard=p->apply_str_to_begin(string_view_t{(char_T*)_m.end()-_used_size,_used_size});
+			_used_size=p->_used_size;
 			_to_size=p->_to_size;
-			_used_size+=p_size;
-			_to=p->_to;
+			_m=move(p->_m);
+			_to=move(p->_to);
 		}
 	}
 	void self_changed()noexcept{
@@ -24697,7 +24688,7 @@ public:
 			return base_t::do_remove_front(size);
 	}
 	[[nodiscard]]virtual ptr_t do_remove_back(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
-		#line 261 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/string_data_t/head_apply_string_data_t.hpp"
+		#line 252 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/string_data_t/head_apply_string_data_t.hpp"
 		if(this->is_unique() && size<_to_size){
 			_to=_to->do_remove_back(size);
 			_to_size-=size;
@@ -24886,18 +24877,11 @@ struct end_apply_string_data_t final:base_string_data_t<char_T>,instance_struct<
 		while(type_info<this_t> == typeid(*_to) && _to->is_unique()){
 			//合并重复的end_apply_string_data_t以防树状结构过深
 			const auto p=down_cast<this_t*>(_to.get());
-			const auto p_begin=(const char_T*)(p->_m.begin());
-			const auto p_size=p->_used_size;
-			if(_m.size()-_used_size>=p_size)
-				copy_assign[p_size](note::from<const char_T*>(p_begin),note::to<char_T*>(_m.data()+_used_size));
-			else{
-				const auto size_now=this->get_size();
-				const auto size_new=get_next_gold_size_to_resize_for_array(size_now);
-				_m.insert_with_resize(_used_size,p_size,p_begin,size_new);
-			}
+			discard=p->apply_str_to_end(string_view_t(_m.begin(),_used_size));
+			_used_size=p->_used_size;
 			_to_size=p->_to_size;
-			_used_size+=p_size;
-			_to=p->_to;
+			_m=move(p->_m);
+			_to=move(p->_to);
 		}
 	}
 	void self_changed()noexcept{
@@ -25041,7 +25025,7 @@ public:
 			return base_t::apply_str_to_begin(str);
 	}
 	[[nodiscard]]virtual ptr_t do_remove_front(size_t size)noexcept(construct_nothrow&&copy_assign_nothrow)override final{
-		#line 252 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/string_data_t/end_apply_string_data_t.hpp"
+		#line 245 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/string/string_data_t/end_apply_string_data_t.hpp"
 		if(this->is_unique() && size<_to_size){
 			_to=_to->do_remove_front(size);
 			_to_size-=size;
