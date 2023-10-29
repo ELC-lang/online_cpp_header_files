@@ -483,8 +483,7 @@ using ::std::size_t;
 
 using ::std::forward;
 using ::std::addressof;
-using ::std::swap;
-#line 52 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/using_std.hpp"
+
 template<class T>
 using remove_cvref= ::std::remove_cvref_t<T>;
 template<class T>
@@ -582,6 +581,23 @@ constexpr struct do_nothing_t{
 	template<typename T>
 	constexpr bool operator==(T&)noexcept{return false;}
 }do_nothing;
+
+//swap
+template<typename T1,typename T2>
+inline constexpr_as_auto void swap(T1&a,T2&b)noexcept_as_auto{
+	using ::std::move;
+	auto tmp=move(b);
+	b=move(a);
+	a=move(tmp);
+}
+#line 87 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/other.hpp"
+template<typename T1,typename T2>
+inline constexpr_as_auto [[nodiscard]]T1 swap(T1&a,const T2&b)noexcept_as_auto{
+	using ::std::move;
+	T1 tmp=move(a);
+	a=b;
+	return tmp;
+}
 
 template<typename T>
 struct times_provider_t{
@@ -4117,7 +4133,8 @@ namespace math{
 
 	//求出最大公约数
 	template<integer_type T>
-	[[nodiscard]]inline auto gcd(T x, T y)noexcept{
+	[[nodiscard]]inline auto binary_gcd(T x, T y)noexcept{
+		static_assert(BIT_POSSIBILITY==2);
 		size_t shift = 0;
 		while(y){
 			//都是偶数时，shift++并位移
@@ -4133,6 +4150,89 @@ namespace math{
 		}
 		// 返回 x 左移 shift 位的结果
 		return move(x) << shift;
+	}
+	//求出最大公约数：欧几里得算法
+	template<integer_type T>
+	[[nodiscard]]inline auto euclidean_gcd(T x, T y)noexcept{
+		if constexpr(is_signed<T>)
+			if(is_negative(x) && is_negative(y))
+				return euclidean_gcd(abs(x), abs(y));
+		while(y){
+			if(x < y)swap(x, y);
+			x = swap(y, x%y);
+		}
+		return x;
+	}
+	template<integer_type T>
+	[[nodiscard]]inline auto base_gcd(T x, T y)noexcept{
+		if constexpr(BIT_POSSIBILITY==2)
+			return binary_gcd(move(x), move(y));
+		else
+			return euclidean_gcd(move(x), move(y));
+	}
+	template<unsigned_big_integer_type T>
+	[[nodiscard]]inline auto lehmer_gcd(T x, T y)noexcept{
+		//假设x≥y
+		if(x < y)swap(x, y);
+
+		size_t m=y.size_in_base_type();
+		if(m <= 1)return base_gcd(move(x), move(y));//如果y只包含一位数（或根本没有），则使用其他方法求出结果
+		T A, B, C, D;
+	outer_loop:
+		while(x && y) {//外循环
+			--m;//提高精度
+			T a = x.right_shift_in_base_type(m), b = y.right_shift_in_base_type(m);//取最显著数位
+			/*初始化矩阵[A B a]为扩展的同一矩阵[1 0 a]
+					  [C D b]			   [0 1 b]
+			*/
+			A = D = 1u; B = C = T{};
+			//对(a+A,b+C)和(a+B,b+D)同时执行欧几里得算法，直到商不同为止
+			do{//内循环
+				const auto w = (a+A) / (b+C);//w为欧几里得算法长除法链中当前长除法的商
+				{
+					const auto w2 = (a+B) / (b+D);
+					if(w != w2)
+						if(!B){//B=0意味着陷入了死锁；执行欧几里得算法的正常步骤，然后重新开始外循环
+							x = swap(y, x%y);
+							goto outer_loop;
+						}else break;
+				}
+				/*根据扩展欧几里得算法的矩阵表述替换当前矩阵[A B a]到矩阵积[0  1]	[A B a]   [C	D	 a	 ]
+													 [C D b]			  ⋅			=
+																   [1 −w]	[C D b]   [A−wC B−wD a−wb]
+				*/
+				A-=w*C;swap(A,C);
+				B-=w*D;swap(B,D);
+				a-=w*b;swap(a,b);
+			}while(B);//B≠0则继续
+			//将对压缩形式的前数位执行的欧几里得算法步骤应用到x和y上
+			auto new_x = A*x+B*y, new_y = C*x+D*y;
+			x = move(new_x),y = move(new_y);
+		}
+		return x;
+	}
+	template<basic_integer_type T>
+	[[nodiscard]]force_inline auto lehmer_gcd(T x, T y)noexcept{
+		return euclidean_gcd(move(x), move(y));
+	}
+	template<signed_big_integer_type T>
+	[[nodiscard]]force_inline auto lehmer_gcd(T x, T y)noexcept{
+		const bool sign = is_negative(x) && is_negative(y);
+		return copy_as_negative(gcd(abs(move(x)), abs(move(y))), sign);
+	}
+	
+	template<integer_type T>
+	[[nodiscard]]inline auto gcd(T x, T y)noexcept{
+		if constexpr(BIT_POSSIBILITY==2){
+			if constexpr(is_big_type<T>){
+				constexpr size_t lehmer_threshold = 1<<8;
+				if(max(x.size_in_base_type(),y.size_in_base_type()) >= lehmer_threshold)
+					return lehmer_gcd(move(x), move(y));
+			}
+			return binary_gcd(move(x), move(y));
+		}
+		else
+			return lehmer_gcd(move(x), move(y));
 	}
 }
 using math::gcd;
@@ -4259,7 +4359,7 @@ namespace math{
 
 	template<float_type T>
 	[[nodiscard]]constexpr T arctan(T num, const to_unsigned_t<T>&ε)noexcept{
-		#line 1059 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 1143 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		if constexpr(signed_type<T>)
 			if (num < 0) return -arctan(abs(num), ε);
 		if (num > 1) return π_with_ε(ε)/2u - arctan(reciprocal(move(num)), ε);
@@ -8338,11 +8438,8 @@ public:
 	constexpr auto&operator<<=(size_t n)noexcept{
 		const auto [move_step,offset]=divmod(n,bitnum_of(byte));
 		byte carry{};
-		for(size_t i=data_size-move_step-1;i!=npos;--i){
-			const auto tmp=_data[i];
-			_data[i]=byte((tmp<<offset)|carry);
-			carry=tmp>>(bitnum_of(byte)-offset);
-		}
+		for(size_t i=data_size-move_step-1;i!=npos;--i)
+			carry=swap(_data[i],byte((_data[i]<<offset)|carry))>>(bitnum_of(byte)-offset);
 		for(size_t i=0;i<move_step;++i)
 			_data[i]=byte{};
 		return*this;
@@ -8350,11 +8447,8 @@ public:
 	constexpr auto&operator>>=(size_t n)noexcept{
 		const auto [move_step,offset]=divmod(n,bitnum_of(byte));
 		byte carry{};
-		for(size_t i=move_step;i!=data_size;++i){
-			const auto tmp=_data[i];
-			_data[i]=byte((tmp>>offset)|carry);
-			carry=tmp<<(bitnum_of(byte)-offset);
-		}
+		for(size_t i=move_step;i!=data_size;++i)
+			carry=swap(_data[i],byte((_data[i]>>offset)|carry))<<(bitnum_of(byte)-offset);
 		for(size_t i=data_size-move_step;i!=data_size;++i)
 			_data[i]=byte{};
 		return*this;
@@ -19456,9 +19550,7 @@ public:
 	}
 	void move_top_to(this_t&a)noexcept{
 		_size--;
-		auto tmp=_m;
-		_m=_m->_next;
-		a.add(tmp);
+		a.add(swap(_m,add_const(_m->_next)));
 	}
 };
 
