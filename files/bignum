@@ -679,21 +679,33 @@ push_and_disable_msvc_warning(
 /// 对值追加const
 template<typename T>
 force_inline constexpr const T add_const(T a)noexcept{return a;}
+template<typename T>
+force_inline constexpr const T add_const_by_value(T a)noexcept{return a;}
 /// 对引用追加const
 template<typename T>
 force_inline constexpr const T&add_const(T&a)noexcept{return a;}
+template<typename T>
+force_inline constexpr const T&add_const_by_ref(T&a)noexcept{return a;}
 /// 对引用移除const
 template<typename T>
 force_inline constexpr T&remove_const(const T&a)noexcept{return const_cast<T&>(a);}
+template<typename T>
+force_inline constexpr T&remove_const_by_ref(const T&a)noexcept{return const_cast<T&>(a);}
 /// 对指针追加const
 template<typename T>
 force_inline constexpr const T*add_const(T*a)noexcept{return a;}
+template<typename T>
+force_inline constexpr const T*add_const_by_ptr(T*a)noexcept{return a;}
 /// 对指针移除const
 template<typename T>
 force_inline constexpr T*remove_const(const T*a)noexcept{return const_cast<T*>(a);}
+template<typename T>
+force_inline constexpr T*remove_const_by_ptr(const T*a)noexcept{return const_cast<T*>(a);}
 /// 对指针移除const
 template<typename T>
 force_inline constexpr T*launder_remove_const(const T*a)noexcept{return ::std::launder(remove_const(a));}
+template<typename T>
+force_inline constexpr T*launder_remove_const_by_ptr(const T*a)noexcept{return ::std::launder(remove_const(a));}
 /// 向下转型至
 template<typename T,typename U>
 force_inline constexpr T down_cast(U a)noexcept{return static_cast<T>(a);}
@@ -3659,13 +3671,13 @@ namespace math{
 	//invsqrt
 	template<float_type T> requires(has_ε<T>)
 	[[nodiscard]]force_inline constexpr T invsqrt(const T&v)noexcept;
-	template<float_type T>
-	inline constexpr T invsqrt_iteration(const T&num,const T&v)noexcept{
+	template<float_type T,arithmetic_type U=T>
+	inline constexpr T invsqrt_iteration(const T&num,const U&v)noexcept{
 		//newton-raphson
 		return num*(3u-v*num*num)/2u;
 	}
-	template<float_type T>
-	inline constexpr T invsqrt_to_new_ε(T num,const T&v,const to_unsigned_t<T>&ε,to_unsigned_t<T>&ε_saver)noexcept{
+	template<float_type T,arithmetic_type U=T>
+	inline constexpr T invsqrt_to_new_ε(T num,const U&v,const to_unsigned_t<T>&ε,to_unsigned_t<T>&ε_saver)noexcept{
 		while(ε_saver>ε){
 			auto next_ret=invsqrt_iteration(num,v);
 			ε_saver=abs(next_ret-num);
@@ -3711,13 +3723,13 @@ namespace math{
 	//sqrt
 	template<float_type T> requires(has_ε<T>)
 	[[nodiscard]]force_inline constexpr T sqrt(const T&v)noexcept;
-	template<float_type T>
-	inline constexpr T sqrt_iteration(const T&num,const T&v)noexcept{
+	template<float_type T,arithmetic_type U=T>
+	inline constexpr T sqrt_iteration(const T&num,const U&v)noexcept{
 		//newton-raphson
 		return (num+v/num)/2u;
 	}
-	template<float_type T>
-	inline constexpr T sqrt_to_new_ε(T num,const T&v,const to_unsigned_t<T>&ε,to_unsigned_t<T>&ε_saver)noexcept{
+	template<float_type T,arithmetic_type U=T>
+	inline constexpr T sqrt_to_new_ε(T num,const U&v,const to_unsigned_t<T>&ε,to_unsigned_t<T>&ε_saver)noexcept{
 		while(ε_saver>ε){
 			auto next_ret=sqrt_iteration(num,v);
 			ε_saver=abs(next_ret-num);
@@ -3725,8 +3737,8 @@ namespace math{
 		}
 		return num;
 	}
-	template<float_type T>
-	inline constexpr T sqrt_to_new_ε(T num,const T&v,const to_unsigned_t<T>&ε)noexcept{
+	template<float_type T,arithmetic_type U=T>
+	inline constexpr T sqrt_to_new_ε(T num,const U&v,const to_unsigned_t<T>&ε)noexcept{
 		auto ε_saver=to_unsigned_t<T>{ε*BIT_POSSIBILITY};
 		return sqrt_to_new_ε(num,v,ε,ε_saver);
 	}
@@ -4230,11 +4242,7 @@ namespace math{
 				const auto w = (a+A) / (b+C);//w为欧几里得算法长除法链中当前长除法的商
 				{
 					const auto w2 = (a+B) / (b+D);
-					if(w != w2)
-						if(!B){//B=0意味着陷入了死锁；执行欧几里得算法的正常步骤，然后重新开始外循环
-							x = swap(y, x%y);
-							goto outer_loop;
-						}else break;
+					if(w != w2)break;
 				}
 				/*根据扩展欧几里得算法的矩阵表述替换当前矩阵[A B a]到矩阵积[0  1]	[A B a]   [C	D	 a	 ]
 													 [C D b]			  ⋅			=
@@ -4244,6 +4252,10 @@ namespace math{
 				B-=w*D;swap(B,D);
 				a-=w*b;swap(a,b);
 			}while(B);//B≠0则继续
+			if(!B){//B=0意味着陷入了死锁；执行欧几里得算法的正常步骤，然后重新开始外循环
+				x = swap(y, x%y);
+				goto outer_loop;
+			}
 			//将对压缩形式的前数位执行的欧几里得算法步骤应用到x和y上
 			auto new_x = A*x+B*y, new_y = C*x+D*y;
 			x = move(new_x),y = move(new_y);
@@ -4287,23 +4299,26 @@ namespace magic_number{
 		typedef integer_type_of<T> int_t;
 		typedef to_unsigned_t<int_t> uint_t;
 
-		float_t result{}, sum=magic_number::god;
-		ufloat_t ε;
-		uint_t k{}, _3k{}, _6k{}; bool sign = true;
+		ufloat_t ε=reciprocal(ufloat_t{30u});
+		float_t result{}, sum=ε;
+		/*论证6k、3k、k不需要用大数：
+		6k的迭代次数是max(type_info<size_t>) / 6
+		考虑每次迭代π的有效位数增加14位（10进制下），那么即使在64bit的古董计算机下6k溢出时π可以达到的有效位数大约是4.3042403e+19个（十进制位）
+		这远远超过了一般的计算机算力和大多数的精度要求，所以我们可以放心地使用size_t而不是uint_t来存储6k的值，更不用说3k和k了
+		*/
+		size_t k{}, _3k{}, _6k{}; bool sign = true;
 		uint_t _545140134k_p13591409 = 13591409u; // 545140134*k+13591409
 		uint_t _3k_factorial = 1u, _6k_factorial = 1u, k_factorial_pow_3 = 1u;
-		ufloat_t _640320 = 640320u;
-		ufloat_t sqrt_640320_ε_saver=ε*BIT_POSSIBILITY;
-		ufloat_t sqrt_640320 = sqrt(_640320,ε,sqrt_640320_ε_saver);//我们需要缓存这个与ε有关的值 以便在下一次更高精度的迭代中对缓存的值进行利用
+		ufloat_t sqrt_640320_ε_saver=reciprocal(ufloat_t{5u});
+		ufloat_t sqrt_640320 = 800u;//我们需要缓存这个与ε有关的值 以便在下一次更高精度的迭代中对缓存的值进行利用
 		uint_t _640320_pow_3kplus1 = 640320u;//初始值1次方
-		const uint_t _545140134_ = 545140134u;
-		const uint_t _640320pow3 = pow(uint_t{640320u},3u);
-		size_t base_accurate = 0,sqrt_accuracy_multiplier = 1;//考虑到sqrt_iteration每次都会精度翻倍，而base_iteration每次只会精度增加14，所以我们可以通过追加这个值来省去一些不必要的sqrt迭代
+		static constexpr auto _640320pow3 = 262537412640768000u;
+		size_t base_accurate = 0,sqrt_accuracy_multiplier = 3;//考虑到sqrt_iteration每次都会精度翻倍，而base_iteration每次只会精度增加14，所以我们可以通过追加这个值来省去一些不必要的sqrt迭代
 
 	public:
-		constexpr π_with_ε_impl_t(ufloat_t the_ε = magic_number::god)noexcept: ε(move(the_ε)){}
+		constexpr π_with_ε_impl_t()noexcept{}
 		[[nodiscard]]constexpr T take_value()noexcept{
-			return abs(reciprocal(12u*result/sqrt_640320));
+			return reciprocal(12u*abs(base_accurate?result:21u)/sqrt_640320);
 		}
 		constexpr void do_base_iteration()noexcept{
 			sum = copy_as_negative(ufloat_t
@@ -4311,69 +4326,57 @@ namespace magic_number{
 				/ //= --------------------------------------------------------
 				(		_3k_factorial*k_factorial_pow_3 * _640320_pow_3kplus1		)
 			,sign);
-			++k;
 			for times(3) _3k_factorial *= ++_3k;
 			for times(6) _6k_factorial *= ++_6k;
-			k_factorial_pow_3 *= pow(k,3u);
-			_545140134k_p13591409 += _545140134_;
+			k_factorial_pow_3 *= pow<uint_t>(++k,3u);
+			_545140134k_p13591409 += 545140134u;
 			_640320_pow_3kplus1 *= _640320pow3;
 			sign = !sign;
 
 			result += sum;
+			base_accurate += 14;
 		}
 		constexpr void do_sqrt_iteration()noexcept{
-			sqrt_640320=sqrt_iteration(sqrt_640320,_640320);
+			sqrt_640320=sqrt_iteration(sqrt_640320,640320u);
+			sqrt_accuracy_multiplier++;
 		}
 		constexpr void do_iteration()noexcept{
 			do_base_iteration();
-			base_accurate += 14;
-			if(base_accurate >> sqrt_accuracy_multiplier){
+			if(base_accurate && (base_accurate-8) >> sqrt_accuracy_multiplier)
 				do_sqrt_iteration();
-				sqrt_accuracy_multiplier++;
-			}
 		}
 		constexpr void clean_up()noexcept{
 			simplify(sqrt_640320);
 			simplify(result);
 		}
 		[[nodiscard]]constexpr T operator()()noexcept{
-			while (abs(sum) > ε)
-				do_base_iteration();
+			if(!base_accurate)do_base_iteration();
 			return take_value();
 		}
 		[[nodiscard]]constexpr T operator()(ufloat_t new_ε)noexcept{
 			if(new_ε < ε){
 				if(sqrt_640320_ε_saver>new_ε)//ε变小了，我们需要重新计算sqrt_640320
-					sqrt_640320=sqrt_to_new_ε(sqrt_640320,_640320,new_ε,sqrt_640320_ε_saver);
+					sqrt_640320=sqrt_to_new_ε(sqrt_640320,640320u,new_ε,sqrt_640320_ε_saver);
 				//更新ε.
 				ε = move(new_ε);
+				while (abs(sum) > ε)
+					do_base_iteration();
 			}
-			return operator()();
+			return take_value();
 		}
 	};
-	template<unsigned_float_type T>
-	distinctive inline π_with_ε_impl_t<T> π_with_ε_impl{};
+	template<arithmetic_type T>
+	using π_type = to_unsigned_t<float_type_of<remove_cvref<T>>>;
 	distinctive inline constexpr struct π_with_ε_t{
 		template<unsigned_big_float_type T>
-		static auto&_impl = π_with_ε_impl<to_unsigned_t<remove_cvref<T>>>;
+		static inline π_with_ε_impl_t<T> for_type{};
 		template<float_type T>
 		auto operator()(T&&ε)const noexcept{
 			if constexpr(is_basic_float_type<T>)
-				return (T)magic_number::π;//啊？
+				return (T)π;//啊？
 			else
-				return _impl<T>(forward<T>(ε));
+				return for_type<T>(forward<T>(ε));
 		}
-		template<unsigned_big_float_type T>
-		struct for_type_t{
-			[[nodiscard]]auto operator()(T ε)const noexcept{return _impl<T>(forward<T>(ε));}
-			void do_base_iteration()const noexcept{_impl<T>.do_base_iteration();}
-			void do_sqrt_iteration()const noexcept{_impl<T>.do_sqrt_iteration();}
-			void do_iteration()const noexcept{_impl<T>.do_iteration();}
-			[[nodiscard]]auto take_value()const noexcept{return _impl<T>.take_value();}
-			void clean_up()const noexcept{_impl<T>.clean_up();}
-		};
-		template<unsigned_big_float_type T>
-		static constexpr auto for_type = for_type_t<T>{};//这个是为了让用户可以自己调用do_iteration等函数
 	}π_with_ε{};
 }
 using magic_number::π_with_ε;
@@ -4398,7 +4401,7 @@ namespace math{
 
 	template<float_type T>
 	[[nodiscard]]constexpr T arctan(T num, const to_unsigned_t<T>&ε)noexcept{
-		#line 1143 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
+		#line 1134 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base_defs/math.hpp"
 		if constexpr(signed_type<T>)
 			if (num < 0) return -arctan(abs(num), ε);
 		if (num > 1) return π_with_ε(ε)/2u - arctan(reciprocal(move(num)), ε);
@@ -7820,6 +7823,11 @@ namespace lifetime_n{
 
 		//特殊使用
 		template<class T>
+		[[nodiscard,deprecated("moveing a const object is meaningless")]]
+		constexpr const T&& operator()(const T&a)const noexcept{
+			return static_cast<const T&&>(a);
+		}
+		template<class T>
 		[[nodiscard]]constexpr remove_ref<T>&& operator()(T&&a)const noexcept{
 			return static_cast<remove_ref<T>&&>(a);
 		}
@@ -8059,7 +8067,7 @@ namespace iterator_n{
 		constexpr reverse_base_t(const this_t&a)noexcept(construct<base_t_rw>.nothrow<const base_t_rw&>):_m(a._m){}
 		constexpr reverse_base_t(this_t&&a)noexcept(construct<base_t_rw>.nothrow<base_t_rw&&>):_m(move(a._m)){}
 		constexpr this_t& operator=(const this_t&a)&noexcept{_m=a._m;return*this;}
-		constexpr this_t& operator=(const this_t&&a)&noexcept{_m=move(a._m);return*this;}
+		constexpr this_t& operator=(this_t&&a)&noexcept{_m=move(a._m);return*this;}
 		constexpr auto operator==(const this_t&a)const noexcept{return _m==a._m;}
 		constexpr auto operator<=>(const this_t&a)const noexcept{return _m<=>a._m;}
 
@@ -19589,7 +19597,7 @@ public:
 	}
 	void move_top_to(this_t&a)noexcept{
 		_size--;
-		a.add(swap(_m,add_const(_m->_next)));
+		a.add(swap(_m,add_const_by_value(_m->_next)));
 	}
 };
 
@@ -21176,9 +21184,9 @@ namespace base::math{
 		//bool：是否是有符号类型
 		static constexpr bool is_signed = true;
 		//bool：是否有NaN
-		static constexpr bool has_NaN = true;
+		static constexpr bool has_NaN = false;
 		//bool：是否有inf
-		static constexpr bool has_inf = false;
+		static constexpr bool has_inf = true;
 		//bool：是否有min
 		static constexpr bool has_min = false;
 		//bool：是否有max
@@ -21209,9 +21217,9 @@ namespace base::math{
 		//bool：是否是有符号类型
 		static constexpr bool is_signed = false;
 		//bool：是否有NaN
-		static constexpr bool has_NaN = true;
+		static constexpr bool has_NaN = false;
 		//bool：是否有inf
-		static constexpr bool has_inf = false;
+		static constexpr bool has_inf = true;
 		//bool：是否有min
 		static constexpr bool has_min = true;
 		//min
@@ -21702,17 +21710,11 @@ private:
 		size_t i=0;
 		calc_type num=0;
 		while(i!=a.size()){
-			num+=calc_type(a[i])*calc_type(b);
-			*buf = base_type(num%base_type_mod);
+			num+=calc_type(a[i++])*calc_type(b);
+			*buf++ = base_type(num%base_type_mod);
 			num/=base_type_mod;
-
-			i++;
-			buf++;
 		}
-		if(num)
-			*buf = base_type(num);
-		else
-			*buf = base_type{0};
+		*buf = base_type(num);
 	}
 	static void muti_with_base(base_type*buf,data_view_type a,base_type b)noexcept{
 		if(!b){
@@ -21971,9 +21973,9 @@ private:
 	[[nodiscard]]static auto fast_div_regularisation(data_view_type a,data_view_type b)noexcept{
 		constexpr auto max_calc_type=min(max(type_info<calc_type>),base_type_mod*base_type_mod-1);
 		const auto first2=(b.back()*base_type_mod+*(b.rbegin()+1)+1);
-		const ubigint muti=max_calc_type/first2;
-		const ubigint a_after_reg{fast_muti_base(a,muti)};
-		const ubigint b_after_reg{fast_muti_base(b,muti)};
+		ubigint muti=max_calc_type/first2;
+		ubigint a_after_reg{fast_muti_base(a,muti)};
+		ubigint b_after_reg{fast_muti_base(b,muti)};
 		struct result_t{
 			ubigint a_after_reg;
 			ubigint b_after_reg;
@@ -22247,10 +22249,10 @@ public:
 		return*this;
 	}
 	template<unsigned_basic_integer_type T>
-	[[nodiscard]]ubigint& operator+(T&&other)&&noexcept{
+	[[nodiscard]]ubigint&& operator+(T&&other)&&noexcept{
 		//using add_to_base to avoid new alloc
 		add_to_base(_data,other);
-		return*this;
+		return move(*this);
 	}
 	//operator-=
 	ubigint& operator-=(const ubigint& other)&noexcept{
@@ -22928,13 +22930,12 @@ public:
 	ubigfloat(T num)noexcept{
 		if(isNaN(num))return;
 		//将一个浮点类型无损的转换为两个bigint相除
+		if(isInf(num)){
+			_numerator = 1u;
+			_denominator = zero;
+			return;
+		}
 		if(is_negative(num))num = -num;
-		if constexpr(has_inf<T>)
-			if(num == arithmetic_type_info_prover<T>::Inf()){
-				_numerator = 1u;
-				_denominator = zero;
-				return;
-			}
 		const auto info=get_precision_and_exponent(num);
 		if(info.exponent<0){//小数，有猜测价值
 			//优先进行猜测以处理近似的简单分数
@@ -23069,7 +23070,10 @@ public:
 		return ubigfloat{numerator,denominator};
 	}
 	//friend abs
-	[[nodiscard]]friend ubigfloat abs(const ubigfloat& a)noexcept{
+	[[nodiscard]]friend const ubigfloat& abs(const ubigfloat& a)noexcept{
+		return a;
+	}
+	[[nodiscard]]friend ubigfloat abs(ubigfloat& a)noexcept{
 		return a;
 	}
 	[[nodiscard]]friend ubigfloat&& abs(ubigfloat&& a)noexcept{
@@ -23110,8 +23114,8 @@ public:
 	[[nodiscard]]friend constexpr bool isNaN(const ubigfloat&)noexcept{
 		return false;
 	}
-	//friend isinf
-	[[nodiscard]]friend bool isinf(const ubigfloat&a)noexcept{
+	//friend isInf
+	[[nodiscard]]friend bool isInf(const ubigfloat&a)noexcept{
 		return!a._denominator;
 	}
 	//friend trunc
@@ -23129,16 +23133,16 @@ public:
 	};
 	typedef split_result_t_base<> split_result_t;
 	[[nodiscard]]friend auto split(const ubigfloat& a)noexcept{
-		const auto result=divmod(a._numerator,a._denominator);
+		auto result=divmod(a._numerator,a._denominator);
 		return split_result_t{move(result.quot),ubigfloat{move(result.mod),a._denominator}};
 	}
 	[[nodiscard]]friend auto split(ubigfloat&& a)noexcept{
-		const auto result=divmod(move(a._numerator),a._denominator);
+		auto result=divmod(move(a._numerator),a._denominator);
 		return split_result_t{move(result.quot),ubigfloat{move(result.mod),move(a._denominator)}};
 	}
 	//friend trunc_with_sub
 	[[nodiscard]]friend ubigint trunc_with_sub(ubigfloat& a)noexcept{
-		const auto result=divmod(move(a._numerator),a._denominator);
+		auto result=divmod(move(a._numerator),a._denominator);
 		a._numerator=move(result.mod);
 		return result.quot;
 	}
@@ -23346,7 +23350,7 @@ public:
 		_denominator/=g;
 	}
 	//friend simplify
-	friend decltype(auto) simplify(ubigfloat& a)noexcept{
+	friend auto& simplify(ubigfloat& a)noexcept{
 		a.simplify();
 		return a;
 	}
@@ -23517,11 +23521,22 @@ public:
 		return move(*this);
 	}
 	//friend abs
-	[[nodiscard]]friend ubigfloat abs(const bigfloat& a)noexcept{
+	[[nodiscard]]friend const ubigfloat& abs(const bigfloat& a)noexcept{
+		return a._num;
+	}
+	[[nodiscard]]friend ubigfloat abs(bigfloat& a)noexcept{
 		return a._num;
 	}
 	[[nodiscard]]friend ubigfloat&& abs(bigfloat&& a)noexcept{
 		return move(a._num);
+	}
+	//friend isNaN
+	[[nodiscard]]friend constexpr bool isNaN(const bigfloat&)noexcept{
+		return false;
+	}
+	//friend isInf
+	[[nodiscard]]friend bool isInf(const bigfloat&a)noexcept{
+		return isInf(a._num);
 	}
 	//friend is_negative
 	[[nodiscard]]friend bool is_negative(const bigfloat& a)noexcept{
@@ -23588,11 +23603,11 @@ public:
 	}
 	//operator+
 	template<arithmetic_type T>
-	[[nodiscard]]bigfloat operator+(const T&other)const&noexcept{
+	[[nodiscard]]bigfloat operator+(T&&other)const&noexcept{
 		if(_is_negative==is_negative(other))
-			return bigfloat{_num+abs(other), _is_negative};
+			return bigfloat{_num+abs(forward<T>(other)), _is_negative};
 		else{
-			auto uother=abs(other);
+			auto uother=abs(forward<T>(other));
 			if(_num>uother)
 				return bigfloat{_num-move(uother), _is_negative};
 			else
@@ -23601,11 +23616,11 @@ public:
 	}
 	//operator-
 	template<arithmetic_type T>
-	[[nodiscard]]bigfloat operator-(const T&other)const&noexcept{
+	[[nodiscard]]bigfloat operator-(T&&other)const&noexcept{
 		if(_is_negative!=is_negative(other))
-			return bigfloat{_num+abs(other), _is_negative};
+			return bigfloat{_num+abs(forward<T>(other)), _is_negative};
 		else{
-			auto uother=abs(other);
+			auto uother=abs(forward<T>(other));
 			if(_num>uother)
 				return bigfloat{_num-move(uother), _is_negative};
 			else
@@ -23614,30 +23629,30 @@ public:
 	}
 	//operator*
 	template<arithmetic_type T>
-	[[nodiscard]]bigfloat operator*(const T&other)const&noexcept{
+	[[nodiscard]]bigfloat operator*(T&&other)const&noexcept{
 		const bool sign=_is_negative!=is_negative(other);
-		return bigfloat{_num*abs(other), sign};
+		return bigfloat{_num*abs(forward<T>(other)), sign};
 	}
 	//operator/
 	template<arithmetic_type T>
-	[[nodiscard]]bigfloat operator/(const T&other)const&noexcept{
+	[[nodiscard]]bigfloat operator/(T&&other)const&noexcept{
 		const bool sign=_is_negative!=is_negative(other);
-		return bigfloat{_num/abs(other), sign};
+		return bigfloat{_num/abs(forward<T>(other)), sign};
 	}
 	//operator+=
 	template<unsigned_type T>
-	bigfloat& operator+=(const T& other)&noexcept{
-		_num+=other;
+	bigfloat& operator+=(T&&other)&noexcept{
+		_num+=forward<T>(other);
 		return*this;
 	}
 	template<arithmetic_type T>
-	bigfloat& operator+=(const T&other)&noexcept{
+	bigfloat& operator+=(T&&other)&noexcept{
 		if(_is_negative==is_negative(other)){
-			_num+=abs(other);
+			_num+=abs(forward<T>(other));
 			return*this;
 		}
 		else{
-			auto uother=abs(other);
+			auto uother=abs(forward<T>(other));
 			if(_num>uother){
 				_num-=move(uother);
 				return*this;
@@ -23651,9 +23666,9 @@ public:
 	}
 	//operator-=
 	template<arithmetic_type T>
-	bigfloat& operator-=(const T&other)&noexcept{
+	bigfloat& operator-=(T&&other)&noexcept{
 		if(_is_negative==is_negative(other)){
-			auto uother=abs(other);
+			auto uother=abs(forward<T>(other));
 			if(_num>uother){
 				_num-=move(uother);
 				return*this;
@@ -23665,67 +23680,67 @@ public:
 			}
 		}
 		else{
-			_num+=abs(other);
+			_num+=abs(forward<T>(other));
 			return*this;
 		}
 	}
 	//operator*=
 	template<unsigned_type T>
-	bigfloat& operator*=(const T& other)&noexcept{
-		_num*=other;
+	bigfloat& operator*=(T&&other)&noexcept{
+		_num*=forward<T>(other);
 		return*this;
 	}
 	template<arithmetic_type T>
-	bigfloat& operator*=(const T&other)&noexcept{
+	bigfloat& operator*=(T&&other)&noexcept{
 		_is_negative=_is_negative!=is_negative(other);
-		_num*=abs(other);
+		_num*=abs(forward<T>(other));
 		return*this;
 	}
 	//operator/=
 	template<unsigned_type T>
-	bigfloat& operator/=(const T& other)&noexcept{
-		_num/=other;
+	bigfloat& operator/=(T&&other)&noexcept{
+		_num/=forward<T>(other);
 		return*this;
 	}
 	template<arithmetic_type T>
-	bigfloat& operator/=(const T&other)&noexcept{
+	bigfloat& operator/=(T&&other)&noexcept{
 		_is_negative=_is_negative!=is_negative(other);
-		_num/=abs(other);
+		_num/=abs(forward<T>(other));
 		return*this;
 	}
 	//operator==
 	template<arithmetic_type T>
-	[[nodiscard]]bool operator==(const T& other)const noexcept{
+	[[nodiscard]]bool operator==(T&&other)const noexcept{
 		if(_is_negative!=is_negative(other))return false;
-		return _num==abs(other);
+		return _num==abs(forward<T>(other));
 	}
 	//operator<=>
 	template<arithmetic_type T>
-	[[nodiscard]]auto operator<=>(const T& other)const noexcept{
+	[[nodiscard]]auto operator<=>(T&&other)const noexcept{
 		if(_is_negative!=is_negative(other))
 			return _is_negative?strong_ordering::less:strong_ordering::greater;
 		const bool needs_reverse=_is_negative;
-		auto result=_num <=> abs(other);
+		auto result=_num <=> abs(forward<T>(other));
 		if(needs_reverse)
 			result=compare.reverse(result);
 		return result;
 	}
 	//operatorX for rvalue
 	template<arithmetic_type T>
-	[[nodiscard]]bigfloat&& operator+(const T& other)&&noexcept{
-		return move(*this += other);
+	[[nodiscard]]bigfloat&& operator+(T&&other)&&noexcept{
+		return move(*this += forward<T>(other));
 	}
 	template<arithmetic_type T>
-	[[nodiscard]]bigfloat&& operator-(const T&other)&&noexcept{
-		return move(*this -= other);
+	[[nodiscard]]bigfloat&& operator-(T&&other)&&noexcept{
+		return move(*this -= forward<T>(other));
 	}
 	template<arithmetic_type T>
-	[[nodiscard]]bigfloat&& operator*(const T&other)&&noexcept{
-		return move(*this *= other);
+	[[nodiscard]]bigfloat&& operator*(T&&other)&&noexcept{
+		return move(*this *= forward<T>(other));
 	}
 	template<arithmetic_type T>
-	[[nodiscard]]bigfloat&& operator/(const T&other)&&noexcept{
-		return move(*this /= other);
+	[[nodiscard]]bigfloat&& operator/(T&&other)&&noexcept{
+		return move(*this /= forward<T>(other));
 	}
 	//operator!
 	[[nodiscard]]bool operator!()const noexcept{
@@ -23740,7 +23755,7 @@ public:
 		_num.simplify();
 	}
 	//friend simplify
-	friend decltype(auto) simplify(bigfloat& a)noexcept{
+	friend auto& simplify(bigfloat& a)noexcept{
 		a.simplify();
 		return a;
 	}
