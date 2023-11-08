@@ -17097,9 +17097,11 @@ inline void check_memory_lack()noexcept{
 namespace abstract_base_n{
 	#line 40 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/base/memory/get/defs.hpp"
 	common_attribute_t abstract_base;
+	common_attribute_t instance_struct;
 }
 namespace get_n{
 	using abstract_base_n::abstract_base;
+	using abstract_base_n::instance_struct;
 	//struct build_by_get_only{};已定义于 "../../base_defs/special_attribute.hpp"
 
 	/*!
@@ -17668,20 +17670,23 @@ namespace get_n{
 		void operator()(T*a)const noexcept(nothrow<T>){
 			const APIs::alloc::source_location_guard slg;
 			if(a!=null_ptr){
-				if constexpr(type_info<T>.has_attribute(abstract_base))
-					#if defined(_MSC_VER)
-						[[gsl::suppress(f.6)]]
-					#endif
-					attribute_ptr_cast<abstract_base>(a)->abstract_method_unget_this();
-				else{
-					if constexpr(!destruct.nothrow<T>)
-						template_warning("the destructer of T was not noexcept,this may cause memory lack.");
-					if constexpr(type_info<T>.has_attribute(never_in_array))
-						destruct(a);
-					else
-						destruct[get_size_of_alloc(a)](a);
-					free(a);
-				}
+				if constexpr(::std::is_polymorphic_v<T> && !::std::is_final_v<T>)
+					if constexpr(type_info<T>.has_attribute(abstract_base)){
+						#if defined(_MSC_VER)
+							[[gsl::suppress(f.6)]]
+						#endif
+						attribute_ptr_cast<abstract_base>(a)->abstract_method_unget_this();
+						return;
+					}
+					elseif constexpr(type_info<T>.not_has_attribute(instance_struct))
+						template_warning("T is polymorphic, but there is no elc::abstract_base attribute to provide information to elc's memory system, which could lead to incorrect unget handling.");
+				if constexpr(!destruct.nothrow<T>)
+					template_warning("the destructer of T was not noexcept,this may cause memory lack.");
+				if constexpr(type_info<T>.has_attribute(never_in_array))
+					destruct(a);
+				else
+					destruct[get_size_of_alloc(a)](a);
+				free(a);
 			}
 		}
 		/*适用于unget(this,not destruct);*/
@@ -35094,7 +35099,7 @@ namespace to_string_n{
 			if(str==_repres.get_nan())
 				return arithmetic_type_info_prover<double>::quiet_NaN();
 			elseif(str==_repres.get_inf())
-				return arithmetic_type_info_prover<double>::infinity();
+				return arithmetic_type_info_prover<double>::Inf();
 			else
 				return from_string_get_base<ubigfloat>(str,state);
 		}
@@ -35332,6 +35337,8 @@ namespace to_string_n{
 }
 using to_string_n::to_string;
 using to_string_n::from_string_get;
+using to_string_n::to_string_t;
+using to_string_n::from_string_get_t;
 
 //file_end
 
@@ -35400,6 +35407,8 @@ inline auto operator>>(stream_T&stream,const representation_T& representation)no
 	}
 	using numerical_representation_n::to_string;
 	using numerical_representation_n::from_string_get;
+	using numerical_representation_n::to_string_t;
+	using numerical_representation_n::from_string_get_t;
 	using numerical_representation_n::decimal;
 	using numerical_representation_n::binary;
 	using numerical_representation_n::octal;
@@ -35423,7 +35432,7 @@ inline void test_end(){
 
 //file_end
 
-		#line 54 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
+		#line 56 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
 	}
 	#endif
 
@@ -35590,7 +35599,7 @@ inline void test_end(){
 
 //file_end
 
-	#line 58 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
+	#line 60 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
 }
 namespace elc{
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_export.hpp"
@@ -35600,8 +35609,8 @@ namespace elc{
 #define export using defs::
 export to_string;
 export from_string_get;
-export to_string;
-export from_string_get;
+export to_string_t;
+export from_string_get_t;
 export decimal;
 export binary;
 export octal;
@@ -35613,7 +35622,7 @@ export valanlottish;
 
 //file_end
 
-	#line 61 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
+	#line 63 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
 }
 #if defined(ELC_BASE_STREAM)
 	#line 1 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/_multi/arithmetic_text_io.hpp"
@@ -36216,7 +36225,7 @@ protected:\
 
 //file_end
 
-	#line 64 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
+	#line 66 "https://github.com/ELC-lang/ELC/tree/master/parts/header_file/files/elc/_files/numerical_representation/_body.hpp"
 #endif
 
 //file_end
